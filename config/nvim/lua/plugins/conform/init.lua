@@ -32,6 +32,7 @@ return {
       javascriptreact = { 'prettier', 'rustywind' },
       typescript = { 'prettier', 'rustywind' },
       typescriptreact = { 'prettier', 'rustywind' },
+
       -- rest
       ['*'] = { 'trim_whitespace', 'trim_newlines', 'codespell' },
     },

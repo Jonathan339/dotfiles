@@ -100,6 +100,9 @@ alias gc='git commit -am'
 
 export PATH="$HOME/.local/share/pnpm:$PATH"
 
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH=$BUN_INSTALL/bin:$PATH
 
 # Cargar entorno de Deno si existe
 [ -f "$HOME/.deno/env" ] && . "$HOME/.deno/env"

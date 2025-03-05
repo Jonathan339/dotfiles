@@ -1,7 +1,6 @@
 local M = {}
 local u = require('utils')
 local cmp_nvim_lsp_ok, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
-
 -- Función para manejo de errores y notificaciones
 local function handle_error(msg, level)
   level = level or vim.log.levels.ERROR
@@ -17,12 +16,6 @@ end
 
 local capabilities = cmp_nvim_lsp.default_capabilities()
 local augroup_format = vim.api.nvim_create_augroup('LspFormatting', {})
-
-local user_config = {
-  lsp = {
-    inlay_hint = true,
-  },
-}
 
 -- Función para configurar opciones del buffer
 local function buf_set_option(bufnr, name, value)
@@ -74,21 +67,33 @@ end
 
 -- Función para habilitar hints en línea
 local function enable_inlay_hints(client, bufnr)
-  if client.server_capabilities.inlayHintProvider or user_config.lsp.inlay_hint then
+  if client.server_capabilities.inlayHintProvider then
     vim.lsp.inlay_hint(bufnr, true)
   end
 end
 
 -- Función on_attach que se ejecuta cuando el servidor LSP se adjunta a un buffer
 M.on_attach = function(client, bufnr)
-  -- Configurar omnicompletado
-  buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
 
-  -- Habilitar formateo asincrónico al guardar el buffer
-  enable_format_on_save(client, bufnr)
+  if client.supports_method('textDocument/formatting') then
+    enable_format_on_save(client, bufnr)
+  end
 
-  -- Habilitar hints en línea si el servidor las soporta
-  enable_inlay_hints(client, bufnr)
+  if client.supports_method('textDocument/publishDiagnostics') then
+    vim.diagnostic.config({
+      underline = true,
+      virtual_text = {
+        spacing = 5,
+        severity_limit = 'Warning',
+      },
+      update_in_insert = true,
+    }, bufnr)
+  end
+
+  if client.server_capabilities.inlayHintProvider then
+    vim.lsp.inlay_hint(bufnr, true)
+  end
 end
 
 -- Fusionar capacidades predeterminadas con configuraciones adicionales
