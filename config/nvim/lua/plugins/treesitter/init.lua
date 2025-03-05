@@ -1,6 +1,7 @@
 return {
   'nvim-treesitter/nvim-treesitter',
   build = ':TSUpdate',
+  event = { 'BufReadPost', 'BufWritePost', 'BufNewFile', 'VeryLazy' },
   dependencies = { 'nvim-treesitter/playground', cmd = 'TSPlaygroundToggle' },
   config = function()
     local configs = require('nvim-treesitter.configs')
@@ -60,7 +61,7 @@ return {
       },
       highlight = { enable = true },
       indent = { enable = true },
-      autotag = { enable = true },
+      -- autotag = { enable = true }, -- deprecado
     })
   end,
 }
