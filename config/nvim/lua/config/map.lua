@@ -24,6 +24,7 @@ map('n', '<C-a>', 'ggVG', { desc = 'Seleccionar todo' })
 -- Buscar en el buffer actual
 map('n', '<C-s>', ':Telescope current_buffer_fuzzy_find<CR>', { desc = 'Buscar en el buffer actual' })
 
+vim.keymap.set('n', '-', '<CMD>Oil --float<CR>', { desc = 'Open parent directory' })
 -- Salir del editor
 map('n', '<Leader>q', ':x!<CR>', { desc = 'Salir del editor' })
 
@@ -50,7 +51,8 @@ map('n', '<Leader>h', function()
 end, { desc = 'Ayuda con Telescope' })
 
 -- Buscar palabras con Telescope
-map('n', '<Leader>l',  ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>", { desc = 'Buscar palabras con Telescope' })
+map('n', '<Leader>l', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>",
+  { desc = 'Buscar palabras con Telescope' })
 
 -- Mover líneas hacia arriba o abajo
 map('n', '<A-Up>', ':m .-2<CR>==', { desc = 'Mover línea hacia arriba' })
