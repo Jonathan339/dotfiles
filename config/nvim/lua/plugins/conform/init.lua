@@ -7,35 +7,8 @@ return {
   event = 'BufWritePre',
   lazy = false,
   opts = {
-    formatters_by_ft = {
-      dart = { 'dart_format' },
-      elm = { 'elm_format' },
-      go = { 'gofumpt' },
-      htmldjango = { 'djlint', 'rustywind' },
-      lua = { 'stylua' },
-      python = { 'ruff_fix', 'ruff_format' },
-      rust = { 'rustfmt' },
-      sh = { 'shfmt' },
-      sql = { 'sql_formatter' },
-      zig = { 'zigfmt' },
-      -- prettier
-      css = { 'prettier' },
-      graphql = { 'prettier' },
-      json = { 'prettier' },
-      less = { 'prettier' },
-      markdown = { 'prettier' },
-      scss = { 'prettier' },
-      toml = { 'prettier' },
-      vue = { 'prettier' },
-      yaml = { 'prettier' },
-      javascript = { 'prettier', 'rustywind' },
-      javascriptreact = { 'prettier', 'rustywind' },
-      typescript = { 'prettier', 'rustywind' },
-      typescriptreact = { 'prettier', 'rustywind' },
+    formatters_by_ft = require('lsp.defaults').formatters_by_ft,
 
-      -- rest
-      ['*'] = { 'trim_whitespace', 'trim_newlines', 'codespell' },
-    },
     format_on_save = function(bufnr)
       local disable_filetypes = { c = true, cpp = true }
       return {
