@@ -5,6 +5,11 @@ local augroup = function(name)
   return agroup('_' .. name, { clear = true })
 end
 
+autocmd('BufWritePre', {
+                  buffer = bufnr,
+                  command = 'EslintFixAll',
+                })
+
 autocmd({ 'FileType' }, {
   pattern = { 'gitcommit', 'markdown', 'NeogitCommitMessage' },
   callback = function()
