@@ -43,12 +43,17 @@ map('n', '<Leader>c', ':bp<bar>sp<bar>bn<bar>bd<CR>', { desc = 'Cerrar buffer' }
 map('n', '<Leader>r', ':%s/', { desc = 'Buscar y reemplazar' })
 
 -- Mover líneas y selección
-map('n', '<A-Up>', ':m .-2<CR>==', { desc = 'Mover línea arriba' })
-map('n', '<A-Down>', ':m .+1<CR>==', { desc = 'Mover línea abajo' })
-map('i', '<A-Up>', '<Esc>:m .-2<CR>==gi', { desc = 'Mover línea arriba' })
-map('i', '<A-Down>', '<Esc>:m .+1<CR>==gi', { desc = 'Mover línea abajo' })
-map('v', '<A-Up>', ":m '<-2<CR>gv=gv", { desc = 'Mover selección arriba' })
-map('v', '<A-Down>', ":m '>+1<CR>gv=gv", { desc = 'Mover selección abajo' })
+-- Mover líneas en modo normal
+map('n', '<C-Up>', ':move -2<CR>==', { desc = 'Mover línea arriba' })
+map('n', '<C-Down>', ':move +1<CR>==', { desc = 'Mover línea abajo' })
+
+-- Mover líneas en modo inserción
+map('i', '<C-Up>', '<Esc>:move -2<CR>gi', { desc = 'Mover línea arriba' })
+map('i', '<C-Down>', '<Esc>:move +1<CR>gi', { desc = 'Mover línea abajo' })
+
+-- Mover selección en modo visual
+map('v', '<C-Up>', ":move '<-2<CR>gv=gv", { desc = 'Mover selección arriba' })
+map('v', '<C-Down>', ":move '>+1<CR>gv=gv", { desc = 'Mover selección abajo' })
 
 -- Redimensionar y mover entre ventanas con smart-splits
 map('n', '<A-h>', smart_splits.resize_left, { desc = 'Redimensionar izquierda' })

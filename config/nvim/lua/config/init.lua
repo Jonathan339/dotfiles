@@ -13,6 +13,7 @@ local function load_modules(modules)
   end
 end
 
+-- @returns: true if the string is empty, false otherwise
 -- Módulos principales
 local main_modules = { 'config.options', 'config.lazy', 'config.map' }
 load_modules(main_modules)
@@ -21,7 +22,7 @@ load_modules(main_modules)
 vim.schedule(function()
   local async_modules = {
     'config.autocmd',
-    'lsp.diagnostics',
+    'plugins.lsp.diagnostics',
   }
   load_modules(async_modules)
 end)
@@ -32,3 +33,4 @@ if vim.fn.isdirectory(vim.fn.expand('~/.config/nvim/lua/lsp')) == 1 then
     safe_require('lsp.diagnostics')
   end, 0)
 end
+vim.cmd.colorscheme('catppuccin-macchiato')

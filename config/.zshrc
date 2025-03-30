@@ -1,4 +1,20 @@
+
 # Cargar alias de bash si existe el archivo
+# rt WORKON_HOME=$HOME/.virtualenvs
+# export PROJECT_HOME=$HOME/Devel
+# source /usr/local/bin/virtualenvwrapper.sh
+#
+# alias venv='mkvirtualenv'
+# alias venv-list='lsvirtualenv'
+# alias venv-rm='rmvirtualenv'
+# alias venv-switch='workon'
+#
+export EDITOR=nvim
+#
+# export ZSH_THEME="agnoster"
+#
+# plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+#
 [ -f ~/.bash_aliases ] && . ~/.bash_aliases
 
 # Obtener el nombre de usuario actual
@@ -82,7 +98,7 @@ alias em=androidemulator
 alias code='code .'  # Lanzar VSCode en el directorio actual
 alias expo="bunx create-expo-app@latest"
 alias android='yarn android && code .'
-alias update='sudo apt update && sudo apt upgrade -y'
+alias update='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean'
 alias run-react='yarn react-native run-android && yarn react-native start'
 alias ls='ls --color=auto'
 alias ll='ls -al --color=auto'

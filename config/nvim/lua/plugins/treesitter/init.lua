@@ -1,39 +1,28 @@
 return {
   'nvim-treesitter/nvim-treesitter',
-  build = ':TSUpdate',
   event = { 'BufReadPost', 'BufWritePost', 'BufNewFile', 'VeryLazy' },
+  event = 'VeryLazy',
+  cmd = {
+    'TSBufDisable',
+    'TSBufEnable',
+    'TSBufToggle',
+    'TSDisable',
+    'TSEnable',
+    'TSToggle',
+    'TSInstall',
+    'TSInstallInfo',
+    'TSInstallSync',
+    'TSModuleInfo',
+    'TSUninstall',
+    'TSUpdate',
+    'TSUpdateSync',
+  },
+  build = ':TSUpdate',
   dependencies = { 'nvim-treesitter/playground', cmd = 'TSPlaygroundToggle' },
   config = function()
     local configs = require('nvim-treesitter.configs')
     configs.setup({
-      ensure_installed = {
-        'bash',
-        'css',
-        'go',
-        'gomod',
-        'html',
-        'http',
-        'javascript',
-        'jsdoc',
-        'json',
-        'lua',
-        'luadoc',
-        'markdown',
-        'markdown_inline',
-        'nix',
-        'org',
-        'php',
-        'phpdoc',
-        'python',
-        'query',
-        'regex',
-        'rust',
-        'sql',
-        'svelte',
-        'typescript',
-        'vim',
-        'yaml',
-      },
+      ensure_installed = {},
 
       -- https://github.com/nvim-treesitter/playground#query-linter
       query_linter = {
@@ -44,7 +33,7 @@ return {
       playground = {
         enable = true,
         disable = {},
-        updatetime = 25,        -- Debounced time for highlighting nodes in the playground from source code
+        updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
         persist_queries = true, -- Whether the query persists across vim sessions
         keybindings = {
           toggle_query_editor = 'o',

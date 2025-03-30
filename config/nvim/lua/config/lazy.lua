@@ -26,11 +26,12 @@ require('lazy').setup({
     { import = 'plugins' }, -- Importar plugins desde tu carpeta de configuración
   },
   defaults = {
-    lazy = false,    -- Cargar plugins personalizados durante el inicio
+    lazy = true,     -- Cargar plugins personalizados solo cuando se necesiten
     version = false, -- Usar siempre el último commit de cada plugin
   },
   install = {
-    colorscheme = { 'gruvbox', 'habamax' }, -- Esquemas de color a instalar
+    missing = true,                 -- Instalar plugins pendientes de instalar
+    colorscheme = { 'catppuccin' }, -- Esquemas de color a instalar
   },
   checker = {
     enabled = true, -- Verificar actualizaciones de plugins periódicamente
@@ -44,6 +45,8 @@ require('lazy').setup({
         'tohtml',
         'tutor',
         'zipPlugin',
+        'matchit',
+        'matchparen',
       },
     },
   },

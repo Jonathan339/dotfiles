@@ -12,11 +12,19 @@ function M.create_buf_map(bufnr, opts)
 end
 
 function M.merge_list(tbl1, tbl2)
+  local seen = {}
+  for _, v in ipairs(tbl1) do
+    seen[v] = true
+  end
   for _, v in ipairs(tbl2) do
-    table.insert(tbl1, v)
+    if not seen[v] then
+      table.insert(tbl1, v)
+      seen[v] = true
+    end
   end
   return tbl1
 end
+
 
 function M.merge(...)
   return vim.tbl_deep_extend('force', ...)

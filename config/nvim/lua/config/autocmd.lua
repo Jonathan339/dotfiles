@@ -5,12 +5,51 @@ local augroup = function(name)
   return agroup('_' .. name, { clear = true })
 end
 
+-- Auto formato usando LSP antes de guardar, excluyendo tsserver
 autocmd('BufWritePre', {
-                  buffer = bufnr,
-                  command = 'EslintFixAll',
-                })
+  group = augroup('auto_format'),
+  pattern = '*',
+  callback = function()
+    if vim.b._formatting_disabled ~= true then
+      vim.lsp.buf.format({
+        async = false,
+        timeout_ms = 10000,
+        filter = function(client)
+          return client.name ~= "tsserver"
+        end,
+      })
+    end
+  end,
+})
 
-autocmd({ 'FileType' }, {
+-- Activar y desactivar auto-formato con comandos
+vim.api.nvim_create_user_command("FormatEnable", function()
+  vim.b._formatting_disabled = false
+  vim.notify("Auto-formatting enabled for buffer")
+end, {})
+
+vim.api.nvim_create_user_command("FormatDisable", function()
+  vim.b._formatting_disabled = true
+  vim.notify("Auto-formatting disabled for buffer")
+end, {})
+
+vim.api.nvim_create_user_command('LspFormat', function()
+  vim.lsp.buf.format()
+end, {})
+
+-- Auto crear directorio antes de guardar el archivo
+autocmd('BufWritePre', {
+  group = augroup('auto_create_dir'),
+  callback = function(event)
+    if event.file and not event.file:match('^%w%w+:[\\/][\\/]') then
+      local file = vim.uv.fs_realpath(event.file) or event.file
+      vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
+    end
+  end,
+})
+
+-- Habilitar el ajuste de texto y la corrección ortográfica en archivos específicos
+autocmd('FileType', {
   pattern = { 'gitcommit', 'markdown', 'NeogitCommitMessage' },
   callback = function()
     vim.opt_local.wrap = true
@@ -18,21 +57,17 @@ autocmd({ 'FileType' }, {
   end,
 })
 
-autocmd({ 'CursorHold' }, {
+-- Desvincular snippet de Luasnip al mantener el cursor
+autocmd('CursorHold', {
   callback = function()
     local status_ok, luasnip = pcall(require, 'luasnip')
-    if not status_ok then
-      return
-    end
-    if luasnip.expand_or_jumpable() then
-      -- ask maintainer for option to make this silent
-      -- luasnip.unlink_current()
+    if status_ok and luasnip.expand_or_jumpable() then
       vim.cmd([[silent! lua require("luasnip").unlink_current()]])
     end
   end,
 })
 
--- Remove luasnip snippets when leaving insert mode
+-- Eliminar snippet de Luasnip al salir de modo de inserción
 autocmd('InsertLeave', {
   callback = function()
     local luasnip = require('luasnip')
@@ -42,8 +77,8 @@ autocmd('InsertLeave', {
   end,
 })
 
--- Check if we need to reload the file when it changed
-autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
+-- Auto-reload archivo cuando cambie
+autocmd({'FocusGained', 'TermClose', 'TermLeave'}, {
   group = augroup('checktime'),
   callback = function()
     if vim.o.buftype ~= 'nofile' then
@@ -52,7 +87,7 @@ autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
   end,
 })
 
--- Set custom highlights for completion menu
+-- Resaltado de la lista de autocompletado
 local set_cmp_highlights = function()
   vim.schedule(function()
     vim.api.nvim_set_hl(0, 'CmpItemAbbrDeprecated', { bg = 'NONE', strikethrough = true, fg = '#808080' })
@@ -73,7 +108,7 @@ autocmd('TextChanged', {
   callback = set_cmp_highlights,
 })
 
--- Remove trailing spaces before saving
+-- Eliminar espacios en blanco antes de guardar
 autocmd('BufWritePre', {
   group = augroup('trim_trailing_spaces'),
   callback = function()
@@ -81,7 +116,7 @@ autocmd('BufWritePre', {
   end,
 })
 
--- Resize splits if window got resized
+-- Redimensionar divisores al cambiar el tamaño de la ventana
 autocmd('VimResized', {
   group = augroup('resize_splits'),
   callback = function()
@@ -91,7 +126,7 @@ autocmd('VimResized', {
   end,
 })
 
--- Highlight on yank
+-- Resaltado al hacer yank
 autocmd('TextYankPost', {
   group = augroup('highlight_yank'),
   callback = function()
@@ -99,34 +134,12 @@ autocmd('TextYankPost', {
   end,
 })
 
--- Auto create dir when saving a file
-autocmd('BufWritePre', {
-  group = augroup('auto_create_dir'),
-  callback = function(event)
-    if not event.match:match('^%w%w+:[\\/][\\/]') then
-      local file = vim.uv.fs_realpath(event.match) or event.match
-      vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
-    end
-  end,
-})
-
--- Close specific filetypes with <q>
+-- Cerrar ciertos tipos de archivo con la tecla <q>
 autocmd('FileType', {
   group = augroup('close_with_q'),
   pattern = {
-    'PlenaryTestPopup',
-    'help',
-    'lspinfo',
-    'notify',
-    'qf',
-    'query',
-    'spectre_panel',
-    'startuptime',
-    'tsplayground',
-    'neotest-output',
-    'checkhealth',
-    'neotest-summary',
-    'neotest-output-panel',
+    'PlenaryTestPopup', 'help', 'lspinfo', 'notify', 'qf', 'query', 'spectre_panel',
+    'startuptime', 'tsplayground', 'neotest-output', 'checkhealth', 'neotest-summary', 'neotest-output-panel',
   },
   callback = function(event)
     vim.bo[event.buf].buflisted = false
@@ -134,7 +147,7 @@ autocmd('FileType', {
   end,
 })
 
--- Large file optimizations
+-- Optimizaciones para archivos grandes
 autocmd('BufReadPre', {
   group = augroup('large_file_optimizations'),
   callback = function()
