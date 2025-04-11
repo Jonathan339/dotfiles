@@ -1,8 +1,10 @@
 local M = {
   "williamboman/mason.nvim",
-  lazy = false,
+  event = "VeryLazy",
+  cmd = { "Mason", "MasonInstall", "MasonUpdate" },
+  --lazy = false,
   dependencies = {
-    "neovim/nvim-lspconfig",
+    { "neovim/nvim-lspconfig", event = "BufReadPre" },
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     "williamboman/mason-lspconfig.nvim",
     "j-hui/fidget.nvim",
@@ -38,8 +40,21 @@ local M = {
 
     mason_installer.setup({
       ensure_installed = ensure_installed,
-      auto_update = true,   -- No actualizar automáticamente
-      run_on_start = false, -- Instalar herramientas al iniciar Neovim
+      -- auto_update = true, -- No actualizar automáticamente
+      -- run_on_start = true, -- Instalar herramientas al iniciar Neovim
+    })
+
+    vim.api.nvim_create_autocmd('User', {
+      pattern = 'MasonToolsUpdateCompleted',
+      callback = function()
+        vim.schedule(function()
+          vim.notify(
+            ' Mason-tool-installer has finished updating packages',
+            'info',
+            { title = 'Mason Tool Installer' }
+          )
+        end)
+      end,
     })
 
     mason_lspconfig.setup({

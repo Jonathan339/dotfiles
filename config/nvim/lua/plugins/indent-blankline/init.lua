@@ -1,6 +1,6 @@
 return {
   'lukas-reineke/indent-blankline.nvim',
-  event = { 'VeryLazy', 'BufReadPre' },
+  event = { 'User FilePost' },
   main = 'ibl',
   opts = function()
     return {

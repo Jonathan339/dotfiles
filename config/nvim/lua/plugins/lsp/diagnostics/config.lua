@@ -15,6 +15,7 @@ local default_diagnostic_config = {
     suffix = '',
     source = 'always',
   },
+  virtual_lines = { current_line = true },
   virtual_text = {
     prefix = icons.Circle,
     spacing = 2,

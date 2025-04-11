@@ -1,5 +1,6 @@
 return {
   'lewis6991/gitsigns.nvim',
+  event = "User FilePost",
   enabled = vim.fn.executable('git') == 1,
   opts = function()
     local icon = require('utils.icons').get('git')
