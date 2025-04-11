@@ -44,10 +44,12 @@ install_package_if_not_installed() {
     echo -e "\e[32m$1 ya está instalado. Saltando...\e[0m"
   fi
 }
-
 # Función para verificar la existencia de un archivo
 check_file_exists() {
-  if [ -f "$1" ]; then
+  local full_path="$(pwd)/$1"
+  echo "Verificando la existencia del archivo en la ruta: $full_path"
+  
+  if [ -f "$full_path" ]; then
     echo -e "\e[32m$1 encontrado\e[0m"
     return 0
   else
@@ -58,12 +60,47 @@ check_file_exists() {
 
 # Función para verificar la existencia de un directorio
 check_directory_exists() {
-  if [ -d "$1" ]; then
+  local full_path="$(pwd)/$1"
+  echo "Verificando la existencia del directorio en la ruta: $full_path"
+  
+  if [ -d "$full_path" ]; then
     echo -e "\e[32m$1 encontrado\e[0m"
     return 0
   else
     echo -e "\e[31m$1 no encontrado\e[0m"
     return 1
+  fi
+}
+
+
+# Función para crear enlaces simbólicos de los archivos de configuración
+link_config_files() {
+  echo -e "\e[34mCreando enlaces simbólicos desde la carpeta 'config'...\e[0m"
+  success=true
+
+  # Crear enlaces simbólicos desde la carpeta "config" solo si existen
+  if check_file_exists "config/.zshrc"; then
+    ln -sf "$(pwd)/config/.zshrc" ~/.zshrc && echo -e "\e[32m.zshrc enlazado con éxito\e[0m" || success=false
+  fi
+  if check_file_exists "config/.zsh_aliases"; then
+    ln -sf "$(pwd)/config/.zsh_aliases" ~/.zsh_aliases && echo -e "\e[32m.zsh_aliases enlazado con éxito\e[0m" || success=false
+  fi
+  if check_file_exists "config/.bashrc"; then
+    ln -sf "$(pwd)/config/.bashrc" ~/.bashrc && echo -e "\e[32m.bashrc enlazado con éxito\e[0m" || success=false
+  fi
+  if check_directory_exists "config/nvim"; then
+    ln -sfn "$(pwd)/config/nvim" ~/.config/nvim && echo -e "\e[32mnvim configuraciones enlazadas con éxito\e[0m" || success=false
+  fi
+  if check_file_exists "config/kitty.conf"; then
+    mkdir -p ~/.config/kitty
+    ln -sf "$(pwd)/config/kitty.conf" ~/.config/kitty/kitty.conf && echo -e "\e[32mkitty.conf enlazado con éxito\e[0m" || success=false
+  fi
+
+  if [ "$success" = false ]; then
+    echo -e "\e[31mOcurrió un error al crear los enlaces simbólicos desde la carpeta 'config'\e[0m"
+    exit 1
+  else
+    echo -e "\e[32mTodos los archivos de configuración enlazados con éxito desde la carpeta 'config'\e[0m"
   fi
 }
 
@@ -108,8 +145,6 @@ install_oh_my_zsh() {
     git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh || \
     { echo -e "\e[31mOcurrió un error al instalar Oh My Zsh\e[0m"; exit 1; } 
 }
-
-
 # Función para instalar kitty-themes 
 install_kitty_themes() {
   echo -e "\e[34mInstalando kitty-themes...\e[0m"
@@ -128,14 +163,6 @@ install_nerd_fonts() {
   mkdir -p ~/.local/share/fonts
   cd ~/.local/share/fonts && curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/DroidSansMono/DroidSansMNerdFont-Regular.otf || \
     { echo -e "\e[31mOcurrió un error al descargar las fuentes nerd-fonts\e[0m"; exit 1; }
-}
-
-
-# Función para instalar Android Studio
-install_unlauncher() {
-  echo -e "\e[34mInstalando unlauncher...\e[0m"
-  sudo sudo add-apt-repository ppa:agornostal/ulauncher && sudo apt update  -y && sudo apt install ulauncher -y || \
-    { echo -e "\e[31mOcurrió un error al instalar unlauncher\e[0m"; exit 1; }
 }
 
 # Función para instalar Android Studio
@@ -241,8 +268,8 @@ install_lazygit() {
 install_all() {
   install_packages
   install_oh_my_zsh
-  copy_config_files
-  install_unlauncher
+  #copy_config_files
+  link_config_files
   install_bun
   install_android_studio
   install_spotify
@@ -261,7 +288,7 @@ install_all() {
 # Menú principal
 while true; do
   echo "Bienvenido al instalador de paquetes. Por favor, elige una opción:"
-  select opcion in "Instalar todo" "Instalar paquetes" "Copiar archivos de configuración" "Instalar unlauncher" "Instalar Bun" "Instalar Oh My Zsh" "Instalar kitty-themes" "Instalar Android Studio" "Instalar Spotify" "Instalar Visual Studio Code" "Instalar nvim" "Instalar Node.js" "Instalar Yarn" "Instalar lazygit" "Limpiar" "Salir"
+  select opcion in "Instalar todo" "Instalar paquetes" "Copiar archivos de configuración" "Instalar Bun" "Instalar Oh My Zsh" "Instalar kitty-themes" "Instalar Android Studio" "Instalar Spotify" "Instalar Visual Studio Code" "Instalar nvim" "Instalar Node.js" "Instalar Yarn" "Instalar lazygit" "Limpiar" "Salir"
   do
     case $opcion in
       "Instalar todo")
@@ -271,11 +298,7 @@ while true; do
         install_packages
         ;;
       "Copiar archivos de configuración")
-        copy_config_files
-        ;;
-
-      "Instalar paquetes")
-        install_unlauncher
+        link_config_files
         ;;
 
       " Instalar Bun")

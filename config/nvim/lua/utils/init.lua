@@ -1,212 +1,64 @@
 local M = {}
+local defaults = require("plugins.lsp.defaults")
+local lspconfig = require("lspconfig")
 
-M.servers = {
-	"lua_ls",
-	"cssls",
-	"html",
-	"tsserver",
-	"bashls",
-	"jsonls",
-	"yamlls",
-	"tailwindcss",
-	"gopls",
-	"astro",
-	"jdtls",
-	"pylsp",
-	"clangd",
-	"eslint",
-}
-
-M.icons = {
-	DEBUG = "",
-	ERROR = "",
-	INFO = "",
-	TRACE = "✎",
-	WARN = "",
-}
-
-M.linters = {
-	"prettier",
-	"stylua",
-	"black",
-}
-
-M.parsers = {
-	"lua",
-	"vim",
-	"markdown",
-	"markdown_inline",
-	"latex",
-	"bash",
-	"python",
-	"cpp",
-	"c",
-	"java",
-	"javascript",
-	"typescript",
-	"tsx",
-	"html",
-	"css",
-	"json",
-	"yaml",
-	"toml",
-	"regex",
-	"go",
-	"rust",
-	"dockerfile",
-}
-
-M.git_colors = {
-	GitAdd = "#A1C281",
-	GitChange = "#74ADEA",
-	GitDelete = "#FE747A",
-}
-
-M.lsp_signs = { Error = "✖ ", Warn = "! ", Hint = "󰌶 ", Info = " " }
-
-M.lsp_kinds = {
-	Text = " ",
-	Method = " ",
-	Function = " ",
-	Constructor = " ",
-	Field = " ",
-	Variable = " ",
-	Class = " ",
-	Interface = " ",
-	Module = " ",
-	Property = " ",
-	Unit = " ",
-	Value = " ",
-	Enum = " ",
-	Keyword = " ",
-	Snippet = " ",
-	Color = " ",
-	File = " ",
-	Reference = " ",
-	Folder = " ",
-	EnumMember = " ",
-	Constant = " ",
-	Struct = " ",
-	Event = " ",
-	Operator = " ",
-	TypeParameter = " ",
-	Copilot = " ",
-	Namespace = " ",
-	Package = " ",
-	String = " ",
-	Number = " ",
-	Boolean = " ",
-	Array = " ",
-	Object = " ",
-	Key = " ",
-	Null = " ",
-}
-
-M.mason_packages = {
-	"bash-language-server",
-	"black",
-	"clang-format",
-	"clangd",
-	"codelldb",
-	"cspell",
-	"css-lsp",
-	"eslint-lsp",
-	"graphql-language-service-cli",
-	"html-lsp",
-	"json-lsp",
-	"lua-language-server",
-	"markdownlint",
-	"prettier",
-	"pyright",
-	"shfmt",
-	"tailwindcss-language-server",
-	"taplo",
-	"typescript-language-server",
-	"yaml-language-server",
-	"gopls",
-	"editorconfig-checker",
-}
-
-M.lsp_servers = {
-	"clangd",
-	"tsserver",
-	"pyright",
-	"lua_ls",
-	"eslint",
-	"bashls",
-	"yamlls",
-	"jsonls",
-	"cssls",
-	"taplo",
-	"html",
-	"graphql",
-	"tailwindcss",
-	"gopls",
-}
-
-function M.on_attach(on_attach)
-	vim.api.nvim_create_autocmd("LspAttach", {
-		callback = function(args)
-			local buffer = args.buf
-			local client = vim.lsp.get_client_by_id(args.data.client_id)
-			on_attach(client, buffer)
-		end,
-	})
+M.setup_lsp = function(server, config)
+  lspconfig[server].setup(vim.tbl_deep_extend("force", {
+    capabilities = defaults.capabilities,
+    on_attach = defaults.on_attach,
+    on_init = defaults.on_init,
+  }, config))
 end
 
-function M.warn(msg, notify_opts)
-	vim.notify(msg, vim.log.levels.WARN, notify_opts)
+function M.map(mode, lhs, rhs, opts)
+  vim.keymap.set(mode, lhs, rhs, vim.tbl_deep_extend("force", { silent = true, noremap = true }, opts or {}))
 end
 
-function M.error(msg, notify_opts)
-	vim.notify(msg, vim.log.levels.ERROR, notify_opts)
+function M.create_buf_map(bufnr, opts)
+  return function(mode, lhs, rhs, map_opts)
+    M.map(mode, lhs, rhs, vim.tbl_deep_extend("force", { buffer = bufnr }, opts or {}, map_opts or {}))
+  end
 end
 
-function M.info(msg, notify_opts)
-	vim.notify(msg, vim.log.levels.INFO, notify_opts)
+function M.merge_list(tbl1, tbl2)
+  local seen = {}
+  for _, v in ipairs(tbl1) do seen[v] = true end
+  for _, v in ipairs(tbl2) do
+    if not seen[v] then table.insert(tbl1, v) end
+  end
+  return tbl1
 end
 
----@param silent boolean?
----@param values? {[1]:any, [2]:any}
-function M.toggle(option, silent, values)
-	if values then
-		if vim.opt_local[option]:get() == values[1] then
-			vim.opt_local[option] = values[2]
-		else
-			vim.opt_local[option] = values[1]
-		end
-		return require("utils").info("Set " .. option .. " to " .. vim.opt_local[option]:get(), { title = "Option" })
-	end
-	vim.opt_local[option] = not vim.opt_local[option]:get()
-	if not silent then
-		if vim.opt_local[option]:get() then
-			require("utils").info("Enabled " .. option, { title = "Option" })
-		else
-			require("utils").warn("Disabled " .. option, { title = "Option" })
-		end
-	end
+function M.merge(...) return vim.tbl_deep_extend("force", ...) end
+
+function M.split(str, sep)
+  local res = {}
+  for w in str:gmatch("([^" .. sep .. "]*)") do
+    if w ~= "" then table.insert(res, w) end
+  end
+  return res
 end
 
-M.diagnostics_active = true
-function M.toggle_diagnostics()
-	M.diagnostics_active = not M.diagnostics_active
-	if M.diagnostics_active then
-		vim.diagnostic.show()
-		require("utils").info("Enabled Diagnostics", { title = "Lsp" })
-	else
-		vim.diagnostic.hide()
-		require("utils").warn("Disabled Diagnostics", { title = "Lsp" })
-	end
+function M.get_short_file_path(path)
+  local dirs = {}
+  for dir in string.gmatch(path, "([^/]+)") do table.insert(dirs, dir) end
+  local n = #dirs
+  return n > 3 and ("../" .. dirs[n - 2] .. "/" .. dirs[n - 1] .. "/" .. dirs[n]) or path
 end
 
-M.quickfix_active = false
-function M.toggle_quickfix()
-	M.quickfix_active = not M.quickfix_active
-	if M.quickfix_active then
-		vim.diagnostic.setloclist()
-	else
-		vim.cmd([[ lclose ]])
-	end
+function M.get_short_cwd()
+  local parts = vim.split(vim.fn.getcwd(), "/")
+  return parts[#parts]
+end
+
+function M.diff_source()
+  local gitsigns = vim.b.gitsigns_status_dict
+  return gitsigns and { added = gitsigns.added, modified = gitsigns.changed, removed = gitsigns.removed } or nil
+end
+
+function M.show_macro_recording()
+  local reg = vim.fn.reg_recording()
+  return reg == "" and "" or ("Recording @" .. reg)
 end
 
 return M

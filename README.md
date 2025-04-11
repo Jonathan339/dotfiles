@@ -3,25 +3,32 @@
 ```
 chmod +x install.sh
 ```
+## usar enlaces simbólicos
+```
+ln -sr .bashrc
+ln -sr nvim
+ln -sr .zshrc
+
+```
+
 
 ## Configuración
 
-- .vimrc
+-  nvim
+- .bashrc
+- .kitty.conf
 - .zshrc
-- .bash_aliases
-- nvim
-- .vim
 
 ## Aplicaciónes
 
-- Vlc
-- Google
-- Git
+- curl
 - gcc-5-base
+- Git
+- Google
 - libstdc++6
-- curl 
-- wget
 - nodejs
 - nvim
-- yarn
 - sublime merge
+- Vlc
+- wget
+- yarn

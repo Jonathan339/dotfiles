@@ -1,8 +1,1 @@
-require("core")
-
-
-
-
-
-
-
+require('config')
