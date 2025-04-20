@@ -1,41 +1,37 @@
 local agroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
+
 local augroup = function(name)
-  return agroup('_' .. name, { clear = true })
+  return agroup(name, { clear = true })
 end
 
--- Auto formato usando LSP antes de guardar, excluyendo tsserver
-autocmd('BufWritePre', {
-  group = augroup('auto_format'),
-  pattern = '*',
-  callback = function()
-    if vim.b._formatting_disabled ~= true then
-      vim.lsp.buf.format({
-        async = false,
-        timeout_ms = 10000,
-        filter = function(client)
-          return client.name ~= "tsserver"
-        end,
-      })
+local fmt_group = agroup('autoformat_cmds', { clear = true })
+
+autocmd('LspAttach', {
+  group = fmt_group,
+  desc = 'Configurar formateo al guardar',
+  callback = function(event)
+    local client = vim.lsp.get_client_by_id(event.data.client_id)
+    if not client or not client.supports_method('textDocument/formatting') then
+      return
     end
+
+    autocmd('BufWritePre', {
+      group = fmt_group,
+      buffer = event.buf,
+      desc = 'Formatear antes de guardar',
+      callback = function()
+        if vim.b._formatting_disabled then return end
+        vim.lsp.buf.format({
+          bufnr = event.buf,
+          async = false,
+          timeout_ms = 10000,
+        })
+      end,
+    })
   end,
 })
-
--- Activar y desactivar auto-formato con comandos
-vim.api.nvim_create_user_command("FormatEnable", function()
-  vim.b._formatting_disabled = false
-  vim.notify("Auto-formatting enabled for buffer")
-end, {})
-
-vim.api.nvim_create_user_command("FormatDisable", function()
-  vim.b._formatting_disabled = true
-  vim.notify("Auto-formatting disabled for buffer")
-end, {})
-
-vim.api.nvim_create_user_command('LspFormat', function()
-  vim.lsp.buf.format()
-end, {})
 
 -- Auto crear directorio antes de guardar el archivo
 autocmd('BufWritePre', {
@@ -78,7 +74,7 @@ autocmd('InsertLeave', {
 })
 
 -- Auto-reload archivo cuando cambie
-autocmd({'FocusGained', 'TermClose', 'TermLeave'}, {
+autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
   group = augroup('checktime'),
   callback = function()
     if vim.o.buftype ~= 'nofile' then

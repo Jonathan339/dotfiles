@@ -1,6 +1,8 @@
-return {
-    "nvim-tree/nvim-web-devicons",
-    event = "VeryLazy",
-
-    config = function(_, opts) require("nvim-web-devicons").setup(opts) end
+local M = {
+  'nvim-tree/nvim-web-devicons',
+  event = 'VeryLazy',
 }
+M.config = function()
+  require('nvim-web-devicons').setup()
+end
+return M
