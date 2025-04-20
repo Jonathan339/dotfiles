@@ -1,1 +1,2 @@
-return {"onsails/lspkind.nvim",event = "VeryLazy",}
+local M = { "onsails/lspkind.nvim", event = "VeryLazy", }
+return M

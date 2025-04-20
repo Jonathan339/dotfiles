@@ -1,11 +1,11 @@
 local M = {}
 
 M.ensure_installed = {
-  "bashls", "cssls", "custom_elements_ls", "diagnosticls", "dockerls", "efm",
+  "bashls", "cssls", "custom_elements_ls", "dockerls", "efm",
   "eslint", "graphql", "html", "htmx", "jsonls", "lua_ls", "pyright", "rust_analyzer",
   "spectral", "sqlls", "ts_ls", "tailwindcss", "typos_lsp", "vimls", "vtsls", "vuels",
   "yamlls", "prettier", "stylelint", "shellcheck", "shfmt", "black", "isort", "stylua",
-  "rubocop", "pint", "markdown",
+  "rubocop", "pint", "markdown", "dprint", "fixjson", "prettierd", "autopep8", "goimports", "gofumpt"
 }
 
 local cmp_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
@@ -13,6 +13,7 @@ if not cmp_ok then
   vim.notify("Error cargando cmp_nvim_lsp", vim.log.levels.ERROR)
   return M
 end
+
 
 M.capabilities = cmp_nvim_lsp.default_capabilities()
 M.capabilities.textDocument.completion.completionItem = {

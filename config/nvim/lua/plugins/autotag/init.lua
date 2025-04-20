@@ -1,44 +1,38 @@
-return {
-  -- Automatically add closing tags for HTML and JSX
-  {
-    'windwp/nvim-ts-autotag',
-    event = { 'BufReadPost', 'BufWritePost', 'BufNewFile' },
-    opts = {
-      filetypes = {
-        'html',
-        'templ',
-        'javascript',
-        'typescript',
-        'javascriptreact',
-        'typescriptreact',
-        'svelte',
-        'vue',
-        'tsx',
-        'jsx',
-        'rescript',
-        'xml',
-        'php',
-        'markdown',
-        'astro',
-        'glimmer',
-        'handlebars',
-        'hbs',
+local M = {
+  'windwp/nvim-ts-autotag',
+  event = { 'BufWritePost', 'BufNewFile' },
+}
+
+M.config = function()
+  require('nvim-ts-autotag').setup({
+    enable_close = true,          -- Auto close tags
+    enable_rename = true,         -- Auto rename pairs of tags
+    enable_close_on_slash = true, -- Auto close on trailing
+    filetypes = {
+      'html',
+      'templ',
+      'javascript',
+      'typescript',
+      'javascriptreact',
+      'typescriptreact',
+      'svelte',
+      'vue',
+      'tsx',
+      'jsx',
+      'rescript',
+      'xml',
+      'php',
+      'markdown',
+      'astro',
+      'glimmer',
+      'handlebars',
+      'hbs',
+    },
+    per_filetype = {
+      ['html'] = {
+        enable_close = true,
       },
     },
-    config = function(_, opts)
-      require('nvim-ts-autotag').setup(opts)
-    end,
-  },
-
-  -- Auto pairs
-  {
-    'echasnovski/mini.pairs',
-    event = 'VeryLazy',
-    opts = {},
-  },
-  {
-    'windwp/nvim-autopairs',
-    event = 'InsertEnter',
-    opts = {}, -- this is equivalent to setup({}) function
-  },
-}
+  })
+end
+return M

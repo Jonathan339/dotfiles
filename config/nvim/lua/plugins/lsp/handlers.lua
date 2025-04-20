@@ -1,6 +1,24 @@
 local M = {}
 local setup = require("utils").setup_lsp
 local root_pattern = require("lspconfig.util").root_pattern
+-- M["fixjson"] = function()
+--   setup("fixjson", {
+--     cmd = { "fixjson", "--write" },           -- Añadido --write para sobrescribir archivos.
+--     filetypes = { "json", "jsonc" },
+--     rootMarkers = { "package.json", ".git" }, -- O cualquier otro marcador de raíz.
+--     settings = {
+--       -- Aquí podés agregar configuraciones adicionales si el LSP lo permite.
+--     }
+--   })
+-- end
+M["dprint"] = function()
+  setup("dprint", {
+    cmd = { "dprint", "lsp" },
+    filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "json", "jsonc", "markdown", "python", "toml", "rust", "roslyn", "graphql" },
+    rootMarkers = { "dprint.json", ".dprint.json", "dprint.jsonc", ".dprint.jsonc" }
+  })
+end
+
 
 M["efm"] = function()
   setup("efm", {
@@ -89,7 +107,7 @@ M["eslint"] = function()
   })
 end
 
- M["lua_ls"] = function()
+M["lua_ls"] = function()
   setup("lua_ls", {
     settings = {
       Lua = {
