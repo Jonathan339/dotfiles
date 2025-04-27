@@ -33,4 +33,3 @@ if vim.fn.isdirectory(vim.fn.expand('~/.config/nvim/lua/lsp')) == 1 then
     safe_require('lsp.diagnostics')
   end, 0)
 end
-vim.cmd.colorscheme('catppuccin-macchiato')
