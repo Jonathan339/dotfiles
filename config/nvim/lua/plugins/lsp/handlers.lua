@@ -1,72 +1,77 @@
 local M = {}
-local setup = require("utils").setup_lsp
-local root_pattern = require("lspconfig.util").root_pattern
--- M["fixjson"] = function()
---   setup("fixjson", {
---     cmd = { "fixjson", "--write" },           -- Añadido --write para sobrescribir archivos.
---     filetypes = { "json", "jsonc" },
---     rootMarkers = { "package.json", ".git" }, -- O cualquier otro marcador de raíz.
---     settings = {
---       -- Aquí podés agregar configuraciones adicionales si el LSP lo permite.
---     }
---   })
--- end
-M["dprint"] = function()
-  setup("dprint", {
-    cmd = { "dprint", "lsp" },
-    filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "json", "jsonc", "markdown", "python", "toml", "rust", "roslyn", "graphql" },
-    rootMarkers = { "dprint.json", ".dprint.json", "dprint.jsonc", ".dprint.jsonc" }
+local setup = require('utils').setup_lsp
+local root_pattern = require('lspconfig.util').root_pattern
+
+M['dprint'] = function()
+  setup('dprint', {
+    cmd = { 'dprint', 'lsp' },
+    filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'json', 'jsonc', 'markdown', 'python', 'toml', 'rust', 'roslyn', 'graphql' },
+    rootMarkers = { 'dprint.json', '.dprint.json', 'dprint.jsonc', '.dprint.jsonc' },
   })
 end
 
-
-M["efm"] = function()
-  setup("efm", {
-    cmd = { "efm-langserver" },
+M['efm'] = function()
+  setup('efm', {
+    cmd = { 'efm-langserver' },
     init_options = { documentFormatting = true },
     root_dir = vim.loop.cwd,
     filetypes = {
-      "python", "cpp", "lua", "javascript", "typescript", "javascriptreact",
-      "typescriptreact", "html", "css", "scss", "json", "yaml",
-      "markdown", "markdown.pandoc", "astro", "svelte",
+      'python',
+      'cpp',
+      'lua',
+      'javascript',
+      'typescript',
+      'javascriptreact',
+      'typescriptreact',
+      'html',
+      'css',
+      'scss',
+      'json',
+      'yaml',
+      'markdown',
+      'markdown.pandoc',
+      'astro',
+      'svelte',
     },
     settings = {
-      rootMarkers = { ".git/" },
-      lintDebounce = "500ms",
+      rootMarkers = { '.git/' },
+      lintDebounce = '500ms',
     },
   })
 end
 
-M["typos_lsp"] = function()
-  setup("typos_lsp", {
-    cmd = { "typos-lsp", "--stdio" },
+M['typos_lsp'] = function()
+  setup('typos_lsp', {
+    cmd = { 'typos-lsp', '--stdio' },
   })
 end
 
-M["jsonls"] = function()
-  setup("jsonls", {
-    cmd = { "vscode-json-language-server", "--stdio" },
-    filetypes = { "json", "jsonc" },
+M['jsonls'] = function()
+  setup('jsonls', {
+    cmd = { 'vscode-json-language-server', '--stdio' },
+    filetypes = { 'json', 'jsonc' },
     init_options = true,
   })
 end
 
-M["ts_ls"] = function()
-  setup("ts_ls", {
+M['ts_ls'] = function()
+  setup('ts_ls', {
     handlers = {
-      ["textDocument/definition"] = function(err, result, ctx, ...)
-        if #result > 1 then result = { result[1] } end
-        vim.lsp.handlers["textDocument/definition"](err, result, ctx, ...)
+      ['textDocument/definition'] = function(err, result, ctx, ...)
+        if #result > 1 then
+          result = { result[1] }
+        end
+        vim.lsp.handlers['textDocument/definition'](err, result, ctx, ...)
       end,
     },
-    root_dir = root_pattern("tsconfig.json"),
+    root_dir = root_pattern('tsconfig.json'),
     settings = {
       typescript = {
         inlayHints = {
           includeInlayEnumMemberValueHints = true,
           includeInlayFunctionLikeReturnTypeHints = true,
           includeInlayFunctionParameterTypeHints = true,
-          includeInlayParameterNameHints = "all",
+          includeInlayParameterNameHints = 'all',
           includeInlayPropertyDeclarationTypeHints = true,
           includeInlayVariableTypeHints = true,
           includeInlayVariableTypeHintsWhenTypeMatchesName = true,
@@ -77,7 +82,7 @@ M["ts_ls"] = function()
           includeInlayEnumMemberValueHints = true,
           includeInlayFunctionLikeReturnTypeHints = true,
           includeInlayFunctionParameterTypeHints = true,
-          includeInlayParameterNameHints = "all",
+          includeInlayParameterNameHints = 'all',
           includeInlayPropertyDeclarationTypeHints = true,
           includeInlayVariableTypeHints = true,
           includeInlayVariableTypeHintsWhenTypeMatchesName = true,
@@ -87,33 +92,40 @@ M["ts_ls"] = function()
   })
 end
 
-M["eslint"] = function()
-  setup("eslint", {
-    cmd = { "vscode-eslint-language-server", "--stdio" },
+M['eslint'] = function()
+  setup('eslint', {
+    cmd = { 'vscode-eslint-language-server', '--stdio' },
     filetypes = {
-      "javascript", "javascriptreact", "javascript.jsx", "typescript",
-      "typescriptreact", "typescript.tsx", "vue", "svelte", "astro",
+      'javascript',
+      'javascriptreact',
+      'javascript.jsx',
+      'typescript',
+      'typescriptreact',
+      'typescript.tsx',
+      'vue',
+      'svelte',
+      'astro',
     },
     settings = {
       codeAction = {
-        disableRuleComment = { enable = true, location = "separateLine" },
+        disableRuleComment = { enable = true, location = 'separateLine' },
         showDocumentation = { enable = true },
       },
-      codeActionOnSave = { enable = false, mode = "all" },
+      codeActionOnSave = { enable = false, mode = 'all' },
       format = true,
-      validate = "on",
-      workingDirectory = { mode = "location" },
+      validate = 'on',
+      workingDirectory = { mode = 'location' },
     },
   })
 end
 
-M["lua_ls"] = function()
-  setup("lua_ls", {
+M['lua_ls'] = function()
+  setup('lua_ls', {
     settings = {
       Lua = {
-        diagnostics = { globals = { "vim", "it", "describe", "before_each", "after_each" } },
+        diagnostics = { globals = { 'vim', 'it', 'describe', 'before_each', 'after_each' } },
         workspace = {
-          library = vim.api.nvim_get_runtime_file("", true),
+          library = vim.api.nvim_get_runtime_file('', true),
           checkThirdParty = false,
         },
         format = { enable = true },
