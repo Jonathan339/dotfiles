@@ -1,21 +1,44 @@
-local M = { 'numToStr/Comment.nvim', dependencies = { 'JoosepAlviste/nvim-ts-context-commentstring' } }
+-- lua/plugins/comment/init.lua
+return {
+  'numToStr/Comment.nvim',
+  event = 'VeryLazy',
+  dependencies = {
+    -- Comentarios contextuales para JSX/TSX/Vue/Svelte, etc.
+    'JoosepAlviste/nvim-ts-context-commentstring',
+  },
+  config = function()
+    local comment = require('Comment')
 
-M.config = function()
-  local Comment = require('Comment')
-  local ft = require('Comment.ft')
+    -- Integra commentstring contextual si el plugin está disponible
+    local pre_ok, pre_hook = pcall(function()
+      return require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook()
+    end)
 
-  --1. Using method signature
-  -- Set only line comment or both
-  -- You can also chain the set calls
-  ft.set('yaml', '#%s').set('javascript', { '//%s', '/*%s*/' })
+    comment.setup({
+      padding = true, -- espacio entre // y el texto
+      sticky = true, -- mantener selección tras comentar con visual
+      ignore = '^$', -- no comentar líneas vacías
+      mappings = {
+        basic = true, -- gcc, gc, gbc, gb
+        extra = true, -- gco, gcO, gcA
+        extended = false, -- no necesitamos extra raros
+      },
+      toggler = {
+        line = 'gcc',
+        block = 'gbc',
+      },
+      opleader = {
+        line = 'gc',
+        block = 'gb',
+      },
+      pre_hook = pre_ok and pre_hook or nil, -- usa commentstring contextual cuando aplique
+    })
 
-  -- 2. Metatable magic
-  ft.javascript = { '//%s', '/*%s*/' }
-  ft.yaml = '#%s'
+    -- Overrides de filetypes (opcionales). YAML ya usa '#', pero forzamos con espacio:
+    local ft = require('Comment.ft')
+    ft.set('yaml', '# %s')
 
-  -- 3. Multiple filetypes
-  ft({ 'go', 'rust' }, { '//%s', '/*%s*/' })
-  Comment.setup()
-end
-
-return M
+    -- No seteamos JS/TS manualmente: lo maneja ts-context-commentstring según el contexto
+    -- (por ejemplo, JSX dentro de TSX, <style> en Svelte, etc.)
+  end,
+}

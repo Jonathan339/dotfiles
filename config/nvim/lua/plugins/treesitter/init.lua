@@ -1,41 +1,96 @@
+---@diagnostic disable: undefined-global
+--- lua/plugins/treesitter/init.lua
 return {
   'nvim-treesitter/nvim-treesitter',
-    event = { "BufReadPost", "BufNewFile" },
-    cmd = { "TSInstall", "TSBufEnable", "TSBufDisable", "TSModuleInfo" },
-    build = ":TSUpdate",
-  dependencies = { 'nvim-treesitter/playground', cmd = 'TSPlaygroundToggle' },
+  event = { 'BufReadPost', 'BufNewFile' },
+  cmd = { 'TSInstall', 'TSBufEnable', 'TSBufDisable', 'TSModuleInfo' },
+  build = ':TSUpdate',
+  dependencies = {
+    { 'nvim-treesitter/playground', cmd = 'TSPlaygroundToggle' },
+    -- OJO: el commentstring contextual va en su propio plugin:
+    -- "JoosepAlviste/nvim-ts-context-commentstring" (lo agregamos aparte)
+  },
   config = function()
-    local configs = require('nvim-treesitter.configs')
-    configs.setup({
-      -- ensure_installed = require('plugins.lsp.defaults').ensure_installed,
+    -- Mapear filetypes de React a parsers correctos
+    pcall(function()
+      vim.treesitter.language.register('tsx', 'typescriptreact')
+      vim.treesitter.language.register('javascript', 'javascriptreact')
+    end)
 
-    ensure_installed =  {
-    "javascript",
-    "typescript",
-    "c",
-    "lua",
-    "vim",
-    "vimdoc",
-    "query",
-    "elixir",
-    "erlang",
-    "heex",
-    "eex",
-    "java",
-    "kotlin",
-    "jq",
-    "markdown",
-    "markdown_inline",
-    "dockerfile",
-    "json",
-    "html",
-    "terraform",
-    "go",
-    "tsx",
-    "bash",
-    "ruby",
-},
-      -- https://github.com/nvim-treesitter/playground#query-linter
+    local ts = require('nvim-treesitter.configs')
+
+    ts.setup({
+      -- Tu baseline de parsers + algunos comunes
+      ensure_installed = {
+        'bash',
+        'c',
+        'cpp',
+        'css',
+        'dockerfile',
+        'elixir',
+        'erlang',
+        'heex',
+        'eex',
+        'go',
+        'html',
+        'java',
+        'javascript',
+        'jq',
+        'json',
+        'kotlin',
+        'lua',
+        'markdown',
+        'markdown_inline',
+        'nix',
+        'python',
+        'query',
+        'ruby',
+        'rust',
+        'terraform',
+        'toml',
+        'tsx',
+        'typescript',
+        'vim',
+        'vimdoc',
+      },
+
+      auto_install = true, -- instala en caliente si falta un parser
+      sync_install = false,
+      ignore_install = {},
+
+      highlight = {
+        enable = true,
+        additional_vim_regex_highlighting = false,
+        -- Desactivar highlight en archivos grandes (evita lag)
+        disable = function(_, buf)
+          local max = 500 * 1024 -- 500 KB
+          local ok, stat = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+          if ok and stat and stat.size and stat.size > max then
+            return true
+          end
+          return false
+        end,
+      },
+
+      indent = {
+        enable = true,
+        disable = { 'python', 'yaml' }, -- suelen romper indent
+      },
+
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = 'gnn',
+          node_incremental = 'grn',
+          scope_incremental = 'grc',
+          node_decremental = 'grm',
+        },
+      },
+
+      -- ¡Importante! `context_commentstring` ya NO va aquí.
+      -- Lo configuramos desde el plugin `nvim-ts-context-commentstring`.
+
+      -- Playground + linter de queries (como tenías)
       query_linter = {
         enable = true,
         use_virtual_text = true,
@@ -44,8 +99,8 @@ return {
       playground = {
         enable = true,
         disable = {},
-        updatetime = 25,        -- Debounced time for highlighting nodes in the playground from source code
-        persist_queries = true, -- Whether the query persists across vim sessions
+        updatetime = 25,
+        persist_queries = true,
         keybindings = {
           toggle_query_editor = 'o',
           toggle_hl_groups = 'i',
@@ -55,14 +110,10 @@ return {
           focus_language = 'f',
           unfocus_language = 'F',
           update = 'R',
-          goto_node = '<cr>',
+          goto_node = '<CR>',
           show_help = '?',
         },
       },
-
-      highlight = { enable = true },
-      indent = { enable = true },
-      -- autotag = { enable = true }, -- deprecado
     })
   end,
 }

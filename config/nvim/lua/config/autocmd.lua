@@ -1,51 +1,69 @@
+---@diagnostic disable: undefined-global
+-- lua/config/autocmd.lua
 local agroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
-
-local augroup = function(name)
+local function augroup(name)
   return agroup(name, { clear = true })
 end
 
-local fmt_group = agroup('autoformat_cmds', { clear = true })
+-----------------------------------------------------------------------
+-- Formato al guardar: usa Conform si existe; si no, LSP (fallback)
+-----------------------------------------------------------------------
+local fmt_group = augroup('format_on_save')
 
 autocmd('LspAttach', {
   group = fmt_group,
-  desc = 'Configurar formateo al guardar',
-  callback = function(event)
-    local client = vim.lsp.get_client_by_id(event.data.client_id)
+  desc = 'Configurar formateo al guardar (fallback si no hay Conform)',
+  callback = function(ev)
+    local has_conform = pcall(require, 'conform')
+    if has_conform then
+      -- Conform ya maneja BufWritePre; no dupliquemos autocmds.
+      return
+    end
+
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
     if not client or not client.supports_method('textDocument/formatting') then
       return
     end
 
     autocmd('BufWritePre', {
       group = fmt_group,
-      buffer = event.buf,
-      desc = 'Formatear antes de guardar',
+      buffer = ev.buf,
+      desc = 'Formatear por LSP antes de guardar (fallback)',
       callback = function()
-        if vim.b._formatting_disabled then return end
-        vim.lsp.buf.format({
-          bufnr = event.buf,
-          async = false,
-          timeout_ms = 10000,
-        })
+        if vim.b._formatting_disabled then
+          return
+        end
+        pcall(vim.lsp.buf.format, { bufnr = ev.buf, async = false, timeout_ms = 1000 })
       end,
     })
   end,
 })
 
--- Auto crear directorio antes de guardar el archivo
+-----------------------------------------------------------------------
+-- Crear directorios automáticamente antes de guardar
+-----------------------------------------------------------------------
 autocmd('BufWritePre', {
   group = augroup('auto_create_dir'),
-  callback = function(event)
-    if event.file and not event.file:match('^%w%w+:[\\/][\\/]') then
-      local file = vim.uv.fs_realpath(event.file) or event.file
-      vim.fn.mkdir(vim.fn.fnamemodify(file, ':p:h'), 'p')
+  desc = 'Crear directorios faltantes antes de guardar',
+  callback = function(ev)
+    local file = ev.match or ev.file
+    if not file or file:match('^%w%w+://') then
+      return
+    end -- esquemas tipo netrw
+    local dir = vim.fn.fnamemodify(file, ':p:h')
+    if dir ~= '' and vim.fn.isdirectory(dir) == 0 then
+      vim.fn.mkdir(dir, 'p')
     end
   end,
 })
 
--- Habilitar el ajuste de texto y la corrección ortográfica en archivos específicos
+-----------------------------------------------------------------------
+-- Wrap + spell en textos
+-----------------------------------------------------------------------
 autocmd('FileType', {
+  group = augroup('text_settings'),
   pattern = { 'gitcommit', 'markdown', 'NeogitCommitMessage' },
   callback = function()
     vim.opt_local.wrap = true
@@ -53,27 +71,36 @@ autocmd('FileType', {
   end,
 })
 
--- Desvincular snippet de Luasnip al mantener el cursor
+-----------------------------------------------------------------------
+-- Luasnip: limpiar snippets colgados
+-----------------------------------------------------------------------
 autocmd('CursorHold', {
+  group = augroup('luasnip_unlink_hold'),
   callback = function()
-    local status_ok, luasnip = pcall(require, 'luasnip')
-    if status_ok and luasnip.expand_or_jumpable() then
-      vim.cmd([[silent! lua require("luasnip").unlink_current()]])
+    local ok, ls = pcall(require, 'luasnip')
+    if ok and ls.expand_or_jumpable() then
+      pcall(ls.unlink_current)
     end
   end,
 })
 
--- Eliminar snippet de Luasnip al salir de modo de inserción
 autocmd('InsertLeave', {
+  group = augroup('luasnip_unlink_leave'),
   callback = function()
-    local luasnip = require('luasnip')
-    if luasnip.session.current_nodes[vim.api.nvim_get_current_buf()] and not luasnip.session.jump_active then
-      luasnip.unlink_current()
+    local ok, ls = pcall(require, 'luasnip')
+    if not ok then
+      return
+    end
+    local buf = vim.api.nvim_get_current_buf()
+    if ls.session.current_nodes[buf] and not ls.session.jump_active then
+      pcall(ls.unlink_current)
     end
   end,
 })
 
--- Auto-reload archivo cuando cambie
+-----------------------------------------------------------------------
+-- Auto-reload cuando cambian archivos afuera
+-----------------------------------------------------------------------
 autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
   group = augroup('checktime'),
   callback = function()
@@ -83,8 +110,10 @@ autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
   end,
 })
 
--- Resaltado de la lista de autocompletado
-local set_cmp_highlights = function()
+-----------------------------------------------------------------------
+-- Highlights para nvim-cmp (aplicar en ColorScheme/VimEnter)
+-----------------------------------------------------------------------
+local function set_cmp_highlights()
   vim.schedule(function()
     vim.api.nvim_set_hl(0, 'CmpItemAbbrDeprecated', { bg = 'NONE', strikethrough = true, fg = '#808080' })
     vim.api.nvim_set_hl(0, 'CmpItemAbbrMatch', { bg = 'NONE', fg = '#569CD6' })
@@ -100,19 +129,27 @@ local set_cmp_highlights = function()
   end)
 end
 
-autocmd('TextChanged', {
+autocmd({ 'ColorScheme', 'VimEnter' }, {
+  group = augroup('cmp_hls'),
   callback = set_cmp_highlights,
 })
 
--- Eliminar espacios en blanco antes de guardar
+-----------------------------------------------------------------------
+-- Trim de espacios al guardar (sin mover el cursor)
+-----------------------------------------------------------------------
 autocmd('BufWritePre', {
   group = augroup('trim_trailing_spaces'),
+  desc = 'Eliminar espacios al final de línea',
   callback = function()
-    vim.cmd([[%s/\s\+$//e]])
+    local view = vim.fn.winsaveview()
+    vim.cmd([[keeppatterns %s/\s\+$//e]])
+    vim.fn.winrestview(view)
   end,
 })
 
--- Redimensionar divisores al cambiar el tamaño de la ventana
+-----------------------------------------------------------------------
+-- Redimensionar splits al cambiar tamaño
+-----------------------------------------------------------------------
 autocmd('VimResized', {
   group = augroup('resize_splits'),
   callback = function()
@@ -122,38 +159,74 @@ autocmd('VimResized', {
   end,
 })
 
--- Resaltado al hacer yank
+-----------------------------------------------------------------------
+-- Resaltado al yank
+-----------------------------------------------------------------------
 autocmd('TextYankPost', {
   group = augroup('highlight_yank'),
   callback = function()
-    vim.highlight.on_yank()
+    pcall(vim.highlight.on_yank, { higroup = 'IncSearch', timeout = 150 })
   end,
 })
 
--- Cerrar ciertos tipos de archivo con la tecla <q>
+-----------------------------------------------------------------------
+-- Cerrar con 'q' ciertos buffers auxiliares
+-----------------------------------------------------------------------
 autocmd('FileType', {
   group = augroup('close_with_q'),
   pattern = {
-    'PlenaryTestPopup', 'help', 'lspinfo', 'notify', 'qf', 'query', 'spectre_panel',
-    'startuptime', 'tsplayground', 'neotest-output', 'checkhealth', 'neotest-summary', 'neotest-output-panel',
+    'PlenaryTestPopup',
+    'help',
+    'lspinfo',
+    'notify',
+    'qf',
+    'query',
+    'spectre_panel',
+    'startuptime',
+    'tsplayground',
+    'neotest-output',
+    'checkhealth',
+    'neotest-summary',
+    'neotest-output-panel',
   },
-  callback = function(event)
-    vim.bo[event.buf].buflisted = false
-    vim.keymap.set('n', 'q', '<cmd>close<cr>', { buffer = event.buf, silent = true })
+  callback = function(ev)
+    vim.bo[ev.buf].buflisted = false
+    vim.keymap.set('n', 'q', '<cmd>close<cr>', { buffer = ev.buf, silent = true })
   end,
 })
 
--- Optimizaciones para archivos grandes
+-----------------------------------------------------------------------
+-- Archivos grandes: ajustar para evitar lag
+-----------------------------------------------------------------------
 autocmd('BufReadPre', {
   group = augroup('large_file_optimizations'),
-  callback = function()
-    local max_size = 100 * 1024 -- 100 KB
-    local file_size = vim.fn.getfsize(vim.fn.expand('<afile>'))
-    if file_size > max_size then
+  callback = function(ev)
+    local file = ev.match or ev.file or vim.api.nvim_buf_get_name(0)
+    if not file or file == '' then
+      return
+    end
+    local ok, stat = pcall(vim.uv.fs_stat, file)
+    local max_size = 500 * 1024 -- 500 KB (podés bajarlo si querés)
+    if ok and stat and stat.size and stat.size > max_size then
+      vim.b.large_file = true
       vim.cmd('syntax off')
-      vim.cmd('setlocal noswapfile bufhidden=unload')
-      vim.cmd('setlocal noundofile')
-      vim.cmd('setlocal nofoldenable')
+      vim.opt_local.swapfile = false
+      vim.opt_local.undofile = false
+      vim.opt_local.foldenable = false
+    end
+  end,
+})
+
+-----------------------------------------------------------------------
+-- Volver a la última posición al reabrir el archivo
+-----------------------------------------------------------------------
+autocmd('BufReadPost', {
+  group = augroup('restore_last_cursor'),
+  callback = function(ev)
+    local mark = vim.api.nvim_buf_get_mark(ev.buf, [["]])
+    local lcount = vim.api.nvim_buf_line_count(ev.buf)
+    if mark[1] > 0 and mark[1] <= lcount then
+      pcall(vim.api.nvim_win_set_cursor, 0, mark)
     end
   end,
 })

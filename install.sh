@@ -1,274 +1,254 @@
-#!/bin/bash 
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Variables de paquetes a instalar
-declare -a packages=(
-  libstdc++6
-  curl
-  wget
-  vlc
-  apt-transport-https
-  gnupg2
-  seahorse
-  git
-  python3-pip
-  cargo
-  libssl-dev
-  openjdk-11-jre
-  fzf
-  tmux
-  fonts-powerline
-  kitty
-  xclip
-  zsh
+# ===============================
+#  Dotfiles Installer — Fijo menú
+#  Fecha: 2025-08-11
+# ===============================
+
+INFO="\e[34m[INFO]\e[0m"
+OK="\e[32m[OK]\e[0m"
+WARN="\e[33m[WARN]\e[0m"
+ERR="\e[31m[ERROR]\e[0m"
+
+log() { echo -e "$INFO $*"; }
+ok() { echo -e "$OK  $*"; }
+warn() { echo -e "$WARN $*"; }
+die() {
+  echo -e "$ERR $*" >&2
+  exit 1
+}
+
+trap 'echo -e "\n'"$ERR"' Ocurrió un error. Revisá el mensaje anterior."' ERR
+
+command -v sudo >/dev/null 2>&1 || die "Necesitás sudo instalado."
+command -v curl >/dev/null 2>&1 || die "Necesitás curl (sudo apt install curl)."
+
+# ---- Paquetes APT ----
+declare -a APT_PACKAGES=(
+  libstdc++6 curl wget vlc gnupg2 seahorse git python3-pip cargo libssl-dev
+  openjdk-11-jre fzf tmux fonts-powerline kitty xclip zsh ca-certificates
 )
 
-# Función para instalar paquetes
+package_is_installed() { dpkg -s "$1" &>/dev/null; }
+
 install_packages() {
-  echo -e "\e[34mInstalando paquetes necesarios...\e[0m"
-  sudo apt update && sudo apt install "${packages[@]}" -y || \
-    { echo -e "\e[31mOcurrió un error al instalar paquetes\e[0m"; exit 1; }
+  log "Instalando paquetes necesarios..."
+  sudo apt update
+  sudo apt install -y "${APT_PACKAGES[@]}" || die "Fallo instalando paquetes APT."
+  ok "Paquetes instalados."
 }
 
-# Función para verificar si un paquete está instalado
-package_is_installed() {
-  dpkg -s "$1" &> /dev/null
-}
-
-# Función para instalar un paquete si no está instalado
 install_package_if_not_installed() {
-  if ! package_is_installed "$1"; then
-    echo -e "\e[34m$1 no está instalado. Instalando...\e[0m"
-    sudo apt-get install "$1" -y || \
-      { echo -e "\e[31mOcurrió un error al instalar el paquete $1\e[0m"; exit 1; }
+  local pkg="$1"
+  if package_is_installed "$pkg"; then
+    ok "$pkg ya está instalado. Saltando..."
   else
-    echo -e "\e[32m$1 ya está instalado. Saltando...\e[0m"
+    log "$pkg no está instalado. Instalando..."
+    sudo apt-get install -y "$pkg" || die "Fallo instalando $pkg."
   fi
 }
-# Función para verificar la existencia de un archivo
+
+# ---- Helpers paths ----
 check_file_exists() {
   local full_path="$(pwd)/$1"
-  echo "Verificando la existencia del archivo en la ruta: $full_path"
-  
-  if [ -f "$full_path" ]; then
-    echo -e "\e[32m$1 encontrado\e[0m"
+  log "Verificando archivo: $full_path"
+  [[ -f "$full_path" ]] && {
+    ok "$1 encontrado"
     return 0
-  else
-    echo -e "\e[31m$1 no encontrado\e[0m"
+  } || {
+    warn "$1 no encontrado"
     return 1
-  fi
+  }
 }
 
-# Función para verificar la existencia de un directorio
 check_directory_exists() {
   local full_path="$(pwd)/$1"
-  echo "Verificando la existencia del directorio en la ruta: $full_path"
-  
-  if [ -d "$full_path" ]; then
-    echo -e "\e[32m$1 encontrado\e[0m"
+  log "Verificando directorio: $full_path"
+  [[ -d "$full_path" ]] && {
+    ok "$1 encontrado"
     return 0
-  else
-    echo -e "\e[31m$1 no encontrado\e[0m"
+  } || {
+    warn "$1 no encontrado"
     return 1
-  fi
-}
-
-
-# Función para crear enlaces simbólicos de los archivos de configuración
-link_config_files() {
-  echo -e "\e[34mCreando enlaces simbólicos desde la carpeta 'config'...\e[0m"
-  success=true
-
-  # Crear enlaces simbólicos desde la carpeta "config" solo si existen
-  if check_file_exists "config/.zshrc"; then
-    ln -sf "$(pwd)/config/.zshrc" ~/.zshrc && echo -e "\e[32m.zshrc enlazado con éxito\e[0m" || success=false
-  fi
-  if check_file_exists "config/.zsh_aliases"; then
-    ln -sf "$(pwd)/config/.zsh_aliases" ~/.zsh_aliases && echo -e "\e[32m.zsh_aliases enlazado con éxito\e[0m" || success=false
-  fi
-  if check_file_exists "config/.bashrc"; then
-    ln -sf "$(pwd)/config/.bashrc" ~/.bashrc && echo -e "\e[32m.bashrc enlazado con éxito\e[0m" || success=false
-  fi
-  if check_directory_exists "config/nvim"; then
-    ln -sfn "$(pwd)/config/nvim" ~/.config/nvim && echo -e "\e[32mnvim configuraciones enlazadas con éxito\e[0m" || success=false
-  fi
-  if check_file_exists "config/kitty.conf"; then
-    mkdir -p ~/.config/kitty
-    ln -sf "$(pwd)/config/kitty.conf" ~/.config/kitty/kitty.conf && echo -e "\e[32mkitty.conf enlazado con éxito\e[0m" || success=false
-  fi
-
-  if [ "$success" = false ]; then
-    echo -e "\e[31mOcurrió un error al crear los enlaces simbólicos desde la carpeta 'config'\e[0m"
-    exit 1
-  else
-    echo -e "\e[32mTodos los archivos de configuración enlazados con éxito desde la carpeta 'config'\e[0m"
-  fi
-}
-
-
-# Función para copiar archivos de configuración
-copy_config_files() {
-  echo -e "\e[34mCopiando archivos de configuración desde la carpeta 'config'...\e[0m"
-  success=true
-
-  # Copiar archivos desde la carpeta "config" solo si existen
-  if check_file_exists "config/.zshrc"; then
-    cp -r "config/.zshrc" ~/ && echo -e "\e[32m.zshrc copiado con éxito\e[0m" || success=false
-  fi
-  if check_file_exists "config/.bashrc"; then
-    cp -r "config/.bashrc" ~/ && echo -e "\e[32m.bashrc copiado con éxito\e[0m" || success=false
-  fi
-  if check_directory_exists "config/nvim"; then
-    cp -r "config/nvim" ~/.config/ && echo -e "\e[32mnvim configuraciones copiadas con éxito\e[0m" || success=false
-  fi
-  if check_file_exists "config/kitty.conf"; then
-    mkdir -p ~/.config/kitty && cp -r "config/kitty.conf" ~/.config/kitty/ && echo -e "\e[32mkitty.conf copiado con éxito\e[0m" || success=false
-  fi
-
-  wait # Esperar a que todas las operaciones asíncronas se completen
-
-  if [ "$success" = false ]; then
-    echo -e "\e[31mOcurrió un error al copiar los archivos de configuración desde la carpeta 'config'\e[0m"
-    exit 1
-  else
-    echo -e "\e[32mTodos los archivos de configuración copiados con éxito desde la carpeta 'config' \e[0m"
-  fi
-}
-
-
-# Función para instalar Oh My Zsh
-install_oh_my_zsh() {
-  echo -e "\e[34mInstalando Oh My Zsh...\e[0m"
-  if [ -d ~/.oh-my-zsh ]; then
-    echo -e "\e[33mLa carpeta Oh My Zsh ya existe. Se sobrescribirá.\e[0m"
-    rm -rf ~/.oh-my-zsh
-  fi
-    git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh || \
-    { echo -e "\e[31mOcurrió un error al instalar Oh My Zsh\e[0m"; exit 1; } 
-}
-# Función para instalar kitty-themes 
-install_kitty_themes() {
-  echo -e "\e[34mInstalando kitty-themes...\e[0m"
-
-  if [ -d ~/.config/kitty/kitty-themes ]; then
-    echo -e "\e[33mLa carpeta kitty-themes ya existe. Se sobrescribirá.\e[0m"
-    rm -rf ~/.config/kitty/kitty-themes
-  fi
-
-  git clone --depth 1 https://github.com/dexpota/kitty-themes.git ~/.config/kitty/kitty-themes || \
-    { echo -e "\e[31mOcurrió un error al instalar kitty-themes\e[0m"; exit 1; }
-}
-# Función para instalar nerd_fonts 
-install_nerd_fonts() {
-  echo -e "\e[34mInstalando nerd-fonts...\e[0m"
-  mkdir -p ~/.local/share/fonts
-  cd ~/.local/share/fonts && curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/DroidSansMono/DroidSansMNerdFont-Regular.otf || \
-    { echo -e "\e[31mOcurrió un error al descargar las fuentes nerd-fonts\e[0m"; exit 1; }
-}
-
-# Función para instalar Android Studio
-install_android_studio() {
-  echo -e "\e[34mInstalando Android Studio...\e[0m"
-  sudo snap install android-studio --classic || \
-    { echo -e "\e[31mOcurrió un error al instalar Android Studio\e[0m"; exit 1; }
-}
-
-# Función para instalar Yarn
-install_yarn() {
-  echo -e "\e[34mInstalando Yarn...\e[0m"
-  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-  sudo apt update && sudo apt install yarn -y | sudo cp /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d || \
-    
-    { echo -e "\e[31mOcurrió un error al instalar Yarn\e[0m"; exit 1; }
-}
-
-
-# Funcion para instalar Bun
-install_bun(){
-  echo -e "\e[34mInstalando Bun...\e[0m"
-  curl -fsSL https://bun.sh/install | bash || \
-    { echo -e "\e[31mOcurrió un error al instalar Bun\e[0m"; exit 1; }
-}
-
-
-# Función para instalar Spotify
-install_spotify() {
-  echo -e "\e[34mInstalando Spotify...\e[0m"
-  sudo snap install spotify || \
-    { echo -e "\e[31mOcurrió un error al instalar Spotify\e[0m"; exit 1; }
-}
-
-#Función para instalar Node.js
-install_nodejs() {
-  echo -e "\e[34mInstalando Node.js...\e[0m"
-  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash || {
-    echo -e "\e[31mOcurrió un error al instalar Node.js\e[0m"
-    exit 1
   }
-  # Añadir fnm a la configuración de Zsh para que se cargue automáticamente
-  echo 'eval "$(fnm env --use-on-cd)"' >> ~/.zshrc
-
-  echo -e "\e[32mNode.js se ha instalado correctamente\e[0m"
 }
 
+# ---- Enlace/Copia de config ----
+link_config_files() {
+  log "Creando enlaces simbólicos desde 'config'..."
+  local success="true"
 
-# Función para instalar Visual Studio Code
+  if check_file_exists "config/.zshrc"; then ln -snf "$(pwd)/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc enlazado" || success="false"; fi
+  if check_file_exists "config/.zsh_aliases"; then ln -snf "$(pwd)/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases enlazado" || success="false"; fi
+  if check_file_exists "config/.bashrc"; then ln -snf "$(pwd)/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc enlazado" || success="false"; fi
+  if check_directory_exists "config/nvim"; then
+    mkdir -p "$HOME/.config"
+    ln -snf "$(pwd)/config/nvim" "$HOME/.config/nvim" && ok "nvim enlazado" || success="false"
+  fi
+  if check_file_exists "config/kitty.conf"; then
+    mkdir -p "$HOME/.config/kitty"
+    ln -snf "$(pwd)/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
+  fi
+
+  [[ "$success" = true ]] && ok "Enlaces simbólicos creados" || die "Error creando enlaces simbólicos."
+}
+
+copy_config_files() {
+  log "Copiando archivos de configuración desde 'config'..."
+  local success="true"
+
+  if check_file_exists "config/.zshrc"; then cp -f "config/.zshrc" "$HOME/" && ok ".zshrc copiado" || success="false"; fi
+  if check_file_exists "config/.bashrc"; then cp -f "config/.bashrc" "$HOME/" && ok ".bashrc copiado" || success="false"; fi
+  if check_directory_exists "config/nvim"; then
+    mkdir -p "$HOME/.config"
+    cp -rf "config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
+  fi
+  if check_file_exists "config/kitty.conf"; then
+    mkdir -p "$HOME/.config/kitty"
+    cp -f "config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
+  fi
+
+  [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."
+}
+
+# ---- Oh My Zsh ----
+install_oh_my_zsh() {
+  log "Instalando Oh My Zsh..."
+  [[ -d "$HOME/.oh-my-zsh" ]] && {
+    warn "Existe ~/.oh-my-zsh, se reemplaza"
+    rm -rf "$HOME/.oh-my-zsh"
+  }
+  git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh" || die "Fallo instalando Oh My Zsh."
+  ok "Oh My Zsh instalado."
+}
+
+# ---- Kitty themes ----
+install_kitty_themes() {
+  log "Instalando kitty-themes..."
+  mkdir -p "$HOME/.config/kitty"
+  [[ -d "$HOME/.config/kitty/kitty-themes" ]] && {
+    warn "Existe kitty-themes, se reemplaza"
+    rm -rf "$HOME/.config/kitty/kitty-themes"
+  }
+  git clone --depth=1 https://github.com/dexpota/kitty-themes.git "$HOME/.config/kitty/kitty-themes" || die "Fallo instalando kitty-themes."
+  ok "kitty-themes instalado."
+}
+
+# ---- Nerd Fonts ----
+install_nerd_fonts() {
+  log "Instalando nerd-fonts (DroidSansMono Nerd Font)..."
+  mkdir -p "$HOME/.local/share/fonts"
+  pushd "$HOME/.local/share/fonts" >/dev/null
+  curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/DroidSansMono/DroidSansMNerdFont-Regular.otf || die "Fallo descargando la fuente."
+  popd >/dev/null
+  ok "Nerd Font instalada (si querés: fc-cache -fv)."
+}
+
+# ---- Snap helpers/apps ----
+ensure_snapd() {
+  if ! command -v snap >/dev/null 2>&1; then
+    log "Instalando snapd..."
+    sudo apt update && sudo apt install -y snapd || die "Fallo instalando snapd."
+    ok "snapd instalado."
+  fi
+}
+
+install_android_studio() {
+  ensure_snapd
+  log "Instalando Android Studio (snap)..."
+  sudo snap install android-studio --classic || die "Fallo instalando Android Studio."
+  ok "Android Studio instalado."
+}
+install_spotify() {
+  ensure_snapd
+  log "Instalando Spotify (snap)..."
+  sudo snap install spotify || die "Fallo instalando Spotify."
+  ok "Spotify instalado."
+}
 install_vscode() {
-  echo -e "\e[34mInstalando Visual Studio Code...\e[0m"
-  sudo snap install code --classic || \
-    { echo -e "\e[31mOcurrió un error al instalar Visual Studio Code\e[0m"; exit 1; }
+  ensure_snapd
+  log "Instalando VS Code (snap)..."
+  sudo snap install code --classic || die "Fallo instalando VS Code."
+  ok "VS Code instalado."
 }
-
-# Función para instalar nvim
 install_nvim() {
-  echo -e "\e[34mInstalando nvim...\e[0m"
-  sudo snap install nvim --beta --classic || \
-    { echo -e "\e[31mOcurrió un error al instalar nvim\e[0m"; exit 1; }
+  ensure_snapd
+  log "Instalando Neovim (snap beta)..."
+  sudo snap install nvim --beta --classic || die "Fallo instalando Neovim."
+  ok "Neovim instalado."
 }
 
-# Función para limpiar
-clean() {
-  echo -e "\e[34mLimpieza...\e"
-  sudo apt autoremove -y
-  sudo apt full-upgrade -y || \
-    { echo -e "\e[31mOcurrió un error al limpiar\e[0m"; exit 1; }
+# ---- Yarn (keyring) ----
+install_yarn() {
+  log "Instalando Yarn (repo con keyring)..."
+  sudo mkdir -p /usr/share/keyrings
+  curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/yarn-archive-keyring.gpg
+  echo "deb [signed-by=/usr/share/keyrings/yarn-archive-keyring.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list >/dev/null
+  sudo apt update
+  sudo apt install -y yarn || die "Fallo instalando Yarn."
+  ok "Yarn instalado."
 }
 
-# Función para verificar si Kitty y sus temas están instalados
-kitty_is_installed() {
-  if ! command -v kitty &> /dev/null; then
-    return 1
+# ---- Bun ----
+install_bun() {
+  log "Instalando Bun..."
+  curl -fsSL https://bun.sh/install | bash || die "Fallo instalando Bun."
+  ok "Bun instalado."
+}
+
+# ---- Node.js (FNM recomendado) ----
+install_fnm() {
+  log "Instalando FNM (Node manager)..."
+  curl -fsSL https://fnm.vercel.app/install | bash || die "Fallo instalando FNM."
+  # corregido comillas
+  grep -q 'fnm env' "$HOME/.zshrc" 2>/dev/null || echo 'eval "$(fnm env --use-on-cd)"' >>"$HOME/.zshrc"
+  ok "FNM instalado. Abrí una nueva terminal para tener fnm en PATH."
+}
+
+install_nodejs_with_fnm() {
+  export FNM_DIR="$HOME/.local/share/fnm"
+  export PATH="$HOME/.fnm:$FNM_DIR:$PATH"
+  if command -v fnm >/dev/null 2>&1; then
+    log "Instalando Node.js LTS con FNM..."
+    fnm install --lts && fnm default lts-latest
+    ok "Node.js LTS instalado con FNM."
+  else
+    warn "FNM no está disponible en esta shell. Abrí una nueva terminal (o source ~/.zshrc) y corré de nuevo esta opción."
   fi
-
-  if [ ! -d "$HOME/.config/kitty/kitty-themes" ]; then
-    return 1
-  fi
-
-  return 0
 }
 
-# Función para instalar lazygit
+install_nodejs() {
+  install_fnm
+  install_nodejs_with_fnm
+}
+
+# ---- Lazygit ----
 install_lazygit() {
-  echo -e "\e[34mInstalando lazygit...\e[0m"
-  
-  # Obtener la última versión de lazygit desde GitHub
-  LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-  
-  # Descargar y descomprimir la versión específica de lazygit
-  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+  log "Instalando lazygit..."
+  ARCH="x86_64"
+  [[ "$(uname -m)" == "aarch64" ]] && ARCH="arm64"
+  LAZYGIT_VERSION="$(curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -Po '"tag_name": "v\K[^"]*' || true)"
+  [[ -z "$LAZYGIT_VERSION" ]] && die "No pude obtener la versión de lazygit."
+  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${ARCH}.tar.gz"
   tar xf lazygit.tar.gz lazygit
-  
-  # Instalar lazygit en /usr/local/bin
   sudo install lazygit /usr/local/bin
-  rm -rf lazygit lazygit.tar.gz
-  echo -e "\e[32mlazygit instalado con éxito\e[0m"
+  rm -f lazygit lazygit.tar.gz
+  ok "lazygit instalado."
 }
 
-# Función para instalar todo
+# ---- Limpieza ----
+clean() {
+  log "Limpieza..."
+  sudo apt autoremove -y
+  sudo apt full-upgrade -y
+  ok "Limpieza completa."
+}
+
+# ---- Instalación completa ----
 install_all() {
   install_packages
   install_oh_my_zsh
-  #copy_config_files
   link_config_files
   install_bun
   install_android_studio
@@ -277,69 +257,49 @@ install_all() {
   install_nvim
   install_nerd_fonts
   install_yarn
-  install_kitty_themes 
+  install_kitty_themes
   install_nodejs
   install_lazygit
   clean
-  # zsh
-  # source ~/.zshrc
+  ok "Todo listo. Abrí una nueva terminal para aplicar cambios de PATH."
 }
 
-# Menú principal
-while true; do
-  echo "Bienvenido al instalador de paquetes. Por favor, elige una opción:"
-  select opcion in "Instalar todo" "Instalar paquetes" "Copiar archivos de configuración" "Instalar Bun" "Instalar Oh My Zsh" "Instalar kitty-themes" "Instalar Android Studio" "Instalar Spotify" "Instalar Visual Studio Code" "Instalar nvim" "Instalar Node.js" "Instalar Yarn" "Instalar lazygit" "Limpiar" "Salir"
-  do
-    case $opcion in
-      "Instalar todo")
-        install_all
-        ;;
-      "Instalar paquetes")
-        install_packages
-        ;;
-      "Copiar archivos de configuración")
-        link_config_files
-        ;;
-
-      " Instalar Bun")
-        install_bun;;
-
-      "Instalar Oh My Zsh")
-        install_oh_my_zsh
-        ;;
-      "Instalar kitty-themes")
-        install_kitty_themes
-        ;;
-      "Instalar Android Studio")
-        install_android_studio
-        ;;
-      "Instalar Spotify")
-        install_spotify
-        ;;
-      "Instalar Visual Studio Code")
-        install_vscode
-        ;;
-      "Instalar nvim")
-        install_nvim
-        ;;
-      "Instalar Node.js")
-        install_nodejs
-        ;;
-      "Instalar Yarn")
-        install_yarn
-        ;;
-      "Instalar lazygit")
-        install_lazygit
-        ;;
-      "Limpiar")
-        clean
-        ;;
-      "Salir")
-        exit
-        ;;
-      *)
-        echo "Opción inválida. Inténtalo de nuevo."
-        ;;
-    esac
-  done
+# ---- Menú (coincide por número con $REPLY) ----
+PS3="Elegí una opción: "
+select opcion in \
+  "Instalar todo" \
+  "Instalar paquetes" \
+  "Enlazar archivos de configuración" \
+  "Copiar archivos de configuración" \
+  "Instalar Bun" \
+  "Instalar Oh My Zsh" \
+  "Instalar kitty-themes" \
+  "Instalar Android Studio" \
+  "Instalar Spotify" \
+  "Instalar Visual Studio Code" \
+  "Instalar nvim" \
+  "Instalar Node.js" \
+  "Instalar Yarn" \
+  "Instalar lazygit" \
+  "Limpiar" \
+  "Salir"; do
+  case "$REPLY" in
+    1) install_all ;;
+    2) install_packages ;;
+    3) link_config_files ;;
+    4) copy_config_files ;;
+    5) install_bun ;;
+    6) install_oh_my_zsh ;;
+    7) install_kitty_themes ;;
+    8) install_android_studio ;;
+    9) install_spotify ;;
+    10) install_vscode ;;
+    11) install_nvim ;;
+    12) install_nodejs ;;
+    13) install_yarn ;;
+    14) install_lazygit ;;
+    15) clean ;;
+    16) exit 0 ;;
+    *) echo "Opción inválida." ;;
+  esac
 done
