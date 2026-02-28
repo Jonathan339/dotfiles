@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global
 return {
   'brenoprata10/nvim-highlight-colors',
-  event = { 'BufReadPost', 'InsertEnter' },
+  event = { 'BufReadPost', 'BufNewFile', 'InsertEnter' },
   opts = function()
     return {
       render = 'background', -- "background" | "foreground" | "first_column" | "virtual"
@@ -29,8 +29,8 @@ return {
     }
   end,
   config = function(_, opts)
-    -- No lo actives en archivos marcados como grandes
-    if vim.b.large_file then
+    -- guardas de performance/ contexto
+    if vim.b.large_file or vim.wo.diff or #vim.api.nvim_list_uis() == 0 then
       return
     end
     require('nvim-highlight-colors').setup(opts)

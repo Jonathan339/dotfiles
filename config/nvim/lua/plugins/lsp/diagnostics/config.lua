@@ -1,12 +1,21 @@
 local u = require('utils')
 local user_config = require('config.user')
-local icons = require('utils.icons').get('diagnostics')
-local config = {}
+
+-- intenta cargar icons, si no hay, usa defaults simples
+local ok, icons_mod = pcall(require, 'utils.icons')
+local icons = ok and icons_mod.get('diagnostics') or {
+  Debug = '',
+  Circle = '●',
+  Error = '',
+  Warning = '',
+  Information = '',
+  Hint = '',
+}
 
 local default_diagnostic_config = {
   underline = true,
   update_in_insert = true,
-  severity_sort = false,
+  severity_sort = true,
   float = {
     border = 'rounded',
     focusable = true,
@@ -15,14 +24,13 @@ local default_diagnostic_config = {
     suffix = '',
     source = 'always',
   },
-  virtual_lines = { current_line = true },
+  -- ⚠️ solo activar si tenés plugin lsp_lines
+  virtual_lines = false,
   virtual_text = {
     prefix = icons.Circle,
     spacing = 2,
     source = 'always',
-    -- severity = {
-    --   min = vim.diagnostic.severity.HINT,
-    -- },
+    -- severity = { min = vim.diagnostic.severity.HINT },
   },
   signs = {
     text = {
@@ -40,8 +48,7 @@ local default_diagnostic_config = {
   },
 }
 
--- Fusionar configuración predeterminada con la del usuario
-config = u.merge(default_diagnostic_config, user_config.diagnostic or {})
+-- Fusionar con config de usuario
+local config = u.merge(default_diagnostic_config, user_config.diagnostic or {})
 
--- Devolver configuración para ser utilizada en otro lugar
 return config

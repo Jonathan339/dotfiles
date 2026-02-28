@@ -7,7 +7,7 @@ local M = {
       function()
         require('oil').open()
       end,
-      desc = 'Oil: abrir directorio padre',
+      desc = 'Oil: abrir dir padre',
     },
     {
       '<leader>e',
@@ -20,13 +20,12 @@ local M = {
   dependencies = { 'nvim-tree/nvim-web-devicons' },
   opts = function()
     return {
-      default_file_explorer = true, -- reemplaza netrw
+      default_file_explorer = true,
       columns = { 'icon', 'permissions', 'size', 'mtime' },
-      delete_to_trash = true, -- requiere trash-cli o gio (opcional)
+      delete_to_trash = true,
       skip_confirm_for_simple_edits = true,
-      -- watch_for_changes = true,    -- si querés refresco automático (experimental)
       view_options = {
-        show_hidden = false, -- toggle con g.
+        show_hidden = false,
         natural_order = true,
         sort = { { 'type', 'asc' }, { 'name', 'asc' } },
         is_always_hidden = function(name, _)
@@ -53,20 +52,16 @@ local M = {
         ['gs'] = 'actions.change_sort',
         ['g.'] = 'actions.toggle_hidden',
       },
-      use_default_keymaps = true, -- mantené defaults + los de arriba
+      use_default_keymaps = true,
     }
   end,
 }
 
-function M.config(_, opts)
+M.config = function(_, opts)
   require('oil').setup(opts)
-  -- atajos globales por si el plugin aún no cargó
-  vim.keymap.set('n', '-', function()
-    require('oil').open()
-  end, { desc = 'Oil: abrir directorio padre' })
-  vim.keymap.set('n', '<leader>e', function()
-    require('oil').open_float()
-  end, { desc = 'Oil: explorador flotante' })
+  -- 🔕 quitá estos mapeos si ya usás 'keys' arriba
+  -- vim.keymap.set("n", "-", function() require("oil").open() end, { desc = "Oil: abrir dir padre" })
+  -- vim.keymap.set("n", "<leader>e", function() require("oil").open_float() end, { desc = "Oil: explorador flotante" })
 end
 
 return M

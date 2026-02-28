@@ -178,28 +178,20 @@ M['lua_ls'] = function()
     settings = {
       Lua = {
         runtime = { version = 'LuaJIT' },
-        diagnostics = { globals = { 'vim', 'it', 'describe', 'before_each', 'after_each' } },
-        workspace = {
-          library = vim.api.nvim_get_runtime_file('', true),
-          checkThirdParty = false,
+        diagnostics = {
+          globals = { 'vim', 'it', 'describe', 'before_each', 'after_each' },
         },
-        format = { enable = false }, -- usamos stylua vía Conform
+        workspace = {
+          checkThirdParty = false, -- evita warnings de libs externas
+          library = vim.api.nvim_get_runtime_file('', true), -- neodev igual la extiende
+        },
+        format = { enable = false }, -- formatea Conform (stylua)
         telemetry = { enable = false },
         completion = { callSnippet = 'Replace' },
       },
     },
-    on_init = function(client)
-      local s = client.config.settings or {}
-      s.Lua = s.Lua or {}
-      s.Lua.diagnostics = s.Lua.diagnostics or {}
-      s.Lua.diagnostics.globals = { 'vim', 'it', 'describe', 'before_each', 'after_each' }
-      s.Lua.workspace = s.Lua.workspace or {}
-      s.Lua.workspace.checkThirdParty = false
-      s.Lua.workspace.library = vim.api.nvim_get_runtime_file('', true)
-      client.config.settings = s
-      client.notify('workspace/didChangeConfiguration', { settings = s })
-    end,
     on_attach = function(client, _)
+      -- evitar doble formateo (lo hace Conform)
       client.server_capabilities.documentFormattingProvider = false
       client.server_capabilities.documentRangeFormattingProvider = false
     end,

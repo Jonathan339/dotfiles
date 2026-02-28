@@ -4,21 +4,7 @@ local M = {
   event = 'VeryLazy',
   dependencies = { 'MunifTanjim/nui.nvim' },
   opts = function()
-    local function has(mod)
-      return pcall(require, mod)
-    end
-
-    -- backends preferidos para select (se elige el 1º disponible)
-    local select_backends = { 'nui' }
-    if has('telescope') then
-      table.insert(select_backends, 'telescope')
-    end
-    table.insert(select_backends, 'builtin')
-
     return {
-      -------------------------------------------------------------------
-      -- ui.input (rename, prompts, etc.)
-      -------------------------------------------------------------------
       input = {
         enabled = true,
         prompt_align = 'left',
@@ -28,58 +14,47 @@ local M = {
         relative = 'editor',
         border = 'rounded',
         win_options = {
-          -- Cambiá esto si querés otro highlight:
           winhighlight = 'NormalFloat:NormalFloat,FloatBorder:FloatBorder',
+          -- winblend = 0, -- activa si querés transparencia
         },
-        -- Para LSP rename, mostrar cerca del cursor
         get_config = function(opts)
           if opts and opts.kind == 'rename' then
             return { relative = 'cursor', prefer_width = 40, border = 'rounded' }
           end
         end,
       },
-
-      -------------------------------------------------------------------
-      -- ui.select (code actions, pickers genéricos)
-      -------------------------------------------------------------------
       select = {
         enabled = true,
-        backend = select_backends, -- {"nui", "telescope", "builtin"} según disponibilidad
+        -- ⚠️ orden fijo; evita require('telescope') en opts
+        backend = { 'nui', 'telescope', 'builtin' },
         trim_prompt = true,
-
-        telescope = {
-          theme = 'cursor',
-        },
-
+        telescope = { theme = 'cursor' },
         nui = {
           relative = 'editor',
           position = '50%',
-          size = nil, -- auto
+          size = nil,
           border = { style = 'rounded' },
           max_width = 0.5,
           max_height = 0.6,
         },
-
-        -- Casos especiales
         get_config = function(opts)
           if opts and opts.kind == 'codeaction' then
             return {
               backend = 'nui',
-              nui = {
-                relative = 'cursor',
-                max_width = 60,
-                border = { style = 'rounded' },
-              },
+              nui = { relative = 'cursor', max_width = 60, border = { style = 'rounded' } },
             }
           end
         end,
       },
     }
   end,
+  config = function(_, opts)
+    -- (opcional) evita inicializar sin UI o en diff
+    if #vim.api.nvim_list_uis() == 0 or vim.wo.diff then
+      return
+    end
+    require('dressing').setup(opts)
+  end,
 }
-
-M.config = function(_, opts)
-  require('dressing').setup(opts)
-end
 
 return M

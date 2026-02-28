@@ -29,9 +29,9 @@ vim.opt.relativenumber = true
 -- UI / statusline
 vim.opt.title = true
 vim.opt.termguicolors = true
-vim.opt.cmdheight = 0      -- ideal con noice.nvim
-vim.opt.laststatus = 3     -- 🔥 globalstatus para lualine
-vim.opt.showmode = false   -- lualine muestra el modo
+vim.opt.cmdheight = 0 -- ideal con noice.nvim
+vim.opt.laststatus = 3 -- 🔥 globalstatus para lualine
+vim.opt.showmode = false -- lualine muestra el modo
 vim.opt.signcolumn = 'yes' -- evita “salto” al aparecer diagnósticos
 
 -- Búsqueda
@@ -67,6 +67,9 @@ vim.opt.pumheight = 12
 -- Comandos
 vim.opt.showcmd = true
 vim.opt.inccommand = 'split'
+
+--
+vim.o.conceallevel = 1
 
 -- Paths / ignore
 vim.opt.path:append({ '**' })
