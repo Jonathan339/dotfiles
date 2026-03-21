@@ -1,48 +1,33 @@
 # =========================
-#  Zsh config — optimizado
-#  Fecha: 2026-02-21
-# =========================
-
-# =========================
-# Zsh config — ULTRA OPTIMIZADO
+# Zsh config — ULTRA CLEAN
 # =========================
 
 # Salir si no es interactiva
 [[ $- != *i* ]] && return
 
 # -------------------------
-# Opciones core rápidas
+# Opciones rápidas
 # -------------------------
-setopt autocd
-setopt correct
-setopt hist_ignore_all_dups
-setopt share_history
-setopt inc_append_history
-setopt extended_glob
-setopt glob_dots
-setopt no_beep
-setopt notify
-setopt nobanghist
+setopt autocd correct \
+       hist_ignore_all_dups share_history inc_append_history \
+       extended_glob glob_dots no_beep notify nobanghist
 
 # -------------------------
-# PATH optimizado
+# PATH (sin duplicados)
 # -------------------------
 typeset -U path PATH
+
+export ANDROID_HOME="$HOME/Android/Sdk"
 
 path=(
   "$HOME/.local/bin"
   "$HOME/.local/share/pnpm"
   "$HOME/.bun/bin"
-  $path
-)
-
-export ANDROID_HOME="$HOME/Android/Sdk"
-
-path+=(
   "$ANDROID_HOME/emulator"
   "$ANDROID_HOME/platform-tools"
   "$ANDROID_HOME/tools"
   "$ANDROID_HOME/tools/bin"
+  $path
 )
 
 export PATH
@@ -53,63 +38,47 @@ export PATH
 export EDITOR=nvim
 
 # -------------------------
-# JAVA_HOME rápido (sin forks extra)
+# JAVA_HOME sin procesos extra
 # -------------------------
-if [[ -z "$JAVA_HOME" && -L /etc/alternatives/java ]]; then
-  export JAVA_HOME=${${$(readlink -f /etc/alternatives/java):h}:h}
+if [[ -z "$JAVA_HOME" && -x /usr/bin/java ]]; then
+  export JAVA_HOME="${${$(command -v java):A}:h:h}"
 fi
 
 # -------------------------
-# Cache dirs
+# Cache
 # -------------------------
 ZSH_CACHE="$HOME/.cache/zsh"
 mkdir -p "$ZSH_CACHE"
 
 # -------------------------
-# Oh My Zsh (modo rápido)
+# Oh My Zsh mínimo
 # -------------------------
 export ZSH="$HOME/.oh-my-zsh"
-
 ZSH_THEME="agnoster"
 
-plugins=(
-  git
-  tmux
-  command-not-found
-  zsh-interactive-cd
-)
+plugins=(git tmux)
 
-# cargar solo si existe
 [[ -r "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
 
 # -------------------------
-# compinit ULTRA rápido
+# compinit optimizado
 # -------------------------
 autoload -Uz compinit
-
-ZCOMPFILE="$ZSH_CACHE/zcompdump-$ZSH_VERSION"
+ZCOMPFILE="$ZSH_CACHE/zcompdump"
 
 if [[ -f "$ZCOMPFILE" ]]; then
-  compinit -d "$ZCOMPFILE"
+  compinit -C -d "$ZCOMPFILE"
 else
   compinit -d "$ZCOMPFILE"
 fi
 
 # -------------------------
-# Lazy load fzf
+# Lazy loads reales
 # -------------------------
-if [[ -f ~/.fzf.zsh ]]; then
-  source ~/.fzf.zsh
-fi
-
-# -------------------------
-# Lazy load Deno
-# -------------------------
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 [[ -f "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
 
-# -------------------------
-# Virtualenvwrapper lazy
-# -------------------------
+# Virtualenvwrapper lazy real
 export WORKON_HOME="$HOME/.virtualenvs"
 
 load_virtualenvwrapper() {
@@ -117,7 +86,7 @@ load_virtualenvwrapper() {
     "$HOME/.local/bin/virtualenvwrapper.sh" \
     "/usr/share/virtualenvwrapper/virtualenvwrapper.sh"
   do
-    [[ -r "$f" ]] && source "$f" && return
+    [[ -r "$f" ]] && source "$f" && unfunction load_virtualenvwrapper && return
   done
 }
 
@@ -125,17 +94,33 @@ alias workon='load_virtualenvwrapper && workon'
 alias mkvirtualenv='load_virtualenvwrapper && mkvirtualenv'
 
 # -------------------------
+# Aliases limpios (sin duplicados)
+# -------------------------
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias grep='grep --color=auto'
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -I'
+
+alias gs='git status'
+alias gp='git pull'
+alias gpp='git push'
+alias gc='git commit -am'
+
+alias expo='bunx create-expo-app@latest'
+alias android='yarn android && code .'
+alias run-react='yarn react-native run-android && yarn react-native start'
+alias em='androidemulator'
+alias update='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y'
+
+# -------------------------
 # Android emulator helper
 # -------------------------
-is_emulator_running() {
-  pgrep -f "emulator -avd $1" >/dev/null
-}
-
 androidemulator() {
-
   local avd
 
-  if command -v fzf >/dev/null; then
+  if command -v fzf >/dev/null 2>&1; then
     avd="${1:-$(emulator -list-avds | fzf)}"
   else
     avd="${1:-$(emulator -list-avds | head -n1)}"
@@ -143,37 +128,17 @@ androidemulator() {
 
   [[ -z "$avd" ]] && return
 
-  if is_emulator_running "$avd"; then
+  if pgrep -f "emulator -avd $avd" >/dev/null; then
     echo "Ya está ejecutándose."
   else
     emulator -avd "$avd" -read-only &
   fi
 }
 
-alias em='androidemulator'
-
 # -------------------------
-# Aliases seguros
+# Starship (más rápido que agnoster)
 # -------------------------
-alias ls='ls --color=auto'
-alias ll='ls -alF'
-alias grep='grep --color=auto'
-
-alias rm='rm -I'
-alias cp='cp -i'
-alias mv='mv -i'
-
-alias gs='git status'
-alias gp='git pull'
-alias gpp='git push'
-alias gc='git commit -am'
-
-alias update='sudo apt update && sudo apt upgrade -y'
-
-# -------------------------
-# Starship prompt (rápido)
-# -------------------------
-if command -v starship >/dev/null; then
+if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
