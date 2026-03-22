@@ -78,7 +78,9 @@ fi
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 [[ -f "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
 
+# -------------------------
 # Virtualenvwrapper lazy real
+# -------------------------
 export WORKON_HOME="$HOME/.virtualenvs"
 
 load_virtualenvwrapper() {
@@ -94,7 +96,48 @@ alias workon='load_virtualenvwrapper && workon'
 alias mkvirtualenv='load_virtualenvwrapper && mkvirtualenv'
 
 # -------------------------
-# Aliases limpios (sin duplicados)
+# Update del sistema
+# -------------------------
+update() {
+  local start_time end_time duration
+  start_time=$SECONDS
+
+  echo
+  echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
+  echo "${fg[cyan]}🚀 Iniciando actualización - $(date '+%H:%M:%S')${reset_color}"
+  echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
+
+  echo "${fg[yellow]}▶ Actualizando repositorios...${reset_color}"
+  if ! sudo apt update; then
+    echo "${fg[red]}✖ Error en apt update${reset_color}"
+    return 1
+  fi
+
+  echo "${fg[yellow]}▶ Actualizando sistema...${reset_color}"
+  if ! sudo apt full-upgrade -y; then
+    echo "${fg[red]}✖ Error en full-upgrade${reset_color}"
+    return 1
+  fi
+
+  echo "${fg[yellow]}▶ Limpiando dependencias...${reset_color}"
+  if ! sudo apt autoremove -y; then
+    echo "${fg[red]}✖ Error en autoremove${reset_color}"
+    return 1
+  fi
+
+  echo "${fg[yellow]}▶ Limpiando cache...${reset_color}"
+  sudo apt clean
+
+  end_time=$SECONDS
+  duration=$(( end_time - start_time ))
+
+  echo "${fg[green]}✔ Sistema actualizado correctamente.${reset_color}"
+  echo "${fg[magenta]}⏱ Duración: ${duration}s${reset_color}"
+  echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
+  echo
+}
+# -------------------------
+# Aliases limpios
 # -------------------------
 alias ls='ls --color=auto'
 alias ll='ls -alF'
@@ -112,7 +155,6 @@ alias expo='bunx create-expo-app@latest --template blank-typescript'
 alias android='yarn android && code .'
 alias run-react='yarn react-native run-android && yarn react-native start'
 alias em='androidemulator'
-alias update='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y'
 
 # -------------------------
 # Android emulator helper
@@ -136,7 +178,7 @@ androidemulator() {
 }
 
 # -------------------------
-# Starship (más rápido que agnoster)
+# Starship
 # -------------------------
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
