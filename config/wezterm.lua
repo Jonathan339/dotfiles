@@ -11,19 +11,18 @@ config.audible_bell = "Disabled"
 -- ======================================================
 -- GRID EXACTO
 -- ======================================================
-config.window_startup_state = "Normal"
 config.initial_cols = 129
 config.initial_rows = 41
-config.use_resize_increments = false -- Evita maximización forzada
+config.use_resize_increments = false
 config.adjust_window_size_when_changing_font_size = false
 
 -- ======================================================
 -- VENTANA
 -- ======================================================
-config.window_decorations = "TITLE" -- Solo barra de título
+config.window_decorations = "TITLE"
 config.window_background_opacity = 0.92
-config.enable_tab_bar = false -- Sin barra de pestañas
-config.enable_scroll_bar = false -- Sin barra de desplazamiento
+config.enable_tab_bar = false
+config.enable_scroll_bar = false
 
 config.window_padding = {
 	top = 0,
@@ -39,7 +38,7 @@ config.webgpu_power_preference = "HighPerformance"
 -- CURSOR
 -- ======================================================
 config.default_cursor_style = "BlinkingBar"
-config.cursor_blink_rate = 0 -- Sin parpadeo
+config.cursor_blink_rate = 0
 
 -- ======================================================
 -- RENDIMIENTO
@@ -54,7 +53,7 @@ config.font = wezterm.font({
 	family = "JetBrains Mono",
 	weight = "Regular",
 })
-config.font_size = 12.2 -- Ajustado para permitir más columnas
+config.font_size = 12.2
 config.line_height = 1.0
 config.cell_width = 1.0
 
@@ -99,7 +98,6 @@ config.colors = {
 -- TECLAS PERSONALIZADAS
 -- ======================================================
 config.keys = {
-	-- Soluciona backspace enviando BS en lugar de DEL
 	{ key = "Backspace", mods = "NONE", action = wezterm.action.SendString("\x08") },
 }
 
