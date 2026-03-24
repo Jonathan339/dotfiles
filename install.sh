@@ -109,6 +109,13 @@ link_config_files() {
     mkdir -p "$HOME/.config/kitty"
     ln -snf "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
   fi
+<<<<<<< HEAD
+=======
+  if check_file_exists "config/alacritty/alacritty.toml"; then
+    mkdir -p "$HOME/.config/alacritty"
+    ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml enlazado" || success="false"
+  fi
+>>>>>>> origin/codex/provide-repository-overview-v75wrm
   if check_file_exists "config/wezterm.lua"; then
     mkdir -p "$HOME/.config/wezterm"
     ln -snf "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua enlazado" || success="false"
@@ -132,6 +139,13 @@ copy_config_files() {
     mkdir -p "$HOME/.config/kitty"
     cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
   fi
+<<<<<<< HEAD
+=======
+  if check_file_exists "config/alacritty/alacritty.toml"; then
+    mkdir -p "$HOME/.config/alacritty"
+    cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
+  fi
+>>>>>>> origin/codex/provide-repository-overview-v75wrm
   if check_file_exists "config/wezterm.lua"; then
     mkdir -p "$HOME/.config/wezterm"
     cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"

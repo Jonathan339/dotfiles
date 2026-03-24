@@ -7,6 +7,7 @@ Repositorio de configuración personal para entorno Linux (terminal + shell + Ne
 - `install.sh`: instalador interactivo por menú para preparar el sistema.
 - `config/nvim`: configuración modular de Neovim en Lua.
 - `config/kitty.conf`: configuración de Kitty.
+- `config/alacritty/alacritty.toml`: configuración de Alacritty.
 - `config/wezterm.lua`: configuración de WezTerm.
 - `config/.zshrc`, `config/.zsh_aliases`, `config/.bashrc`: configuración de shell.
 
@@ -51,6 +52,7 @@ También podés usar modo rápido sin menú:
 - `~/.bashrc`
 - `~/.config/nvim`
 - `~/.config/kitty/kitty.conf`
+- `~/.config/alacritty/alacritty.toml`
 - `~/.config/wezterm/wezterm.lua`
 
 ## Nota
