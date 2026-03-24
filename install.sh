@@ -21,8 +21,13 @@ die() {
 
 trap 'echo -e "\n'"$ERR"' Ocurrió un error. Revisá el mensaje anterior."' ERR
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+CONFIG_MODE="${DOTFILES_CONFIG_MODE:-link}" # link (default) | copy
+
 command -v sudo >/dev/null 2>&1 || die "Necesitás sudo instalado."
 command -v curl >/dev/null 2>&1 || die "Necesitás curl (sudo apt install curl)."
+command -v git >/dev/null 2>&1 || die "Necesitás git (sudo apt install git)."
 
 # ---- Paquetes APT ----
 declare -a APT_PACKAGES=(
@@ -31,12 +36,26 @@ declare -a APT_PACKAGES=(
 )
 
 package_is_installed() { dpkg -s "$1" &>/dev/null; }
+snap_is_installed() { snap list "$1" &>/dev/null; }
 
 install_packages() {
   log "Instalando paquetes necesarios..."
   sudo apt update
-  sudo apt install -y "${APT_PACKAGES[@]}" || die "Fallo instalando paquetes APT."
-  ok "Paquetes instalados."
+  local -a to_install=()
+  local pkg
+  for pkg in "${APT_PACKAGES[@]}"; do
+    if ! package_is_installed "$pkg"; then
+      to_install+=("$pkg")
+    fi
+  done
+
+  if [[ "${#to_install[@]}" -eq 0 ]]; then
+    ok "Todos los paquetes APT ya estaban instalados."
+    return
+  fi
+
+  sudo apt install -y "${to_install[@]}" || die "Fallo instalando paquetes APT."
+  ok "Paquetes instalados: ${to_install[*]}"
 }
 
 install_package_if_not_installed() {
@@ -51,7 +70,7 @@ install_package_if_not_installed() {
 
 # ---- Helpers paths ----
 check_file_exists() {
-  local full_path="$(pwd)/$1"
+  local full_path="$REPO_ROOT/$1"
   log "Verificando archivo: $full_path"
   [[ -f "$full_path" ]] && {
     ok "$1 encontrado"
@@ -63,7 +82,7 @@ check_file_exists() {
 }
 
 check_directory_exists() {
-  local full_path="$(pwd)/$1"
+  local full_path="$REPO_ROOT/$1"
   log "Verificando directorio: $full_path"
   [[ -d "$full_path" ]] && {
     ok "$1 encontrado"
@@ -79,16 +98,24 @@ link_config_files() {
   log "Creando enlaces simbólicos desde 'config'..."
   local success="true"
 
-  if check_file_exists "config/.zshrc"; then ln -snf "$(pwd)/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc enlazado" || success="false"; fi
-  if check_file_exists "config/.zsh_aliases"; then ln -snf "$(pwd)/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases enlazado" || success="false"; fi
-  if check_file_exists "config/.bashrc"; then ln -snf "$(pwd)/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc enlazado" || success="false"; fi
+  if check_file_exists "config/.zshrc"; then ln -snf "$REPO_ROOT/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc enlazado" || success="false"; fi
+  if check_file_exists "config/.zsh_aliases"; then ln -snf "$REPO_ROOT/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases enlazado" || success="false"; fi
+  if check_file_exists "config/.bashrc"; then ln -snf "$REPO_ROOT/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc enlazado" || success="false"; fi
   if check_directory_exists "config/nvim"; then
     mkdir -p "$HOME/.config"
-    ln -snf "$(pwd)/config/nvim" "$HOME/.config/nvim" && ok "nvim enlazado" || success="false"
+    ln -snf "$REPO_ROOT/config/nvim" "$HOME/.config/nvim" && ok "nvim enlazado" || success="false"
   fi
   if check_file_exists "config/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
-    ln -snf "$(pwd)/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
+    ln -snf "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
+  fi
+  if check_file_exists "config/alacritty/alacritty.toml"; then
+    mkdir -p "$HOME/.config/alacritty"
+    ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml enlazado" || success="false"
+  fi
+  if check_file_exists "config/wezterm.lua"; then
+    mkdir -p "$HOME/.config/wezterm"
+    ln -snf "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua enlazado" || success="false"
   fi
 
   [[ "$success" = true ]] && ok "Enlaces simbólicos creados" || die "Error creando enlaces simbólicos."
@@ -98,18 +125,43 @@ copy_config_files() {
   log "Copiando archivos de configuración desde 'config'..."
   local success="true"
 
-  if check_file_exists "config/.zshrc"; then cp -f "config/.zshrc" "$HOME/" && ok ".zshrc copiado" || success="false"; fi
-  if check_file_exists "config/.bashrc"; then cp -f "config/.bashrc" "$HOME/" && ok ".bashrc copiado" || success="false"; fi
+  if check_file_exists "config/.zshrc"; then cp -f "$REPO_ROOT/config/.zshrc" "$HOME/" && ok ".zshrc copiado" || success="false"; fi
+  if check_file_exists "config/.zsh_aliases"; then cp -f "$REPO_ROOT/config/.zsh_aliases" "$HOME/" && ok ".zsh_aliases copiado" || success="false"; fi
+  if check_file_exists "config/.bashrc"; then cp -f "$REPO_ROOT/config/.bashrc" "$HOME/" && ok ".bashrc copiado" || success="false"; fi
   if check_directory_exists "config/nvim"; then
     mkdir -p "$HOME/.config"
-    cp -rf "config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
+    cp -rf "$REPO_ROOT/config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
   fi
   if check_file_exists "config/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
-    cp -f "config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
+    cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
+  fi
+  if check_file_exists "config/alacritty/alacritty.toml"; then
+    mkdir -p "$HOME/.config/alacritty"
+    cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
+  fi
+  if check_file_exists "config/wezterm.lua"; then
+    mkdir -p "$HOME/.config/wezterm"
+    cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
   fi
 
   [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."
+}
+
+apply_config_files() {
+  case "$CONFIG_MODE" in
+    link)
+      log "Modo configuración: enlaces simbólicos (default)."
+      link_config_files
+      ;;
+    copy)
+      log "Modo configuración: copia de archivos."
+      copy_config_files
+      ;;
+    *)
+      die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'link' o 'copy'."
+      ;;
+  esac
 }
 
 # ---- Oh My Zsh ----
@@ -138,6 +190,11 @@ install_kitty_themes() {
 # ---- Nerd Fonts ----
 install_nerd_fonts() {
   log "Instalando nerd-fonts (DroidSansMono Nerd Font)..."
+  local font_path="$HOME/.local/share/fonts/DroidSansMNerdFont-Regular.otf"
+  if [[ -f "$font_path" ]]; then
+    ok "DroidSansMono Nerd Font ya está instalada. Saltando..."
+    return
+  fi
   mkdir -p "$HOME/.local/share/fonts"
   pushd "$HOME/.local/share/fonts" >/dev/null
   curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/DroidSansMono/DroidSansMNerdFont-Regular.otf || die "Fallo descargando la fuente."
@@ -156,24 +213,40 @@ ensure_snapd() {
 
 install_android_studio() {
   ensure_snapd
+  if snap_is_installed android-studio; then
+    ok "Android Studio ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando Android Studio (snap)..."
   sudo snap install android-studio --classic || die "Fallo instalando Android Studio."
   ok "Android Studio instalado."
 }
 install_spotify() {
   ensure_snapd
+  if snap_is_installed spotify; then
+    ok "Spotify ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando Spotify (snap)..."
   sudo snap install spotify || die "Fallo instalando Spotify."
   ok "Spotify instalado."
 }
 install_vscode() {
   ensure_snapd
+  if snap_is_installed code; then
+    ok "VS Code ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando VS Code (snap)..."
   sudo snap install code --classic || die "Fallo instalando VS Code."
   ok "VS Code instalado."
 }
 install_nvim() {
   ensure_snapd
+  if snap_is_installed nvim; then
+    ok "Neovim (snap) ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando Neovim (snap beta)..."
   sudo snap install nvim --beta --classic || die "Fallo instalando Neovim."
   ok "Neovim instalado."
@@ -181,6 +254,10 @@ install_nvim() {
 
 # ---- Yarn (keyring) ----
 install_yarn() {
+  if command -v yarn >/dev/null 2>&1; then
+    ok "Yarn ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando Yarn (repo con keyring)..."
   sudo mkdir -p /usr/share/keyrings
   curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | sudo gpg --dearmor -o /usr/share/keyrings/yarn-archive-keyring.gpg
@@ -192,6 +269,10 @@ install_yarn() {
 
 # ---- Bun ----
 install_bun() {
+  if command -v bun >/dev/null 2>&1; then
+    ok "Bun ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando Bun..."
   curl -fsSL https://bun.sh/install | bash || die "Fallo instalando Bun."
   ok "Bun instalado."
@@ -199,6 +280,10 @@ install_bun() {
 
 # ---- Node.js (FNM recomendado) ----
 install_fnm() {
+  if command -v fnm >/dev/null 2>&1; then
+    ok "FNM ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando FNM (Node manager)..."
   curl -fsSL https://fnm.vercel.app/install | bash || die "Fallo instalando FNM."
   # corregido comillas
@@ -225,15 +310,23 @@ install_nodejs() {
 
 # ---- Lazygit ----
 install_lazygit() {
+  if command -v lazygit >/dev/null 2>&1; then
+    ok "lazygit ya está instalado. Saltando..."
+    return
+  fi
   log "Instalando lazygit..."
   ARCH="x86_64"
   [[ "$(uname -m)" == "aarch64" ]] && ARCH="arm64"
   LAZYGIT_VERSION="$(curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -Po '"tag_name": "v\K[^"]*' || true)"
   [[ -z "$LAZYGIT_VERSION" ]] && die "No pude obtener la versión de lazygit."
-  curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${ARCH}.tar.gz"
+  local tmp_dir
+  tmp_dir="$(mktemp -d)"
+  pushd "$tmp_dir" >/dev/null
+  curl -fsSLo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${ARCH}.tar.gz"
   tar xf lazygit.tar.gz lazygit
   sudo install lazygit /usr/local/bin
-  rm -f lazygit lazygit.tar.gz
+  popd >/dev/null
+  rm -rf "$tmp_dir"
   ok "lazygit instalado."
 }
 
@@ -249,7 +342,7 @@ clean() {
 install_all() {
   install_packages
   install_oh_my_zsh
-  link_config_files
+  apply_config_files
   install_bun
   install_android_studio
   install_spotify
@@ -263,6 +356,17 @@ install_all() {
   clean
   ok "Todo listo. Abrí una nueva terminal para aplicar cambios de PATH."
 }
+
+# ---- CLI rápida opcional ----
+if [[ "${1:-}" == "--all" ]]; then
+  if [[ "${2:-}" == "--copy" ]]; then
+    CONFIG_MODE="copy"
+  else
+    CONFIG_MODE="link"
+  fi
+  install_all
+  exit 0
+fi
 
 # ---- Menú (coincide por número con $REPLY) ----
 PS3="Elegí una opción: "
