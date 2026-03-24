@@ -101,21 +101,22 @@ link_config_files() {
   if check_file_exists "config/.zshrc"; then ln -snf "$REPO_ROOT/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc enlazado" || success="false"; fi
   if check_file_exists "config/.zsh_aliases"; then ln -snf "$REPO_ROOT/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases enlazado" || success="false"; fi
   if check_file_exists "config/.bashrc"; then ln -snf "$REPO_ROOT/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc enlazado" || success="false"; fi
+
   if check_directory_exists "config/nvim"; then
     mkdir -p "$HOME/.config"
     ln -snf "$REPO_ROOT/config/nvim" "$HOME/.config/nvim" && ok "nvim enlazado" || success="false"
   fi
+
   if check_file_exists "config/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
     ln -snf "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
   fi
-<<<<<<< HEAD
-=======
+
   if check_file_exists "config/alacritty/alacritty.toml"; then
     mkdir -p "$HOME/.config/alacritty"
     ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml enlazado" || success="false"
   fi
->>>>>>> origin/codex/provide-repository-overview-v75wrm
+
   if check_file_exists "config/wezterm.lua"; then
     mkdir -p "$HOME/.config/wezterm"
     ln -snf "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua enlazado" || success="false"
@@ -131,21 +132,22 @@ copy_config_files() {
   if check_file_exists "config/.zshrc"; then cp -f "$REPO_ROOT/config/.zshrc" "$HOME/" && ok ".zshrc copiado" || success="false"; fi
   if check_file_exists "config/.zsh_aliases"; then cp -f "$REPO_ROOT/config/.zsh_aliases" "$HOME/" && ok ".zsh_aliases copiado" || success="false"; fi
   if check_file_exists "config/.bashrc"; then cp -f "$REPO_ROOT/config/.bashrc" "$HOME/" && ok ".bashrc copiado" || success="false"; fi
+
   if check_directory_exists "config/nvim"; then
     mkdir -p "$HOME/.config"
     cp -rf "$REPO_ROOT/config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
   fi
+
   if check_file_exists "config/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
     cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
   fi
-<<<<<<< HEAD
-=======
+
   if check_file_exists "config/alacritty/alacritty.toml"; then
     mkdir -p "$HOME/.config/alacritty"
     cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
   fi
->>>>>>> origin/codex/provide-repository-overview-v75wrm
+
   if check_file_exists "config/wezterm.lua"; then
     mkdir -p "$HOME/.config/wezterm"
     cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
@@ -164,12 +166,9 @@ apply_config_files() {
       log "Modo configuración: copia de archivos."
       copy_config_files
       ;;
-    *)
-      die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'link' o 'copy'."
-      ;;
+    *) die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'link' o 'copy'." ;;
   esac
 }
-
 # ---- Oh My Zsh ----
 install_oh_my_zsh() {
   log "Instalando Oh My Zsh..."
