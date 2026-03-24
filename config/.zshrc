@@ -151,7 +151,7 @@ alias gp='git pull'
 alias gpp='git push'
 alias gc='git commit -am'
 
-alias expo='bunx create-expo-app@latest --template blank-typescript'
+alias exp='bunx create-expo-app@latest --template blank-typescript'
 alias android='yarn android && code .'
 alias run-react='yarn react-native run-android && yarn react-native start'
 alias em='androidemulator'
