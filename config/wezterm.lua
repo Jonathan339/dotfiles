@@ -2,7 +2,7 @@ local wezterm = require("wezterm")
 local config = {}
 
 -- ======================================================
--- TERMINAL (COMPATIBLE)
+-- TERMINAL
 -- ======================================================
 config.term = "xterm-256color"
 config.enable_csi_u_key_encoding = true
@@ -11,18 +11,20 @@ config.audible_bell = "Disabled"
 -- ======================================================
 -- GRID EXACTO
 -- ======================================================
-config.initial_cols = 145
-config.initial_rows = 44
-config.use_resize_increments = true
-config.adjust_window_size_when_changing_font_size = true
+config.window_startup_state = "Normal"
+config.initial_cols = 129
+config.initial_rows = 41
+config.use_resize_increments = false -- Evita maximización forzada
+config.adjust_window_size_when_changing_font_size = false
 
 -- ======================================================
 -- VENTANA
 -- ======================================================
-config.window_decorations = "TITLE"
+config.window_decorations = "TITLE" -- Solo barra de título
 config.window_background_opacity = 0.92
-config.enable_tab_bar = true
-config.hide_tab_bar_if_only_one_tab = true
+config.enable_tab_bar = false -- Sin barra de pestañas
+config.enable_scroll_bar = false -- Sin barra de desplazamiento
+
 config.window_padding = {
 	top = 0,
 	right = 0,
@@ -30,17 +32,14 @@ config.window_padding = {
 	bottom = 0,
 }
 
-config.enable_tab_bar = false
-config.enable_scroll_bar = false
-
 config.front_end = "WebGpu"
 config.webgpu_power_preference = "HighPerformance"
 
 -- ======================================================
 -- CURSOR
 -- ======================================================
-config.default_cursor_style = "SteadyBlock"
-config.cursor_blink_rate = 0
+config.default_cursor_style = "BlinkingBar"
+config.cursor_blink_rate = 0 -- Sin parpadeo
 
 -- ======================================================
 -- RENDIMIENTO
@@ -55,7 +54,7 @@ config.font = wezterm.font({
 	family = "JetBrains Mono",
 	weight = "Regular",
 })
-config.font_size = 12.5
+config.font_size = 12.2 -- Ajustado para permitir más columnas
 config.line_height = 1.0
 config.cell_width = 1.0
 
@@ -96,6 +95,17 @@ config.colors = {
 	},
 }
 
+-- ======================================================
+-- TECLAS PERSONALIZADAS
+-- ======================================================
+config.keys = {
+	-- Soluciona backspace enviando BS en lugar de DEL
+	{ key = "Backspace", mods = "NONE", action = wezterm.action.SendString("\x08") },
+}
+
+-- ======================================================
+-- GENERAL
+-- ======================================================
 config.automatically_reload_config = true
 
 return config
