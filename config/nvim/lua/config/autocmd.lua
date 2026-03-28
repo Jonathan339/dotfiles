@@ -6,8 +6,7 @@ local autocmd = vim.api.nvim_create_autocmd
 local function augroup(name)
   return agroup(name, { clear = true })
 end
------------------------------------------------------------------------
--- Fix: no dejar fondo forzado al salir de Neovim
+----------------------------------------------------------------------- Fix: no dejar fondo forzado al salir de Neovim
 -----------------------------------------------------------------------
 autocmd('VimLeave', {
   group = augroup('reset_terminal_background'),
@@ -240,3 +239,64 @@ autocmd('BufReadPost', {
     end
   end,
 })
+
+-- ==========================================
+-- Compilar y ejecutar C / C++
+-- ==========================================
+
+local function run_c_cpp()
+  local file = vim.fn.expand('%:p')
+  local ext = vim.fn.expand('%:e')
+  local filename = vim.fn.expand('%:t:r')
+  local dir = vim.fn.expand('%:p:h')
+  local build_dir = dir .. '/build'
+  local output = build_dir .. '/' .. filename
+
+  if ext ~= 'c' and ext ~= 'cpp' then
+    vim.notify('No es archivo C o C++', vim.log.levels.ERROR)
+    return
+  end
+
+  -- Guardar archivo
+  vim.cmd('write')
+
+  -- Crear carpeta build si no existe
+  vim.fn.mkdir(build_dir, 'p')
+
+  -- Borrar ejecutable viejo si existe
+  vim.fn.delete(output)
+
+  local compile_cmd
+
+  if ext == 'c' then
+    compile_cmd = string.format('gcc -std=c11 -Wall -Wextra -O2 %s -o %s', vim.fn.shellescape(file), vim.fn.shellescape(output))
+  else
+    compile_cmd = string.format('g++ -std=c++20 -Wall -Wextra -O2 %s -o %s', vim.fn.shellescape(file), vim.fn.shellescape(output))
+  end
+
+  -- Compilar
+  local compile_result = vim.fn.system(compile_cmd)
+
+  if vim.v.shell_error ~= 0 then
+    vim.notify('Error de compilación:\n' .. compile_result, vim.log.levels.ERROR)
+    return
+  end
+
+  -- Comando a ejecutar dentro de la terminal
+  local full_cmd = string.format('cd %s && ./%s; echo; printf "\\nPresiona ENTER para cerrar..."; read; rm -f %s', vim.fn.shellescape(build_dir), filename, vim.fn.shellescape(output))
+
+  -- Ejecutar en Alacritty (forma compatible)
+  vim.fn.jobstart({
+    'alacritty',
+    '-e',
+    'bash',
+    '-c',
+    full_cmd,
+  }, { detach = true })
+end
+
+-- ==========================================
+-- Atajo
+-- ==========================================
+
+vim.keymap.set('n', '<leader>r', run_c_cpp, { noremap = true, silent = true })
