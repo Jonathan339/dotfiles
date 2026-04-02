@@ -5,11 +5,7 @@ return {
   event = { 'BufReadPost', 'BufNewFile' },
   cmd = { 'TSInstall', 'TSBufEnable', 'TSBufDisable', 'TSModuleInfo' },
   build = ':TSUpdate',
-  dependencies = {
-    { 'nvim-treesitter/playground', cmd = 'TSPlaygroundToggle' },
-    -- OJO: el commentstring contextual va en su propio plugin:
-    -- "JoosepAlviste/nvim-ts-context-commentstring" (lo agregamos aparte)
-  },
+
   config = function()
     -- Mapear filetypes de React a parsers correctos
     pcall(function()
@@ -96,24 +92,7 @@ return {
         use_virtual_text = true,
         lint_events = { 'BufWrite', 'CursorHold' },
       },
-      playground = {
-        enable = true,
-        disable = {},
-        updatetime = 25,
-        persist_queries = true,
-        keybindings = {
-          toggle_query_editor = 'o',
-          toggle_hl_groups = 'i',
-          toggle_injected_languages = 't',
-          toggle_anonymous_nodes = 'a',
-          toggle_language_display = 'I',
-          focus_language = 'f',
-          unfocus_language = 'F',
-          update = 'R',
-          goto_node = '<CR>',
-          show_help = '?',
-        },
-      },
+      
     })
   end,
 }
