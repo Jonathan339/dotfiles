@@ -162,41 +162,18 @@ return {
     local mason_pkg_for_linter = { eslint_d = 'eslint_d', ruff = 'ruff' }
 
     ---------------------------------------------------------------------
-    -- Helpers: carga/chequeo lspconfig (evita warnings y falsos negativos)
+    -- Helpers LSP (Neovim 0.11+)
     ---------------------------------------------------------------------
-    local function require_lspconfig()
-      local ok, lspconfig = pcall(require, 'lspconfig')
-      if ok then
-        return lspconfig
-      end
-      local ok_lazy, lazy = pcall(require, 'lazy')
-      if ok_lazy then
-        pcall(lazy.load, { plugins = { 'nvim-lspconfig' } })
-        pcall(lazy.load, { plugins = { 'neovim/nvim-lspconfig' } })
-      end
-      local ok2, lspconfig2 = pcall(require, 'lspconfig')
-      return ok2 and lspconfig2 or nil
-    end
-
     local function lsp_server_available(server)
-      require_lspconfig()
-      -- ts_ls puede existir como builtin (nuevo) o custom; probamos ambos nombres
-      local candidates = (server == 'ts_ls') and { 'ts_ls', 'tsserver' } or { server }
-
-      -- 1) ¿Existe módulo builtin?
-      for _, name in ipairs(candidates) do
-        if pcall(require, 'lspconfig.server_configurations.' .. name) then
-          return true
-        end
+      if not (vim.lsp and vim.lsp.config) then
+        return false
       end
 
-      -- 2) ¿Está registrado como custom en lspconfig.configs?
-      local ok_cfgs, cfgs = pcall(require, 'lspconfig.configs')
-      if ok_cfgs then
-        for _, name in ipairs(candidates) do
-          if cfgs[name] ~= nil then
-            return true
-          end
+      local candidates = (server == 'ts_ls') and { 'ts_ls', 'tsserver' } or { server }
+      for _, name in ipairs(candidates) do
+        local ok, cfg = pcall(vim.lsp.config, name)
+        if ok and cfg ~= nil then
+          return true
         end
       end
 
@@ -296,21 +273,14 @@ return {
     end
 
     ---------------------------------------------------------------------
-    -- LSP on-demand (sin warnings)
+    -- LSP on-demand (Neovim 0.11+)
     ---------------------------------------------------------------------
     local function lsp_setup_on_demand(server)
-      -- 1) Confirmar que el server exista en lspconfig
       if not lsp_server_available(server) then
-        log('server no disponible en lspconfig: ' .. server, vim.log.levels.WARN)
+        log('server no disponible: ' .. server, vim.log.levels.WARN)
         return
       end
 
-      local lspconfig = require_lspconfig()
-      if not lspconfig then
-        return
-      end
-
-      -- 2) Cargar defaults/handlers del usuario (si existen)
       local capabilities, user_on_attach
       pcall(function()
         capabilities = require('plugins.lsp.defaults').capabilities
@@ -319,7 +289,6 @@ return {
         user_on_attach = require('plugins.lsp.handlers').on_attach
       end)
 
-      -- 3) Un on_attach que desactiva formateo del LSP donde usamos Conform
       local disable_fmt = { ts_ls = true, lua_ls = true, jsonls = true, eslint = true }
       local function merged_on_attach(client, bufnr)
         if disable_fmt[server] and client.server_capabilities then
@@ -331,14 +300,16 @@ return {
         end
       end
 
-      -- 4) Hacer setup mínimo si aún no fue configurado por mason-lspconfig
-      local cfg = lspconfig[server]
-      if cfg and (not cfg.document_config or not cfg.document_config.on_new_config) then
-        cfg.setup({
-          capabilities = capabilities,
-          on_attach = merged_on_attach,
-        })
+      local ok_setup, setup = pcall(require, 'plugins.lsp.setup')
+      if not ok_setup or not setup or type(setup.setup) ~= 'function' then
+        log('plugins.lsp.setup no disponible', vim.log.levels.WARN)
+        return
       end
+
+      setup.setup(server, {
+        capabilities = capabilities,
+        on_attach = merged_on_attach,
+      })
     end
 
     local function ensure_lsp(ft, bufnr)
@@ -347,32 +318,19 @@ return {
         return
       end
 
-      -- 🔴 importante: garantizá que lspconfig esté cargado ANTES de checks
-      require_lspconfig()
-
       local mason_pkg = mason_pkg_for_lsp[server] or server
       enqueue_install(function(next)
         ensure_mason_package(mason_pkg, function()
           -- verificar config disponible sin producir falsos negativos
           if not lsp_server_available(server) then
-            -- intenta forzar carga nuevamente
-            require_lspconfig()
-            if not lsp_server_available(server) then
-              log(('config "%s" no encontrada en lspconfig (post-inst)'):format(server), vim.log.levels.WARN)
-              next()
-              return
-            end
+            log(('config "%s" no encontrada en vim.lsp.config (post-inst)'):format(server), vim.log.levels.WARN)
+            next()
+            return
           end
 
-          -- setup y attach
+          -- setup
           lsp_setup_on_demand(server)
           vim.schedule(function()
-            local lspconfig = require_lspconfig()
-            if lspconfig and lspconfig[server] and lspconfig[server].manager then
-              pcall(function()
-                lspconfig[server].manager.try_add_wrapper(bufnr)
-              end)
-            end
             next()
           end)
         end)
