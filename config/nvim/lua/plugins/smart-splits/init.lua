@@ -1,6 +1,9 @@
 -- lua/plugins/smart-splits/init.lua
 local M = {
   'mrjones2014/smart-splits.nvim',
+  enabled = function()
+    return vim.fn.has('nvim-0.10') == 1
+  end,
   event = 'VeryLazy',
   opts = {
     ignored_filetypes = { 'nofile', 'quickfix', 'qf', 'prompt' },
@@ -10,7 +13,10 @@ local M = {
 }
 
 M.config = function(_, opts)
-  local ss = require('smart-splits')
+  local ok_ss, ss = pcall(require, 'smart-splits')
+  if not ok_ss then
+    return
+  end
   ss.setup(opts)
 
   -- Ejemplo de keymaps: Ctrl-h/j/k/l para moverse entre splits

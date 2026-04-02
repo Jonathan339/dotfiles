@@ -33,6 +33,10 @@ local M = {
 }
 
 M.config = function()
+  if vim.fn.has('nvim-0.11') ~= 1 then
+    return
+  end
+
   -- 1) Diagnósticos unificados (si tenés el módulo)
   do
     local ok_cfg, cfg = pcall(require, 'plugins.lsp.diagnostics.config')
