@@ -1,6 +1,9 @@
 -- lua/plugins/lsp/init.lua
 local M = {
   'williamboman/mason.nvim',
+  enabled = function()
+    return vim.fn.has('nvim-0.11') == 1
+  end,
   event = 'VeryLazy',
   cmd = { 'Mason', 'MasonInstall', 'MasonUpdate' },
   dependencies = {

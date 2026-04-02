@@ -23,6 +23,8 @@ return {
         pcall(vim.notify, '[auto-ensure] ' .. msg, level)
       end)
     end
+    local has_nvim_011_lsp = vim.fn.has('nvim-0.11') == 1
+
     local function in_list(val, list)
       for _, v in ipairs(list) do
         if v == val then
@@ -313,6 +315,10 @@ return {
     end
 
     local function ensure_lsp(ft, bufnr)
+      if not has_nvim_011_lsp then
+        return
+      end
+
       local server = lsp_by_ft[ft]
       if not server then
         return
