@@ -1,4 +1,4 @@
-local u = require('utils')
+local u = require('utils.init')
 local user_config = require('config.user')
 
 -- intenta cargar icons, si no hay, usa defaults simples

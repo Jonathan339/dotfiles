@@ -1,4 +1,4 @@
-local map = require('utils').map
+local map = require('utils.init').map
 local telescope_builtin = require('telescope.builtin')
 local smart_splits = require('smart-splits')
 

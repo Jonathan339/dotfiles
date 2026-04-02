@@ -26,7 +26,7 @@ local default_config = {
   }
 }
 
-local u = require('utils')
+local u = require('utils.init')
 local config = u.merge(default_config, user_config)
 
 function config.lsp.add_on_attach_mapping(callback)
