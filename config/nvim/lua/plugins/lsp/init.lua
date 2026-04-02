@@ -112,7 +112,7 @@ M.config = function()
     return o
   end
 
-  local lsp = require('lspconfig')
+  local setup_lsp = require('plugins.lsp.setup').setup
 
   -- 5) Compat: handlers API vieja vs nueva
   if type(mlsp.setup_handlers) == 'function' then
@@ -125,7 +125,7 @@ M.config = function()
         if server_name == 'lua_ls' then
           pcall(require, 'neodev') -- ya se cargó por dependencia, por las dudas
         end
-        lsp[server_name].setup(opts)
+        setup_lsp(server_name, opts)
       end,
     })
   else
@@ -137,7 +137,7 @@ M.config = function()
           if server_name == 'lua_ls' then
             pcall(require, 'neodev')
           end
-          lsp[server_name].setup(opts)
+          setup_lsp(server_name, opts)
         end,
       },
     })

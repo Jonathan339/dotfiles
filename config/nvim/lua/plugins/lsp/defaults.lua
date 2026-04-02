@@ -93,8 +93,22 @@ end
 
 -- Root genérico (útil para la mayoría de servidores)
 M.root_dir = function(fname)
-  local util = require('lspconfig').util
-  return util.root_pattern('.git', 'tsconfig.base.json', 'tsconfig.json', 'package.json', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs', 'eslint.config.ts')(fname)
+  local match = vim.fs.find({
+    '.git',
+    'tsconfig.base.json',
+    'tsconfig.json',
+    'package.json',
+    '.eslintrc.js',
+    '.eslintrc.cjs',
+    '.eslintrc.json',
+    '.eslintrc.yaml',
+    '.eslintrc.yml',
+    'eslint.config.js',
+    'eslint.config.cjs',
+    'eslint.config.mjs',
+    'eslint.config.ts',
+  }, { path = fname, upward = true })[1]
+  return match and vim.fs.dirname(match) or nil
 end
 
 return M

@@ -1,8 +1,18 @@
 -- lua/plugins/lsp/handlers.lua
 local M = {}
-local setup = require('utils').setup_lsp
-local util = require('lspconfig.util')
-local root_pattern = util.root_pattern
+local setup = require('plugins.lsp.setup').setup
+local function root_pattern(...)
+  local patterns = { ... }
+  return function(fname)
+    local match = vim.fs.find(patterns, { path = fname, upward = true })[1]
+    return match and vim.fs.dirname(match) or nil
+  end
+end
+
+local function find_git_ancestor(fname)
+  local git_dir = vim.fs.find('.git', { path = fname, upward = true })[1]
+  return git_dir and vim.fs.dirname(git_dir) or nil
+end
 
 -- dprint LSP (formatea y/o diagnostica con su config local)
 M['dprint'] = function()
@@ -98,7 +108,7 @@ M['ts_ls'] = function()
     },
     -- Soporte TS/JS: roots comunes
     root_dir = function(fname)
-      return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or util.find_git_ancestor(fname) or (vim.uv and vim.uv.cwd() or vim.loop.cwd())
+      return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or find_git_ancestor(fname) or (vim.uv and vim.uv.cwd() or vim.loop.cwd())
     end,
     settings = {
       typescript = {
@@ -144,7 +154,7 @@ M['eslint'] = function()
   setup('eslint', {
     cmd = { 'vscode-eslint-language-server', '--stdio' },
     root_dir = function(fname)
-      return root_pattern('.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs', 'eslint.config.ts', 'package.json')(fname) or util.find_git_ancestor(fname)
+      return root_pattern('.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs', 'eslint.config.ts', 'package.json')(fname) or find_git_ancestor(fname)
     end,
     filetypes = {
       'javascript',
