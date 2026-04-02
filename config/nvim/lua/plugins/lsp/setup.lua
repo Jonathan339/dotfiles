@@ -16,31 +16,21 @@ end
 
 local function warn(msg)
   vim.schedule(function()
-    local ok = pcall(vim.notify, msg, vim.log.levels.WARN)
-    if not ok then
-      vim.api.nvim_echo({ { msg, 'WarningMsg' } }, true, {})
-    end
+    vim.api.nvim_echo({ { msg, 'WarningMsg' } }, true, {})
   end)
 end
 
 function M.setup(server, config)
   config = config or {}
 
-  local ok_lspconfig, lspconfig = pcall(require, 'lspconfig')
-  if not ok_lspconfig then
-    warn('[lsp.setup] Unable to load lspconfig for ' .. server)
+  if not (vim.lsp and vim.lsp.config and vim.lsp.enable) then
+    warn('[lsp.setup] Requires Neovim 0.11+ (vim.lsp.config / vim.lsp.enable)')
     return
   end
 
   local ok_defaults, defaults = pcall(require, 'plugins.lsp.defaults')
   if not ok_defaults then
     defaults = {}
-  end
-
-  local client = lspconfig[server]
-  if not client then
-    warn(('[lsp.setup] Unknown server: %s'):format(server))
-    return
   end
 
   local merged = vim.tbl_deep_extend('force', {
@@ -50,7 +40,16 @@ function M.setup(server, config)
   merged.on_attach = chain(defaults.on_attach, config.on_attach)
   merged.on_init = chain(defaults.on_init, config.on_init)
 
-  client.setup(merged)
+  local ok_configure, err = pcall(vim.lsp.config, server, merged)
+  if not ok_configure then
+    warn(('[lsp.setup] Failed configuring %s: %s'):format(server, tostring(err)))
+    return
+  end
+
+  local ok_enable, enable_err = pcall(vim.lsp.enable, server)
+  if not ok_enable then
+    warn(('[lsp.setup] Failed enabling %s: %s'):format(server, tostring(enable_err)))
+  end
 end
 
 return M

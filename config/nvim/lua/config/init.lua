@@ -2,7 +2,11 @@
 local function safe_require(module)
   local ok, err = pcall(require, module)
   if not ok then
-    vim.notify('Error loading ' .. module .. '\n\n' .. err, vim.log.levels.ERROR)
+    local msg = 'Error loading ' .. module .. '\n\n' .. err
+    local notified = pcall(vim.notify, msg, vim.log.levels.ERROR)
+    if not notified then
+      vim.api.nvim_echo({ { msg, 'ErrorMsg' } }, true, {})
+    end
   end
 end
 
