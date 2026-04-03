@@ -1,8 +1,8 @@
-local ok, user_config = pcall(require, 'lsp.defaults')
-local lsp_defaults = ok and require('lsp.defaults') or {}
+local ok, lsp_defaults = pcall(require, 'plugins.lsp.defaults')
+local user_config = {}
 
 if not ok then
-  user_config = {}
+  lsp_defaults = {}
 end
 
 local default_config = {

@@ -28,8 +28,8 @@ vim.schedule(function()
 end)
 
 -- Carga condicional de módulos
-if vim.fn.isdirectory(vim.fn.expand('~/.config/nvim/lua/lsp')) == 1 then
+if vim.fn.isdirectory(vim.fn.expand('~/.config/nvim/lua/plugins/lsp')) == 1 then
   vim.defer_fn(function()
-    safe_require('lsp.diagnostics')
+    safe_require('plugins.lsp.diagnostics')
   end, 0)
 end
