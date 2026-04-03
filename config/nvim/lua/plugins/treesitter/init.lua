@@ -1,98 +1,73 @@
----@diagnostic disable: undefined-global
---- lua/plugins/treesitter/init.lua
+
 return {
-  'nvim-treesitter/nvim-treesitter',
-  event = { 'BufReadPost', 'BufNewFile' },
-  cmd = { 'TSInstall', 'TSBufEnable', 'TSBufDisable', 'TSModuleInfo' },
-  build = ':TSUpdate',
+	{ "nvim-treesitter/playground", cmd = "TSPlaygroundToggle" },
 
-  config = function()
-    -- Mapear filetypes de React a parsers correctos
-    pcall(function()
-      vim.treesitter.language.register('tsx', 'typescriptreact')
-      vim.treesitter.language.register('javascript', 'javascriptreact')
-    end)
-
-    local ts = require('nvim-treesitter.configs')
-
-    ts.setup({
-      -- Tu baseline de parsers + algunos comunes
-      ensure_installed = {
-        'bash',
-        'c',
-        'cpp',
-        'css',
-        'dockerfile',
-        'elixir',
-        'erlang',
-        'heex',
-        'eex',
-        'go',
-        'html',
-        'java',
-        'javascript',
-        'jq',
-        'json',
-        'kotlin',
-        'lua',
-        'markdown',
-        'markdown_inline',
-        'nix',
-        'python',
-        'query',
-        'ruby',
-        'rust',
-        'terraform',
-        'toml',
-        'tsx',
-        'typescript',
-        'vim',
-        'vimdoc',
+	{
+		"nvim-treesitter/nvim-treesitter",
+		build = ":TSUpdate",
+		opts = {
+			  ensure_installed = {
+        "bash",
+        "c",
+        "cpp",
+        "css",
+        "dockerfile",
+        "go",
+        "html",
+        "javascript",
+        "json",
+        "lua",
+        "markdown",
+        "python",
+        "rust",
+        "tsx",
+        "typescript",
+        "vim",
+        "vimdoc",
       },
 
-      auto_install = true, -- instala en caliente si falta un parser
-      sync_install = false,
-      ignore_install = {},
+			-- matchup = {
+			-- 	enable = true,
+			-- },
 
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
-        -- Desactivar highlight en archivos grandes (evita lag)
-        disable = function(_, buf)
-          local max = 500 * 1024 -- 500 KB
-          local ok, stat = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
-          if ok and stat and stat.size and stat.size > max then
-            return true
-          end
-          return false
-        end,
-      },
+			-- https://github.com/nvim-treesitter/playground#query-linter
+			query_linter = {
+				enable = true,
+				use_virtual_text = true,
+				lint_events = { "BufWrite", "CursorHold" },
+			},
 
-      indent = {
-        enable = true,
-        disable = { 'python', 'yaml' }, -- suelen romper indent
-      },
+			playground = {
+				enable = true,
+				disable = {},
+				updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
+				persist_queries = true, -- Whether the query persists across vim sessions
+				keybindings = {
+					toggle_query_editor = "o",
+					toggle_hl_groups = "i",
+					toggle_injected_languages = "t",
+					toggle_anonymous_nodes = "a",
+					toggle_language_display = "I",
+					focus_language = "f",
+					unfocus_language = "F",
+					update = "R",
+					goto_node = "<cr>",
+					show_help = "?",
+				},
+			},
+		},
+		config = function(_, opts)
+			local TS = require("nvim-treesitter")
+			TS.setup(opts)
 
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = 'gnn',
-          node_incremental = 'grn',
-          scope_incremental = 'grc',
-          node_decremental = 'grm',
-        },
-      },
-
-      -- ¡Importante! `context_commentstring` ya NO va aquí.
-      -- Lo configuramos desde el plugin `nvim-ts-context-commentstring`.
-
-      -- Playground + linter de queries (como tenías)
-      query_linter = {
-        enable = true,
-        use_virtual_text = true,
-        lint_events = { 'BufWrite', 'CursorHold' },
-      },
-      
-    })
-  end,
+			-- MDX
+			vim.filetype.add({
+				extension = {
+					mdx = "mdx",
+				},
+			})
+			vim.treesitter.language.register("markdown", "mdx")
+		end,
+	},
 }
+    
