@@ -1,6 +1,6 @@
 -- lua/plugins/lsp/handlers.lua
 local M = {}
-local setup = require('utils').setup_lsp
+local setup = require('plugins.lsp.setup').setup_lsp
 local util = require('lspconfig.util')
 local root_pattern = util.root_pattern
 
