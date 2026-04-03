@@ -1,17 +1,59 @@
 ---@diagnostic disable: undefined-global
---- lua/plugins/treesitter/init.lua
 return {
   'nvim-treesitter/nvim-treesitter',
-  event = { 'BufReadPost', 'BufNewFile' },
-  cmd = { 'TSInstall', 'TSBufEnable', 'TSBufDisable', 'TSModuleInfo' },
+  lazy = false, -- nvim-treesitter upstream no soporta lazy-loading
   build = ':TSUpdate',
+  cmd = { 'TSInstall', 'TSUpdate', 'TSBufEnable', 'TSBufDisable', 'TSModuleInfo' },
 
   config = function()
     local uv = vim.uv or vim.loop
     local warned_langs = {}
 
+    local ensure_installed = {
+      'bash',
+      'c',
+      'cpp',
+      'css',
+      'dockerfile',
+      'elixir',
+      'erlang',
+      'eex',
+      'go',
+      'heex',
+      'html',
+      'java',
+      'javascript',
+      'jq',
+      'json',
+      'kotlin',
+      'lua',
+      'markdown',
+      'markdown_inline',
+      'nix',
+      'python',
+      'query',
+      'ruby',
+      'rust',
+      'terraform',
+      'toml',
+      'tsx',
+      'typescript',
+      'vim',
+      'vimdoc',
+      'yaml',
+    }
+
+    local function is_large_file(buf)
+      local max = 500 * 1024
+      local ok, stat = pcall(uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+      return ok and stat and stat.size and stat.size > max
+    end
+
     local function ts_can_highlight(lang, buf)
       if not lang or not buf or not vim.api.nvim_buf_is_valid(buf) then
+        return false
+      end
+      if is_large_file(buf) then
         return false
       end
 
@@ -28,113 +70,92 @@ return {
       local ok_root, root = pcall(function()
         return trees[1]:root()
       end)
-      if not ok_root or not root then
-        return false
-      end
-
-      return type(root.range) == 'function'
+      return ok_root and root and type(root.range) == 'function'
     end
 
-    -- Mapear filetypes de React a parsers correctos
+    local function warn_once(lang)
+      if warned_langs[lang] then
+        return
+      end
+      warned_langs[lang] = true
+      vim.schedule(function()
+        vim.notify(
+          ('Treesitter desactivado para "%s" (parser incompatible o desactualizado). Ejecutá :TSUpdate y reiniciá Neovim.'):format(lang),
+          vim.log.levels.WARN
+        )
+      end)
+    end
+
+    -- Mapear filetypes React -> parser correcto
     pcall(function()
       vim.treesitter.language.register('tsx', 'typescriptreact')
       vim.treesitter.language.register('javascript', 'javascriptreact')
     end)
 
-    local ts = require('nvim-treesitter.configs')
+    local has_new_api, ts = pcall(require, 'nvim-treesitter')
+    if has_new_api and type(ts.setup) == 'function' then
+      -- API nueva (Neovim 0.12+)
+      ts.setup({})
+      if type(ts.install) == 'function' then
+        pcall(ts.install, ensure_installed)
+      end
 
-    ts.setup({
-      -- Tu baseline de parsers + algunos comunes
-      ensure_installed = {
-        'bash',
-        'c',
-        'cpp',
-        'css',
-        'dockerfile',
-        'elixir',
-        'erlang',
-        'heex',
-        'eex',
-        'go',
-        'html',
-        'java',
-        'javascript',
-        'jq',
-        'json',
-        'kotlin',
-        'lua',
-        'markdown',
-        'markdown_inline',
-        'nix',
-        'python',
-        'query',
-        'ruby',
-        'rust',
-        'terraform',
-        'toml',
-        'tsx',
-        'typescript',
-        'vim',
-        'vimdoc',
-      },
-
-      auto_install = true, -- instala en caliente si falta un parser
-      sync_install = false,
-      ignore_install = {},
-
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
-        -- Desactivar highlight en archivos grandes y en parsers rotos/incompatibles
-        disable = function(lang, buf)
-          local max = 500 * 1024 -- 500 KB
-          local ok, stat = pcall(uv.fs_stat, vim.api.nvim_buf_get_name(buf))
-          if ok and stat and stat.size and stat.size > max then
-            return true
+      vim.api.nvim_create_autocmd('FileType', {
+        callback = function(args)
+          local lang = vim.treesitter.language.get_lang(args.match) or args.match
+          if not ts_can_highlight(lang, args.buf) then
+            warn_once(lang)
+            return
           end
-
-          if not ts_can_highlight(lang, buf) then
-            if not warned_langs[lang] then
-              warned_langs[lang] = true
-              vim.schedule(function()
-                vim.notify(
-                  ('Treesitter desactivado para "%s" (parser incompatible o desactualizado). Ejecutá :TSUpdate y reiniciá Neovim.'):format(lang),
-                  vim.log.levels.WARN
-                )
-              end)
-            end
-            return true
-          end
-
-          return false
+          pcall(vim.treesitter.start, args.buf, lang)
         end,
-      },
+      })
+      return
+    end
 
-      indent = {
-        enable = true,
-        disable = { 'python', 'yaml' }, -- suelen romper indent
-      },
-
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = 'gnn',
-          node_incremental = 'grn',
-          scope_incremental = 'grc',
-          node_decremental = 'grm',
+    -- Fallback API legacy (rama master bloqueada)
+    local ok_configs, configs = pcall(require, 'nvim-treesitter.configs')
+    if ok_configs and type(configs.setup) == 'function' then
+      configs.setup({
+        ensure_installed = ensure_installed,
+        auto_install = true,
+        sync_install = false,
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+          disable = function(lang, buf)
+            if not ts_can_highlight(lang, buf) then
+              warn_once(lang)
+              return true
+            end
+            return false
+          end,
         },
-      },
+        indent = {
+          enable = true,
+          disable = { 'python', 'yaml' },
+        },
+        incremental_selection = {
+          enable = true,
+          keymaps = {
+            init_selection = 'gnn',
+            node_incremental = 'grn',
+            scope_incremental = 'grc',
+            node_decremental = 'grm',
+          },
+        },
+        query_linter = {
+          enable = true,
+          use_virtual_text = true,
+          lint_events = { 'BufWrite', 'CursorHold' },
+        },
+      })
+      return
+    end
 
-      -- ¡Importante! `context_commentstring` ya NO va aquí.
-      -- Lo configuramos desde el plugin `nvim-ts-context-commentstring`.
-
-      -- Playground + linter de queries (como tenías)
-      query_linter = {
-        enable = true,
-        use_virtual_text = true,
-        lint_events = { 'BufWrite', 'CursorHold' },
-      },
-      
-    })
+    vim.notify(
+      'No se pudo inicializar nvim-treesitter: API no reconocida.',
+      vim.log.levels.ERROR
+    )
   end,
 }

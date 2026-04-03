@@ -24,7 +24,7 @@ M.config = function()
   })
 
   -- scope solo si hay Treesitter
-  local has_ts = pcall(require, 'nvim-treesitter.configs')
+  local has_ts = pcall(require, 'nvim-treesitter') or pcall(require, 'nvim-treesitter.configs')
 
   require('ibl').setup({
     indent = {
