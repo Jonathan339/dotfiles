@@ -1,73 +1,98 @@
-
 return {
-	{ "nvim-treesitter/playground", cmd = "TSPlaygroundToggle" },
+  "nvim-treesitter/nvim-treesitter",
+  branch = "main",
+  lazy = false,
 
-	{
-		"nvim-treesitter/nvim-treesitter",
-		build = ":TSUpdate",
-		opts = {
-			  ensure_installed = {
-        "bash",
-        "c",
-        "cpp",
-        "css",
-        "dockerfile",
-        "go",
-        "html",
-        "javascript",
-        "json",
-        "lua",
-        "markdown",
-        "python",
-        "rust",
-        "tsx",
-        "typescript",
-        "vim",
-        "vimdoc",
-      },
+  init = function()
 
-			-- matchup = {
-			-- 	enable = true,
-			-- },
+    ---------------------------------------------------------------
+    -- 1. Asegurar tree-sitter CLI con bun
+    ---------------------------------------------------------------
+    local function ensure_tree_sitter_cli(callback)
+      if vim.fn.executable("tree-sitter") == 1 then
+        callback()
+        return
+      end
 
-			-- https://github.com/nvim-treesitter/playground#query-linter
-			query_linter = {
-				enable = true,
-				use_virtual_text = true,
-				lint_events = { "BufWrite", "CursorHold" },
-			},
+      if vim.fn.executable("bun") == 0 then
+        vim.notify(
+          "tree-sitter no encontrado y bun no está instalado",
+          vim.log.levels.WARN
+        )
+        return
+      end
 
-			playground = {
-				enable = true,
-				disable = {},
-				updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
-				persist_queries = true, -- Whether the query persists across vim sessions
-				keybindings = {
-					toggle_query_editor = "o",
-					toggle_hl_groups = "i",
-					toggle_injected_languages = "t",
-					toggle_anonymous_nodes = "a",
-					toggle_language_display = "I",
-					focus_language = "f",
-					unfocus_language = "F",
-					update = "R",
-					goto_node = "<cr>",
-					show_help = "?",
-				},
-			},
-		},
-		config = function(_, opts)
-			local TS = require("nvim-treesitter")
-			TS.setup(opts)
+      vim.notify("Instalando tree-sitter-cli con bun...", vim.log.levels.INFO)
 
-			-- MDX
-			vim.filetype.add({
-				extension = {
-					mdx = "mdx",
-				},
-			})
-			vim.treesitter.language.register("markdown", "mdx")
-		end,
-	},
+      vim.system(
+        { "bun", "install", "-g", "tree-sitter-cli" },
+        { text = true },
+        function(obj)
+          if obj.code ~= 0 then
+            vim.schedule(function()
+              vim.notify(
+                "Error instalando tree-sitter-cli con bun",
+                vim.log.levels.ERROR
+              )
+            end)
+            return
+          end
+
+          vim.schedule(function()
+            if vim.fn.executable("tree-sitter") == 1 then
+              vim.notify("tree-sitter-cli instalado correctamente", vim.log.levels.INFO)
+              callback()
+            else
+              vim.notify(
+                "tree-sitter se instaló pero no está en PATH",
+                vim.log.levels.ERROR
+              )
+            end
+          end)
+        end
+      )
+    end
+
+    ---------------------------------------------------------------
+    -- 2. Instalar parsers faltantes
+    ---------------------------------------------------------------
+    local function ensure_parsers()
+      local ensure_installed = {
+        "vim", "regex", "rust", "markdown", "json",
+        "javascript", "typescript", "yaml", "html",
+        "css", "bash", "lua", "dockerfile",
+        "solidity", "gitignore", "python",
+        "vue", "svelte", "toml", "go",
+      }
+
+      local installed = require("nvim-treesitter.config").get_installed()
+
+      local to_install = vim.iter(ensure_installed)
+        :filter(function(parser)
+          return not vim.tbl_contains(installed, parser)
+        end)
+        :totable()
+
+      if #to_install > 0 then
+        require("nvim-treesitter").install(to_install)
+      end
+    end
+
+    ---------------------------------------------------------------
+    -- 3. Ejecutar todo en orden correcto
+    ---------------------------------------------------------------
+    ensure_tree_sitter_cli(function()
+      ensure_parsers()
+    end)
+
+    ---------------------------------------------------------------
+    -- 4. Activar Treesitter
+    ---------------------------------------------------------------
+    vim.api.nvim_create_autocmd("FileType", {
+      callback = function()
+        pcall(vim.treesitter.start)
+        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      end,
+    })
+  end,
 }
-    

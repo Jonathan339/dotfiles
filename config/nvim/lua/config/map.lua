@@ -1,6 +1,6 @@
 local map = require('utils').map
-local telescope_builtin = require('telescope.builtin')
-local smart_splits = require('smart-splits')
+-- local telescope_builtin = require('telescope.builtin')
+-- local smart_splits = require('smart-splits')
 
 -- Seleccionar todo
 map('n', '<C-a>', 'ggVG', { desc = 'Seleccionar todo' })
@@ -56,15 +56,15 @@ map('v', '<C-Up>', ":move '<-2<CR>gv=gv", { desc = 'Mover selección arriba' })
 map('v', '<C-Down>', ":move '>+1<CR>gv=gv", { desc = 'Mover selección abajo' })
 
 -- Redimensionar y mover entre ventanas con smart-splits
-map('n', '<A-h>', smart_splits.resize_left, { desc = 'Redimensionar izquierda' })
-map('n', '<A-j>', smart_splits.resize_down, { desc = 'Redimensionar abajo' })
-map('n', '<A-k>', smart_splits.resize_up, { desc = 'Redimensionar arriba' })
-map('n', '<A-l>', smart_splits.resize_right, { desc = 'Redimensionar derecha' })
-
-map('n', '<C-h>', smart_splits.move_cursor_left, { desc = 'Mover cursor izquierda' })
-map('n', '<C-j>', smart_splits.move_cursor_down, { desc = 'Mover cursor abajo' })
-map('n', '<C-k>', smart_splits.move_cursor_up, { desc = 'Mover cursor arriba' })
-map('n', '<C-l>', smart_splits.move_cursor_right, { desc = 'Mover cursor derecha' })
+-- map('n', '<A-h>', smart_splits.resize_left, { desc = 'Redimensionar izquierda' })
+-- map('n', '<A-j>', smart_splits.resize_down, { desc = 'Redimensionar abajo' })
+-- map('n', '<A-k>', smart_splits.resize_up, { desc = 'Redimensionar arriba' })
+-- map('n', '<A-l>', smart_splits.resize_right, { desc = 'Redimensionar derecha' })
+-- 
+-- map('n', '<C-h>', smart_splits.move_cursor_left, { desc = 'Mover cursor izquierda' })
+-- map('n', '<C-j>', smart_splits.move_cursor_down, { desc = 'Mover cursor abajo' })
+-- map('n', '<C-k>', smart_splits.move_cursor_up, { desc = 'Mover cursor arriba' })
+-- map('n', '<C-l>', smart_splits.move_cursor_right, { desc = 'Mover cursor derecha' })
 
 -- Mapeo para abrir el directorio principal
 map('n', '-', '<CMD>Oil --float<CR>', { desc = 'Abrir directorio principal' })
