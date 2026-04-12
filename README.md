@@ -5,7 +5,6 @@ Repositorio de configuración personal para entorno Linux (terminal + shell + Ne
 ## Qué incluye
 
 - `install.sh`: instalador interactivo por menú para preparar el sistema.
-- `stow/`: paquetes de dotfiles para desplegar configuración con GNU Stow.
 - `config/nvim`: configuración modular de Neovim en Lua.
 - `config/kitty.conf`: configuración de Kitty.
 - `config/alacritty/alacritty.toml`: configuración de Alacritty.
@@ -48,13 +47,13 @@ También podés usar modo rápido sin menú:
 
 ### Paquetes Stow
 
-> Nota: los paquetes dentro de `stow/` apuntan a `config/` para evitar duplicar archivos.
+> Nota: no se guarda una carpeta `stow/` en el repo. El instalador genera una estructura temporal de paquetes desde `config/` para evitar duplicación.
 
-- `stow/shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`
-- `stow/nvim` → `~/.config/nvim`
-- `stow/kitty` → `~/.config/kitty/kitty.conf`
-- `stow/alacritty` → `~/.config/alacritty/alacritty.toml`
-- `stow/wezterm` → `~/.config/wezterm/wezterm.lua`
+- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`
+- `nvim` → `~/.config/nvim`
+- `kitty` → `~/.config/kitty/kitty.conf`
+- `alacritty` → `~/.config/alacritty/alacritty.toml`
+- `wezterm` → `~/.config/wezterm/wezterm.lua`
 
 ## Ruta de configs destino
 

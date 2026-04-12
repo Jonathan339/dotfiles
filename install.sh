@@ -98,11 +98,26 @@ stow_config_files() {
   log "Aplicando dotfiles con GNU Stow..."
   install_package_if_not_installed stow
   local success="true"
-  local stow_dir="$REPO_ROOT/stow"
+  local stow_dir
   local -a stow_packages=(shell nvim kitty alacritty wezterm)
   local pkg
+  stow_dir="$(mktemp -d)"
 
-  [[ -d "$stow_dir" ]] || die "No existe el directorio '$stow_dir'."
+  mkdir -p \
+    "$stow_dir/shell" \
+    "$stow_dir/nvim/.config" \
+    "$stow_dir/kitty/.config/kitty" \
+    "$stow_dir/alacritty/.config/alacritty" \
+    "$stow_dir/wezterm/.config/wezterm"
+
+  ln -snf "$REPO_ROOT/config/.zshrc" "$stow_dir/shell/.zshrc"
+  ln -snf "$REPO_ROOT/config/.bashrc" "$stow_dir/shell/.bashrc"
+  [[ -f "$REPO_ROOT/config/.zsh_aliases" ]] && ln -snf "$REPO_ROOT/config/.zsh_aliases" "$stow_dir/shell/.zsh_aliases"
+
+  ln -snf "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
+  ln -snf "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
+  ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
+  ln -snf "$REPO_ROOT/config/wezterm.lua" "$stow_dir/wezterm/.config/wezterm/wezterm.lua"
 
   for pkg in "${stow_packages[@]}"; do
     if [[ -d "$stow_dir/$pkg" ]]; then
@@ -114,6 +129,7 @@ stow_config_files() {
     fi
   done
 
+  rm -rf "$stow_dir"
   [[ "$success" = true ]] && ok "Dotfiles aplicados con Stow" || die "Error aplicando dotfiles con Stow."
 }
 
