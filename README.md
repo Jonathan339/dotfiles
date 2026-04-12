@@ -29,6 +29,7 @@ El script permite:
 - Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit y Alacritty).
 - Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
 - Instalar Alacritty desde el menú (`5) Alacritty`).
+
 > Si venías del modo de enlaces antiguo, el instalador limpia symlinks heredados en rutas administradas antes de aplicar Stow para evitar conflictos.
 
 También podés usar modo rápido sin menú:
