@@ -99,7 +99,7 @@ stow_config_files() {
   install_package_if_not_installed stow
   local success="true"
   local stow_dir
-  local -a stow_packages=(shell nvim kitty alacritty wezterm)
+  local -a stow_packages=(shell nvim kitty alacritty)
   local pkg
   stow_dir="$(mktemp -d)"
 
@@ -107,8 +107,7 @@ stow_config_files() {
     "$stow_dir/shell" \
     "$stow_dir/nvim/.config" \
     "$stow_dir/kitty/.config/kitty" \
-    "$stow_dir/alacritty/.config/alacritty" \
-    "$stow_dir/wezterm/.config/wezterm"
+    "$stow_dir/alacritty/.config/alacritty"
 
   # Limpia enlaces simbólicos heredados (modo link antiguo) para evitar conflictos con Stow.
   local -a legacy_targets=(
@@ -118,7 +117,6 @@ stow_config_files() {
     "$HOME/.config/nvim"
     "$HOME/.config/kitty/kitty.conf"
     "$HOME/.config/alacritty/alacritty.toml"
-    "$HOME/.config/wezterm/wezterm.lua"
   )
   local target
   for target in "${legacy_targets[@]}"; do
@@ -132,7 +130,6 @@ stow_config_files() {
   cp -a "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
   cp -f "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
   cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
-  cp -f "$REPO_ROOT/config/wezterm.lua" "$stow_dir/wezterm/.config/wezterm/wezterm.lua"
 
   for pkg in "${stow_packages[@]}"; do
     if [[ -d "$stow_dir/$pkg" ]]; then
@@ -169,11 +166,6 @@ copy_config_files() {
   if check_file_exists "config/alacritty/alacritty.toml"; then
     mkdir -p "$HOME/.config/alacritty"
     cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
-  fi
-
-  if check_file_exists "config/wezterm.lua"; then
-    mkdir -p "$HOME/.config/wezterm"
-    cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
   fi
 
   [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."
@@ -291,33 +283,6 @@ install_alacritty() {
   ok "Alacritty instalado."
 }
 
-install_wezterm() {
-  if command -v wezterm >/dev/null 2>&1; then
-    ok "WezTerm ya está instalado. Saltando..."
-    return
-  fi
-
-  log "Configurando repositorio oficial APT de WezTerm..."
-  sudo mkdir -p /usr/share/keyrings
-  curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg \
-    || die "No se pudo importar la key GPG de WezTerm."
-  echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' \
-    | sudo tee /etc/apt/sources.list.d/wezterm.list >/dev/null \
-    || die "No se pudo configurar el repo APT de WezTerm."
-  sudo chmod 644 /usr/share/keyrings/wezterm-fury.gpg || die "No se pudieron ajustar permisos de la key de WezTerm."
-
-  log "Actualizando índices de APT e instalando WezTerm..."
-  sudo apt update
-  sudo apt install -y wezterm || die "Fallo instalando WezTerm desde el repo oficial."
-  ok "WezTerm instalado desde repositorio oficial."
-}
-
-install_terminal_emulators() {
-  log "Instalando emuladores de terminal (Alacritty + WezTerm)..."
-  install_alacritty
-  install_wezterm
-}
-
 # ---- Yarn (keyring) ----
 install_yarn() {
   if command -v yarn >/dev/null 2>&1; then
@@ -414,7 +379,7 @@ install_all() {
   install_spotify
   install_vscode
   install_nvim
-  install_terminal_emulators
+  install_alacritty
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -436,16 +401,14 @@ if [[ "${1:-}" == "--all" ]]; then
 fi
 
 # ---- Menú (coincide por número con $REPLY) ----
-echo "Atajos terminales: 5) Alacritty + WezTerm | 6) Alacritty | 7) WezTerm"
+echo "Atajo terminal: 5) Alacritty"
 PS3="Elegí una opción: "
 select opcion in \
   "Instalar todo" \
   "Instalar paquetes" \
   "Aplicar dotfiles con GNU Stow" \
   "Copiar archivos de configuración" \
-  "Instalar terminales (Alacritty + WezTerm)" \
   "Instalar Alacritty" \
-  "Instalar WezTerm (repo oficial APT)" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
   "Instalar kitty-themes" \
@@ -463,21 +426,19 @@ select opcion in \
     2) install_packages ;;
     3) stow_config_files ;;
     4) copy_config_files ;;
-    5) install_terminal_emulators ;;
-    6) install_alacritty ;;
-    7) install_wezterm ;;
-    8) install_bun ;;
-    9) install_oh_my_zsh ;;
-    10) install_kitty_themes ;;
-    11) install_android_studio ;;
-    12) install_spotify ;;
-    13) install_vscode ;;
-    14) install_nvim ;;
-    15) install_nodejs ;;
-    16) install_yarn ;;
-    17) install_lazygit ;;
-    18) clean ;;
-    19) exit 0 ;;
+    5) install_alacritty ;;
+    6) install_bun ;;
+    7) install_oh_my_zsh ;;
+    8) install_kitty_themes ;;
+    9) install_android_studio ;;
+    10) install_spotify ;;
+    11) install_vscode ;;
+    12) install_nvim ;;
+    13) install_nodejs ;;
+    14) install_yarn ;;
+    15) install_lazygit ;;
+    16) clean ;;
+    17) exit 0 ;;
     *) echo "Opción inválida." ;;
   esac
 done
