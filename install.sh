@@ -436,12 +436,16 @@ if [[ "${1:-}" == "--all" ]]; then
 fi
 
 # ---- Menú (coincide por número con $REPLY) ----
+echo "Atajos terminales: 5) Alacritty + WezTerm | 6) Alacritty | 7) WezTerm"
 PS3="Elegí una opción: "
 select opcion in \
   "Instalar todo" \
   "Instalar paquetes" \
   "Aplicar dotfiles con GNU Stow" \
   "Copiar archivos de configuración" \
+  "Instalar terminales (Alacritty + WezTerm)" \
+  "Instalar Alacritty" \
+  "Instalar WezTerm (repo oficial APT)" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
   "Instalar kitty-themes" \
@@ -449,9 +453,6 @@ select opcion in \
   "Instalar Spotify" \
   "Instalar Visual Studio Code" \
   "Instalar nvim" \
-  "Instalar terminales (Alacritty + WezTerm)" \
-  "Instalar Alacritty" \
-  "Instalar WezTerm" \
   "Instalar Node.js" \
   "Instalar Yarn" \
   "Instalar lazygit" \
@@ -462,16 +463,16 @@ select opcion in \
     2) install_packages ;;
     3) stow_config_files ;;
     4) copy_config_files ;;
-    5) install_bun ;;
-    6) install_oh_my_zsh ;;
-    7) install_kitty_themes ;;
-    8) install_android_studio ;;
-    9) install_spotify ;;
-    10) install_vscode ;;
-    11) install_nvim ;;
-    12) install_terminal_emulators ;;
-    13) install_alacritty ;;
-    14) install_wezterm ;;
+    5) install_terminal_emulators ;;
+    6) install_alacritty ;;
+    7) install_wezterm ;;
+    8) install_bun ;;
+    9) install_oh_my_zsh ;;
+    10) install_kitty_themes ;;
+    11) install_android_studio ;;
+    12) install_spotify ;;
+    13) install_vscode ;;
+    14) install_nvim ;;
     15) install_nodejs ;;
     16) install_yarn ;;
     17) install_lazygit ;;

@@ -30,6 +30,7 @@ El script permite:
 - Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit, Alacritty y WezTerm).
 - Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
 - Instalar en lote los terminales (`Alacritty + WezTerm`) desde el menú.
+- Atajo en menú: `5) Alacritty + WezTerm`, `6) Alacritty`, `7) WezTerm`.
 
 > Para WezTerm, el instalador configura el repositorio oficial APT de WezTerm (`apt.fury.io/wez`) e instala el paquete `wezterm`.
 > Si venías del modo de enlaces antiguo, el instalador limpia symlinks heredados en rutas administradas antes de aplicar Stow para evitar conflictos.
