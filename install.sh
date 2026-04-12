@@ -23,7 +23,7 @@ trap 'echo -e "\n'"$ERR"' Ocurrió un error. Revisá el mensaje anterior."' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
-CONFIG_MODE="${DOTFILES_CONFIG_MODE:-link}" # link (default) | copy
+CONFIG_MODE="${DOTFILES_CONFIG_MODE:-stow}" # stow (default) | copy
 
 command -v sudo >/dev/null 2>&1 || die "Necesitás sudo instalado."
 command -v curl >/dev/null 2>&1 || die "Necesitás curl (sudo apt install curl)."
@@ -93,64 +93,57 @@ check_directory_exists() {
   }
 }
 
-# ---- Enlace/Copia de config ----
-link_config_files() {
-  log "Creando enlaces simbólicos desde 'config'..."
+# ---- Stow/Copia de config ----
+stow_config_files() {
+  log "Aplicando dotfiles con GNU Stow..."
+  install_package_if_not_installed stow
   local success="true"
+  local stow_dir="$REPO_ROOT/stow"
+  local -a stow_packages=(shell nvim kitty alacritty wezterm)
+  local pkg
 
-  if check_file_exists "config/.zshrc"; then ln -snf "$REPO_ROOT/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc enlazado" || success="false"; fi
-  if check_file_exists "config/.zsh_aliases"; then ln -snf "$REPO_ROOT/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases enlazado" || success="false"; fi
-  if check_file_exists "config/.bashrc"; then ln -snf "$REPO_ROOT/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc enlazado" || success="false"; fi
+  [[ -d "$stow_dir" ]] || die "No existe el directorio '$stow_dir'."
 
-  if check_directory_exists "config/nvim"; then
-    mkdir -p "$HOME/.config"
-    ln -snf "$REPO_ROOT/config/nvim" "$HOME/.config/nvim" && ok "nvim enlazado" || success="false"
-  fi
+  for pkg in "${stow_packages[@]}"; do
+    if [[ -d "$stow_dir/$pkg" ]]; then
+      stow --restow --dir "$stow_dir" --target "$HOME" "$pkg" \
+        && ok "Paquete Stow '$pkg' aplicado" \
+        || success="false"
+    else
+      warn "Paquete Stow '$pkg' no encontrado. Saltando..."
+    fi
+  done
 
-  if check_file_exists "config/kitty.conf"; then
-    mkdir -p "$HOME/.config/kitty"
-    ln -snf "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
-  fi
-
-  if check_file_exists "config/alacritty/alacritty.toml"; then
-    mkdir -p "$HOME/.config/alacritty"
-    ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml enlazado" || success="false"
-  fi
-
-  if check_file_exists "config/wezterm.lua"; then
-    mkdir -p "$HOME/.config/wezterm"
-    ln -snf "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua enlazado" || success="false"
-  fi
-
-  [[ "$success" = true ]] && ok "Enlaces simbólicos creados" || die "Error creando enlaces simbólicos."
+  [[ "$success" = true ]] && ok "Dotfiles aplicados con Stow" || die "Error aplicando dotfiles con Stow."
 }
 
 copy_config_files() {
-  log "Copiando archivos de configuración desde 'config'..."
+  log "Copiando archivos de configuración desde 'stow'..."
   local success="true"
+  local stow_dir="$REPO_ROOT/stow"
 
-  if check_file_exists "config/.zshrc"; then cp -f "$REPO_ROOT/config/.zshrc" "$HOME/" && ok ".zshrc copiado" || success="false"; fi
-  if check_file_exists "config/.zsh_aliases"; then cp -f "$REPO_ROOT/config/.zsh_aliases" "$HOME/" && ok ".zsh_aliases copiado" || success="false"; fi
-  if check_file_exists "config/.bashrc"; then cp -f "$REPO_ROOT/config/.bashrc" "$HOME/" && ok ".bashrc copiado" || success="false"; fi
+  if check_file_exists "stow/shell/.zshrc"; then cp -f "$stow_dir/shell/.zshrc" "$HOME/.zshrc" && ok ".zshrc copiado" || success="false"; fi
+  if check_file_exists "stow/shell/.zsh_aliases"; then cp -f "$stow_dir/shell/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases copiado" || success="false"; fi
+  if check_file_exists "stow/shell/.bashrc"; then cp -f "$stow_dir/shell/.bashrc" "$HOME/.bashrc" && ok ".bashrc copiado" || success="false"; fi
 
-  if check_directory_exists "config/nvim"; then
+  if check_directory_exists "stow/nvim/.config/nvim"; then
     mkdir -p "$HOME/.config"
-    cp -rf "$REPO_ROOT/config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
+    cp -rf "$stow_dir/nvim/.config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
   fi
 
-  if check_file_exists "config/kitty.conf"; then
+  if check_file_exists "stow/kitty/.config/kitty/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
-    cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
+    cp -f "$stow_dir/kitty/.config/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf copiado" || success="false"
   fi
 
-  if check_file_exists "config/alacritty/alacritty.toml"; then
+  if check_file_exists "stow/alacritty/.config/alacritty/alacritty.toml"; then
     mkdir -p "$HOME/.config/alacritty"
-    cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
+    cp -f "$stow_dir/alacritty/.config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
   fi
 
-  if check_file_exists "config/wezterm.lua"; then
+  if check_file_exists "stow/wezterm/.config/wezterm/wezterm.lua"; then
     mkdir -p "$HOME/.config/wezterm"
-    cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
+    cp -f "$stow_dir/wezterm/.config/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
   fi
 
   [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."
@@ -158,15 +151,15 @@ copy_config_files() {
 
 apply_config_files() {
   case "$CONFIG_MODE" in
-    link)
-      log "Modo configuración: enlaces simbólicos (default)."
-      link_config_files
+    stow)
+      log "Modo configuración: GNU Stow (default)."
+      stow_config_files
       ;;
     copy)
       log "Modo configuración: copia de archivos."
       copy_config_files
       ;;
-    *) die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'link' o 'copy'." ;;
+    *) die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'stow' o 'copy'." ;;
   esac
 }
 # ---- Oh My Zsh ----
@@ -367,7 +360,7 @@ if [[ "${1:-}" == "--all" ]]; then
   if [[ "${2:-}" == "--copy" ]]; then
     CONFIG_MODE="copy"
   else
-    CONFIG_MODE="link"
+    CONFIG_MODE="stow"
   fi
   install_all
   exit 0
@@ -378,7 +371,7 @@ PS3="Elegí una opción: "
 select opcion in \
   "Instalar todo" \
   "Instalar paquetes" \
-  "Enlazar archivos de configuración" \
+  "Aplicar dotfiles con GNU Stow" \
   "Copiar archivos de configuración" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
@@ -395,7 +388,7 @@ select opcion in \
   case "$REPLY" in
     1) install_all ;;
     2) install_packages ;;
-    3) link_config_files ;;
+    3) stow_config_files ;;
     4) copy_config_files ;;
     5) install_bun ;;
     6) install_oh_my_zsh ;;
