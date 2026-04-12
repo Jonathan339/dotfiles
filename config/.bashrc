@@ -91,3 +91,10 @@ esac
 [ -f ~/.bash_aliases ] && . ~/.bash_aliases
 
 # Fin
+
+# fnm
+FNM_PATH="/home/jonathan/.local/share/fnm"
+if [ -d "$FNM_PATH" ]; then
+  export PATH="$FNM_PATH:$PATH"
+  eval "$(fnm env --shell bash)"
+fi

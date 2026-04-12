@@ -191,3 +191,4 @@ if [[ "$ZSH_PROFILING" == "1" ]]; then
   zmodload zsh/zprof
   zprof
 fi
+eval "$(fnm env --use-on-cd)"
