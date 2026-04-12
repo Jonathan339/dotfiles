@@ -80,4 +80,9 @@ rg -n "^(<<<<<<<|=======|>>>>>>>)" install.sh README.md config
 # Si aparece algo, refrescar el branch
 git fetch origin
 git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+
+# Si estás en medio de un merge y el conflicto es en install.sh
+git checkout --ours install.sh
+git add install.sh
+git merge --continue
 ```
