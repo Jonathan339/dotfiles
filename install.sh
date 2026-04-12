@@ -118,32 +118,31 @@ stow_config_files() {
 }
 
 copy_config_files() {
-  log "Copiando archivos de configuración desde 'stow'..."
+  log "Copiando archivos de configuración desde 'config'..."
   local success="true"
-  local stow_dir="$REPO_ROOT/stow"
 
-  if check_file_exists "stow/shell/.zshrc"; then cp -f "$stow_dir/shell/.zshrc" "$HOME/.zshrc" && ok ".zshrc copiado" || success="false"; fi
-  if check_file_exists "stow/shell/.zsh_aliases"; then cp -f "$stow_dir/shell/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases copiado" || success="false"; fi
-  if check_file_exists "stow/shell/.bashrc"; then cp -f "$stow_dir/shell/.bashrc" "$HOME/.bashrc" && ok ".bashrc copiado" || success="false"; fi
+  if check_file_exists "config/.zshrc"; then cp -f "$REPO_ROOT/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc copiado" || success="false"; fi
+  if check_file_exists "config/.zsh_aliases"; then cp -f "$REPO_ROOT/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases copiado" || success="false"; fi
+  if check_file_exists "config/.bashrc"; then cp -f "$REPO_ROOT/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc copiado" || success="false"; fi
 
-  if check_directory_exists "stow/nvim/.config/nvim"; then
+  if check_directory_exists "config/nvim"; then
     mkdir -p "$HOME/.config"
-    cp -rf "$stow_dir/nvim/.config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
+    cp -rf "$REPO_ROOT/config/nvim" "$HOME/.config/" && ok "nvim copiado" || success="false"
   fi
 
-  if check_file_exists "stow/kitty/.config/kitty/kitty.conf"; then
+  if check_file_exists "config/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
-    cp -f "$stow_dir/kitty/.config/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf copiado" || success="false"
+    cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf copiado" || success="false"
   fi
 
-  if check_file_exists "stow/alacritty/.config/alacritty/alacritty.toml"; then
+  if check_file_exists "config/alacritty/alacritty.toml"; then
     mkdir -p "$HOME/.config/alacritty"
-    cp -f "$stow_dir/alacritty/.config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
+    cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
   fi
 
-  if check_file_exists "stow/wezterm/.config/wezterm/wezterm.lua"; then
+  if check_file_exists "config/wezterm.lua"; then
     mkdir -p "$HOME/.config/wezterm"
-    cp -f "$stow_dir/wezterm/.config/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
+    cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
   fi
 
   [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."

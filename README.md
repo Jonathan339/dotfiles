@@ -48,6 +48,8 @@ También podés usar modo rápido sin menú:
 
 ### Paquetes Stow
 
+> Nota: los paquetes dentro de `stow/` apuntan a `config/` para evitar duplicar archivos.
+
 - `stow/shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`
 - `stow/nvim` → `~/.config/nvim`
 - `stow/kitty` → `~/.config/kitty/kitty.conf`
