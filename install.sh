@@ -23,7 +23,7 @@ trap 'echo -e "\n'"$ERR"' Ocurrió un error. Revisá el mensaje anterior."' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
-CONFIG_MODE="${DOTFILES_CONFIG_MODE:-link}" # link (default) | copy
+CONFIG_MODE="${DOTFILES_CONFIG_MODE:-stow}" # stow (default) | copy
 
 command -v sudo >/dev/null 2>&1 || die "Necesitás sudo instalado."
 command -v curl >/dev/null 2>&1 || die "Necesitás curl (sudo apt install curl)."
@@ -93,45 +93,65 @@ check_directory_exists() {
   }
 }
 
-# ---- Enlace/Copia de config ----
-link_config_files() {
-  log "Creando enlaces simbólicos desde 'config'..."
+# ---- Stow/Copia de config ----
+stow_config_files() {
+  log "Aplicando dotfiles con GNU Stow..."
+  install_package_if_not_installed stow
   local success="true"
+  local stow_dir
+  local -a stow_packages=(shell nvim kitty alacritty)
+  local pkg
+  stow_dir="$(mktemp -d)"
 
-  if check_file_exists "config/.zshrc"; then ln -snf "$REPO_ROOT/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc enlazado" || success="false"; fi
-  if check_file_exists "config/.zsh_aliases"; then ln -snf "$REPO_ROOT/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases enlazado" || success="false"; fi
-  if check_file_exists "config/.bashrc"; then ln -snf "$REPO_ROOT/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc enlazado" || success="false"; fi
+  mkdir -p \
+    "$stow_dir/shell" \
+    "$stow_dir/nvim/.config" \
+    "$stow_dir/kitty/.config/kitty" \
+    "$stow_dir/alacritty/.config/alacritty"
 
-  if check_directory_exists "config/nvim"; then
-    mkdir -p "$HOME/.config"
-    ln -snf "$REPO_ROOT/config/nvim" "$HOME/.config/nvim" && ok "nvim enlazado" || success="false"
-  fi
+  # Limpia enlaces simbólicos heredados (modo link antiguo) para evitar conflictos con Stow.
+  local -a legacy_targets=(
+    "$HOME/.zshrc"
+    "$HOME/.zsh_aliases"
+    "$HOME/.bashrc"
+    "$HOME/.config/nvim"
+    "$HOME/.config/kitty/kitty.conf"
+    "$HOME/.config/alacritty/alacritty.toml"
+  )
+  local target
+  for target in "${legacy_targets[@]}"; do
+    [[ -L "$target" ]] && rm -f "$target"
+  done
 
-  if check_file_exists "config/kitty.conf"; then
-    mkdir -p "$HOME/.config/kitty"
-    ln -snf "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf enlazado" || success="false"
-  fi
+  cp -f "$REPO_ROOT/config/.zshrc" "$stow_dir/shell/.zshrc"
+  cp -f "$REPO_ROOT/config/.bashrc" "$stow_dir/shell/.bashrc"
+  [[ -f "$REPO_ROOT/config/.zsh_aliases" ]] && cp -f "$REPO_ROOT/config/.zsh_aliases" "$stow_dir/shell/.zsh_aliases"
 
-  if check_file_exists "config/alacritty/alacritty.toml"; then
-    mkdir -p "$HOME/.config/alacritty"
-    ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml enlazado" || success="false"
-  fi
+  cp -a "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
+  cp -f "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
+  cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
 
-  if check_file_exists "config/wezterm.lua"; then
-    mkdir -p "$HOME/.config/wezterm"
-    ln -snf "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua enlazado" || success="false"
-  fi
+  for pkg in "${stow_packages[@]}"; do
+    if [[ -d "$stow_dir/$pkg" ]]; then
+      stow --restow --dir "$stow_dir" --target "$HOME" "$pkg" \
+        && ok "Paquete Stow '$pkg' aplicado" \
+        || success="false"
+    else
+      warn "Paquete Stow '$pkg' no encontrado. Saltando..."
+    fi
+  done
 
-  [[ "$success" = true ]] && ok "Enlaces simbólicos creados" || die "Error creando enlaces simbólicos."
+  rm -rf "$stow_dir"
+  [[ "$success" = true ]] && ok "Dotfiles aplicados con Stow" || die "Error aplicando dotfiles con Stow."
 }
 
 copy_config_files() {
   log "Copiando archivos de configuración desde 'config'..."
   local success="true"
 
-  if check_file_exists "config/.zshrc"; then cp -f "$REPO_ROOT/config/.zshrc" "$HOME/" && ok ".zshrc copiado" || success="false"; fi
-  if check_file_exists "config/.zsh_aliases"; then cp -f "$REPO_ROOT/config/.zsh_aliases" "$HOME/" && ok ".zsh_aliases copiado" || success="false"; fi
-  if check_file_exists "config/.bashrc"; then cp -f "$REPO_ROOT/config/.bashrc" "$HOME/" && ok ".bashrc copiado" || success="false"; fi
+  if check_file_exists "config/.zshrc"; then cp -f "$REPO_ROOT/config/.zshrc" "$HOME/.zshrc" && ok ".zshrc copiado" || success="false"; fi
+  if check_file_exists "config/.zsh_aliases"; then cp -f "$REPO_ROOT/config/.zsh_aliases" "$HOME/.zsh_aliases" && ok ".zsh_aliases copiado" || success="false"; fi
+  if check_file_exists "config/.bashrc"; then cp -f "$REPO_ROOT/config/.bashrc" "$HOME/.bashrc" && ok ".bashrc copiado" || success="false"; fi
 
   if check_directory_exists "config/nvim"; then
     mkdir -p "$HOME/.config"
@@ -140,7 +160,7 @@ copy_config_files() {
 
   if check_file_exists "config/kitty.conf"; then
     mkdir -p "$HOME/.config/kitty"
-    cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/" && ok "kitty.conf copiado" || success="false"
+    cp -f "$REPO_ROOT/config/kitty.conf" "$HOME/.config/kitty/kitty.conf" && ok "kitty.conf copiado" || success="false"
   fi
 
   if check_file_exists "config/alacritty/alacritty.toml"; then
@@ -148,25 +168,20 @@ copy_config_files() {
     cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
   fi
 
-  if check_file_exists "config/wezterm.lua"; then
-    mkdir -p "$HOME/.config/wezterm"
-    cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
-  fi
-
   [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."
 }
 
 apply_config_files() {
   case "$CONFIG_MODE" in
-    link)
-      log "Modo configuración: enlaces simbólicos (default)."
-      link_config_files
+    stow)
+      log "Modo configuración: GNU Stow (default)."
+      stow_config_files
       ;;
     copy)
       log "Modo configuración: copia de archivos."
       copy_config_files
       ;;
-    *) die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'link' o 'copy'." ;;
+    *) die "DOTFILES_CONFIG_MODE inválido: '$CONFIG_MODE'. Usá 'stow' o 'copy'." ;;
   esac
 }
 # ---- Oh My Zsh ----
@@ -255,6 +270,17 @@ install_nvim() {
   log "Instalando Neovim (snap beta)..."
   sudo snap install nvim --beta --classic || die "Fallo instalando Neovim."
   ok "Neovim instalado."
+}
+
+# ---- Terminal emulators ----
+install_alacritty() {
+  if command -v alacritty >/dev/null 2>&1; then
+    ok "Alacritty ya está instalado. Saltando..."
+    return
+  fi
+  log "Instalando Alacritty..."
+  install_package_if_not_installed alacritty
+  ok "Alacritty instalado."
 }
 
 # ---- Yarn (keyring) ----
@@ -353,6 +379,7 @@ install_all() {
   install_spotify
   install_vscode
   install_nvim
+  install_alacritty
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -367,19 +394,21 @@ if [[ "${1:-}" == "--all" ]]; then
   if [[ "${2:-}" == "--copy" ]]; then
     CONFIG_MODE="copy"
   else
-    CONFIG_MODE="link"
+    CONFIG_MODE="stow"
   fi
   install_all
   exit 0
 fi
 
 # ---- Menú (coincide por número con $REPLY) ----
+echo "Atajo terminal: 5) Alacritty"
 PS3="Elegí una opción: "
 select opcion in \
   "Instalar todo" \
   "Instalar paquetes" \
-  "Enlazar archivos de configuración" \
+  "Aplicar dotfiles con GNU Stow" \
   "Copiar archivos de configuración" \
+  "Instalar Alacritty" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
   "Instalar kitty-themes" \
@@ -395,20 +424,21 @@ select opcion in \
   case "$REPLY" in
     1) install_all ;;
     2) install_packages ;;
-    3) link_config_files ;;
+    3) stow_config_files ;;
     4) copy_config_files ;;
-    5) install_bun ;;
-    6) install_oh_my_zsh ;;
-    7) install_kitty_themes ;;
-    8) install_android_studio ;;
-    9) install_spotify ;;
-    10) install_vscode ;;
-    11) install_nvim ;;
-    12) install_nodejs ;;
-    13) install_yarn ;;
-    14) install_lazygit ;;
-    15) clean ;;
-    16) exit 0 ;;
+    5) install_alacritty ;;
+    6) install_bun ;;
+    7) install_oh_my_zsh ;;
+    8) install_kitty_themes ;;
+    9) install_android_studio ;;
+    10) install_spotify ;;
+    11) install_vscode ;;
+    12) install_nvim ;;
+    13) install_nodejs ;;
+    14) install_yarn ;;
+    15) install_lazygit ;;
+    16) clean ;;
+    17) exit 0 ;;
     *) echo "Opción inválida." ;;
   esac
 done
