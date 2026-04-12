@@ -110,14 +110,29 @@ stow_config_files() {
     "$stow_dir/alacritty/.config/alacritty" \
     "$stow_dir/wezterm/.config/wezterm"
 
-  ln -snf "$REPO_ROOT/config/.zshrc" "$stow_dir/shell/.zshrc"
-  ln -snf "$REPO_ROOT/config/.bashrc" "$stow_dir/shell/.bashrc"
-  [[ -f "$REPO_ROOT/config/.zsh_aliases" ]] && ln -snf "$REPO_ROOT/config/.zsh_aliases" "$stow_dir/shell/.zsh_aliases"
+  # Limpia enlaces simbólicos heredados (modo link antiguo) para evitar conflictos con Stow.
+  local -a legacy_targets=(
+    "$HOME/.zshrc"
+    "$HOME/.zsh_aliases"
+    "$HOME/.bashrc"
+    "$HOME/.config/nvim"
+    "$HOME/.config/kitty/kitty.conf"
+    "$HOME/.config/alacritty/alacritty.toml"
+    "$HOME/.config/wezterm/wezterm.lua"
+  )
+  local target
+  for target in "${legacy_targets[@]}"; do
+    [[ -L "$target" ]] && rm -f "$target"
+  done
 
-  ln -snf "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
-  ln -snf "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
-  ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
-  ln -snf "$REPO_ROOT/config/wezterm.lua" "$stow_dir/wezterm/.config/wezterm/wezterm.lua"
+  cp -f "$REPO_ROOT/config/.zshrc" "$stow_dir/shell/.zshrc"
+  cp -f "$REPO_ROOT/config/.bashrc" "$stow_dir/shell/.bashrc"
+  [[ -f "$REPO_ROOT/config/.zsh_aliases" ]] && cp -f "$REPO_ROOT/config/.zsh_aliases" "$stow_dir/shell/.zsh_aliases"
+
+  cp -a "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
+  cp -f "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
+  cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
+  cp -f "$REPO_ROOT/config/wezterm.lua" "$stow_dir/wezterm/.config/wezterm/wezterm.lua"
 
   for pkg in "${stow_packages[@]}"; do
     if [[ -d "$stow_dir/$pkg" ]]; then

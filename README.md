@@ -31,6 +31,7 @@ El script permite:
 - Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
 
 > Para WezTerm, el instalador configura el repositorio oficial APT de WezTerm (`apt.fury.io/wez`) e instala el paquete `wezterm`.
+> Si venías del modo de enlaces antiguo, el instalador limpia symlinks heredados en rutas administradas antes de aplicar Stow para evitar conflictos.
 
 También podés usar modo rápido sin menú:
 
