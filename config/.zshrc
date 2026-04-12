@@ -18,11 +18,13 @@ setopt autocd correct \
 typeset -U path PATH
 
 export ANDROID_HOME="$HOME/Android/Sdk"
+export FNM_PATH="$HOME/.local/share/fnm"
 
 path=(
   "$HOME/.local/bin"
   "$HOME/.local/share/pnpm"
   "$HOME/.bun/bin"
+  "$FNM_PATH"
   "$ANDROID_HOME/emulator"
   "$ANDROID_HOME/platform-tools"
   "$ANDROID_HOME/tools"
@@ -136,6 +138,7 @@ update() {
   echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
   echo
 }
+
 # -------------------------
 # Aliases limpios
 # -------------------------
@@ -182,6 +185,13 @@ androidemulator() {
 # -------------------------
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
+fi
+
+# -------------------------
+# FNM Auto Use
+# -------------------------
+if [ -d "$FNM_PATH" ]; then
+  eval "$(fnm env --use-on-cd)"
 fi
 
 # -------------------------
