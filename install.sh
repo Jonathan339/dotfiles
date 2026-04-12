@@ -312,6 +312,12 @@ install_wezterm() {
   ok "WezTerm instalado desde repositorio oficial."
 }
 
+install_terminal_emulators() {
+  log "Instalando emuladores de terminal (Alacritty + WezTerm)..."
+  install_alacritty
+  install_wezterm
+}
+
 # ---- Yarn (keyring) ----
 install_yarn() {
   if command -v yarn >/dev/null 2>&1; then
@@ -408,8 +414,7 @@ install_all() {
   install_spotify
   install_vscode
   install_nvim
-  install_alacritty
-  install_wezterm
+  install_terminal_emulators
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -444,6 +449,7 @@ select opcion in \
   "Instalar Spotify" \
   "Instalar Visual Studio Code" \
   "Instalar nvim" \
+  "Instalar terminales (Alacritty + WezTerm)" \
   "Instalar Alacritty" \
   "Instalar WezTerm" \
   "Instalar Node.js" \
@@ -463,13 +469,14 @@ select opcion in \
     9) install_spotify ;;
     10) install_vscode ;;
     11) install_nvim ;;
-    12) install_alacritty ;;
-    13) install_wezterm ;;
-    14) install_nodejs ;;
-    15) install_yarn ;;
-    16) install_lazygit ;;
-    17) clean ;;
-    18) exit 0 ;;
+    12) install_terminal_emulators ;;
+    13) install_alacritty ;;
+    14) install_wezterm ;;
+    15) install_nodejs ;;
+    16) install_yarn ;;
+    17) install_lazygit ;;
+    18) clean ;;
+    19) exit 0 ;;
     *) echo "Opción inválida." ;;
   esac
 done

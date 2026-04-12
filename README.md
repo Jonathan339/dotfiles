@@ -29,6 +29,7 @@ El script permite:
 - Aplicar dotfiles con **GNU Stow** (default y recomendado) o copiarlos al `$HOME`.
 - Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit, Alacritty y WezTerm).
 - Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
+- Instalar en lote los terminales (`Alacritty + WezTerm`) desde el menú.
 
 > Para WezTerm, el instalador configura el repositorio oficial APT de WezTerm (`apt.fury.io/wez`) e instala el paquete `wezterm`.
 > Si venías del modo de enlaces antiguo, el instalador limpia symlinks heredados en rutas administradas antes de aplicar Stow para evitar conflictos.
