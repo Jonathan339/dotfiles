@@ -30,28 +30,21 @@ command -v git >/dev/null || die "Necesitás git."
 APT_PACKAGES=(
   libstdc++6 curl wget vlc gnupg2 seahorse git python3-pip cargo
   libssl-dev openjdk-11-jre fzf tmux fonts-powerline kitty
-  xclip zsh ca-certificates
+  xclip zsh ca-certificates ripgrep
 )
 
-package_is_installed() { dpkg -s "$1" &>/dev/null; }
+package_is_installed() {
+  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+}
+
 snap_is_installed() { snap list "$1" &>/dev/null; }
 
 install_packages() {
   log "Instalando paquetes necesarios..."
   sudo apt update
 
-  local -a missing=()
+  sudo apt install -y "${APT_PACKAGES[@]}"
 
-  for pkg in "${APT_PACKAGES[@]}"; do
-    package_is_installed "$pkg" || missing+=("$pkg")
-  done
-
-  [[ ${#missing[@]} -eq 0 ]] && {
-    ok "Todos los paquetes ya estaban instalados."
-    return
-  }
-
-  sudo apt install -y "${missing[@]}"
   ok "Paquetes instalados."
 }
 
@@ -125,13 +118,11 @@ install_oh_my_zsh() {
   }
 
   git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
-
   ok "Oh My Zsh instalado."
 }
 
 install_kitty_themes() {
   mkdir -p "$HOME/.config/kitty"
-
   rm -rf "$HOME/.config/kitty/kitty-themes"
 
   git clone --depth=1 \
@@ -166,7 +157,7 @@ install_snap_app() {
 
   snap_is_installed "$name" && return
 
-  sudo snap install "$name" $flag
+  sudo snap install "$name" $flag || warn "Falló snap: $name"
 }
 
 install_yarn() {
@@ -192,9 +183,7 @@ install_bun() {
   fi
 
   log "Instalando Bun..."
-
   curl -fsSL https://bun.sh/install | bash -s -- --no-modify-path
-
   ok "Bun instalado."
 }
 
@@ -205,9 +194,7 @@ install_fnm() {
   fi
 
   log "Instalando FNM..."
-
   curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-
   ok "FNM instalado."
 }
 
@@ -215,7 +202,6 @@ install_nodejs() {
   install_fnm
 
   export PATH="$HOME/.local/share/fnm:$PATH"
-
   eval "$(fnm env)"
 
   fnm install --lts
@@ -228,26 +214,26 @@ install_lazygit() {
   command -v lazygit >/dev/null && return
 
   local arch
-
   case "$(uname -m)" in
     x86_64) arch="x86_64" ;;
     aarch64|arm64) arch="arm64" ;;
-    *) die "Arquitectura no soportada" ;;
+    *) die "Arquitectura no soportada: $(uname -m)" ;;
   esac
 
   local version
-
   version=$(
     curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest |
       grep -Po '"tag_name": "v\K[^"]*'
   )
+
+  [[ -n "$version" ]] || die "No se pudo obtener versión de Lazygit"
 
   curl -Lo lazygit.tar.gz \
     "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${version}_Linux_${arch}.tar.gz"
 
   tar xf lazygit.tar.gz lazygit
 
-  sudo install lazygit /usr/local/bin
+  sudo install -m 755 lazygit /usr/local/bin/lazygit
 
   rm -f lazygit lazygit.tar.gz
 
@@ -257,7 +243,6 @@ install_lazygit() {
 clean() {
   sudo apt autoremove -y
   sudo apt upgrade -y
-
   ok "Sistema limpiado."
 }
 
