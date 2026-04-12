@@ -27,7 +27,7 @@ El script permite:
 
 - Instalar dependencias APT comunes de desarrollo.
 - Aplicar dotfiles con **GNU Stow** (default y recomendado) o copiarlos al `$HOME`.
-- Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit).
+- Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit, Alacritty y WezTerm).
 - Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
 
 También podés usar modo rápido sin menú:

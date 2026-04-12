@@ -265,6 +265,43 @@ install_nvim() {
   ok "Neovim instalado."
 }
 
+# ---- Terminal emulators ----
+install_alacritty() {
+  if command -v alacritty >/dev/null 2>&1; then
+    ok "Alacritty ya está instalado. Saltando..."
+    return
+  fi
+  log "Instalando Alacritty..."
+  install_package_if_not_installed alacritty
+  ok "Alacritty instalado."
+}
+
+install_wezterm() {
+  if command -v wezterm >/dev/null 2>&1; then
+    ok "WezTerm ya está instalado. Saltando..."
+    return
+  fi
+
+  log "Instalando WezTerm..."
+  if apt-cache show wezterm >/dev/null 2>&1; then
+    sudo apt-get install -y wezterm || die "Fallo instalando WezTerm con APT."
+    ok "WezTerm instalado con APT."
+    return
+  fi
+
+  ensure_snapd
+  if snap_is_installed wezterm; then
+    ok "WezTerm (snap) ya está instalado. Saltando..."
+    return
+  fi
+
+  if sudo snap install wezterm --classic; then
+    ok "WezTerm instalado con snap."
+  else
+    warn "No se pudo instalar WezTerm automáticamente (APT/Snap). Instalalo manualmente desde https://wezfurlong.org/wezterm/install/linux.html"
+  fi
+}
+
 # ---- Yarn (keyring) ----
 install_yarn() {
   if command -v yarn >/dev/null 2>&1; then
@@ -361,6 +398,8 @@ install_all() {
   install_spotify
   install_vscode
   install_nvim
+  install_alacritty
+  install_wezterm
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -395,6 +434,8 @@ select opcion in \
   "Instalar Spotify" \
   "Instalar Visual Studio Code" \
   "Instalar nvim" \
+  "Instalar Alacritty" \
+  "Instalar WezTerm" \
   "Instalar Node.js" \
   "Instalar Yarn" \
   "Instalar lazygit" \
@@ -412,11 +453,13 @@ select opcion in \
     9) install_spotify ;;
     10) install_vscode ;;
     11) install_nvim ;;
-    12) install_nodejs ;;
-    13) install_yarn ;;
-    14) install_lazygit ;;
-    15) clean ;;
-    16) exit 0 ;;
+    12) install_alacritty ;;
+    13) install_wezterm ;;
+    14) install_nodejs ;;
+    15) install_yarn ;;
+    16) install_lazygit ;;
+    17) clean ;;
+    18) exit 0 ;;
     *) echo "Opción inválida." ;;
   esac
 done
