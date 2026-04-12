@@ -99,7 +99,11 @@ stow_config_files() {
   install_package_if_not_installed stow
   local success="true"
   local stow_dir
+<<<<<<< HEAD
   local -a stow_packages=(shell nvim kitty alacritty wezterm)
+=======
+  local -a stow_packages=(shell nvim kitty alacritty)
+>>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
   local pkg
   stow_dir="$(mktemp -d)"
 
@@ -107,6 +111,7 @@ stow_config_files() {
     "$stow_dir/shell" \
     "$stow_dir/nvim/.config" \
     "$stow_dir/kitty/.config/kitty" \
+<<<<<<< HEAD
     "$stow_dir/alacritty/.config/alacritty" \
     "$stow_dir/wezterm/.config/wezterm"
 
@@ -129,6 +134,42 @@ stow_config_files() {
     fi
   done
 
+=======
+    "$stow_dir/alacritty/.config/alacritty"
+
+  # Limpia enlaces simbólicos heredados (modo link antiguo) para evitar conflictos con Stow.
+  local -a legacy_targets=(
+    "$HOME/.zshrc"
+    "$HOME/.zsh_aliases"
+    "$HOME/.bashrc"
+    "$HOME/.config/nvim"
+    "$HOME/.config/kitty/kitty.conf"
+    "$HOME/.config/alacritty/alacritty.toml"
+  )
+  local target
+  for target in "${legacy_targets[@]}"; do
+    [[ -L "$target" ]] && rm -f "$target"
+  done
+
+  cp -f "$REPO_ROOT/config/.zshrc" "$stow_dir/shell/.zshrc"
+  cp -f "$REPO_ROOT/config/.bashrc" "$stow_dir/shell/.bashrc"
+  [[ -f "$REPO_ROOT/config/.zsh_aliases" ]] && cp -f "$REPO_ROOT/config/.zsh_aliases" "$stow_dir/shell/.zsh_aliases"
+
+  cp -a "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
+  cp -f "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
+  cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
+
+  for pkg in "${stow_packages[@]}"; do
+    if [[ -d "$stow_dir/$pkg" ]]; then
+      stow --restow --dir "$stow_dir" --target "$HOME" "$pkg" \
+        && ok "Paquete Stow '$pkg' aplicado" \
+        || success="false"
+    else
+      warn "Paquete Stow '$pkg' no encontrado. Saltando..."
+    fi
+  done
+
+>>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
   rm -rf "$stow_dir"
   [[ "$success" = true ]] && ok "Dotfiles aplicados con Stow" || die "Error aplicando dotfiles con Stow."
 }
@@ -154,11 +195,6 @@ copy_config_files() {
   if check_file_exists "config/alacritty/alacritty.toml"; then
     mkdir -p "$HOME/.config/alacritty"
     cp -f "$REPO_ROOT/config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml" && ok "alacritty.toml copiado" || success="false"
-  fi
-
-  if check_file_exists "config/wezterm.lua"; then
-    mkdir -p "$HOME/.config/wezterm"
-    cp -f "$REPO_ROOT/config/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua" && ok "wezterm.lua copiado" || success="false"
   fi
 
   [[ "$success" = true ]] && ok "Archivos de configuración copiados" || die "Error copiando configuraciones."
@@ -276,6 +312,7 @@ install_alacritty() {
   ok "Alacritty instalado."
 }
 
+<<<<<<< HEAD
 install_wezterm() {
   if command -v wezterm >/dev/null 2>&1; then
     ok "WezTerm ya está instalado. Saltando..."
@@ -302,6 +339,8 @@ install_wezterm() {
   fi
 }
 
+=======
+>>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
 # ---- Yarn (keyring) ----
 install_yarn() {
   if command -v yarn >/dev/null 2>&1; then
@@ -399,7 +438,10 @@ install_all() {
   install_vscode
   install_nvim
   install_alacritty
+<<<<<<< HEAD
   install_wezterm
+=======
+>>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -421,12 +463,14 @@ if [[ "${1:-}" == "--all" ]]; then
 fi
 
 # ---- Menú (coincide por número con $REPLY) ----
+echo "Atajo terminal: 5) Alacritty"
 PS3="Elegí una opción: "
 select opcion in \
   "Instalar todo" \
   "Instalar paquetes" \
   "Aplicar dotfiles con GNU Stow" \
   "Copiar archivos de configuración" \
+  "Instalar Alacritty" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
   "Instalar kitty-themes" \
@@ -446,6 +490,7 @@ select opcion in \
     2) install_packages ;;
     3) stow_config_files ;;
     4) copy_config_files ;;
+<<<<<<< HEAD
     5) install_bun ;;
     6) install_oh_my_zsh ;;
     7) install_kitty_themes ;;
@@ -460,6 +505,21 @@ select opcion in \
     16) install_lazygit ;;
     17) clean ;;
     18) exit 0 ;;
+=======
+    5) install_alacritty ;;
+    6) install_bun ;;
+    7) install_oh_my_zsh ;;
+    8) install_kitty_themes ;;
+    9) install_android_studio ;;
+    10) install_spotify ;;
+    11) install_vscode ;;
+    12) install_nvim ;;
+    13) install_nodejs ;;
+    14) install_yarn ;;
+    15) install_lazygit ;;
+    16) clean ;;
+    17) exit 0 ;;
+>>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
     *) echo "Opción inválida." ;;
   esac
 done

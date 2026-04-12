@@ -8,7 +8,6 @@ Repositorio de configuración personal para entorno Linux (terminal + shell + Ne
 - `config/nvim`: configuración modular de Neovim en Lua.
 - `config/kitty.conf`: configuración de Kitty.
 - `config/alacritty/alacritty.toml`: configuración de Alacritty.
-- `config/wezterm.lua`: configuración de WezTerm.
 - `config/.zshrc`, `config/.zsh_aliases`, `config/.bashrc`: configuración de shell.
 
 ## Requisitos mínimos
@@ -27,8 +26,10 @@ El script permite:
 
 - Instalar dependencias APT comunes de desarrollo.
 - Aplicar dotfiles con **GNU Stow** (default y recomendado) o copiarlos al `$HOME`.
-- Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit, Alacritty y WezTerm).
+- Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit y Alacritty).
 - Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
+- Instalar Alacritty desde el menú (`5) Alacritty`).
+> Si venías del modo de enlaces antiguo, el instalador limpia symlinks heredados en rutas administradas antes de aplicar Stow para evitar conflictos.
 
 También podés usar modo rápido sin menú:
 
@@ -53,7 +54,6 @@ También podés usar modo rápido sin menú:
 - `nvim` → `~/.config/nvim`
 - `kitty` → `~/.config/kitty/kitty.conf`
 - `alacritty` → `~/.config/alacritty/alacritty.toml`
-- `wezterm` → `~/.config/wezterm/wezterm.lua`
 
 ## Ruta de configs destino
 
@@ -63,7 +63,6 @@ También podés usar modo rápido sin menú:
 - `~/.config/nvim`
 - `~/.config/kitty/kitty.conf`
 - `~/.config/alacritty/alacritty.toml`
-- `~/.config/wezterm/wezterm.lua`
 
 ## Nota
 
