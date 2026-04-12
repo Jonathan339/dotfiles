@@ -68,3 +68,21 @@ También podés usar modo rápido sin menú:
 ## Nota
 
 Si ya tenés herramientas instaladas, el instalador intenta detectarlas y saltar su reinstalación para que el proceso sea más rápido e idempotente.
+
+## Troubleshooting
+
+Si al ejecutar `./install.sh` aparece un error como `error sintáctico cerca del elemento inesperado '<<<'`, normalmente hay marcadores de merge sin resolver en tu copia local.
+
+```bash
+# Verificar marcadores de merge
+rg -n "^(<<<<<<<|=======|>>>>>>>)" install.sh README.md config
+
+# Si aparece algo, refrescar el branch
+git fetch origin
+git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+
+# Si estás en medio de un merge y el conflicto es en install.sh
+git checkout --ours install.sh
+git add install.sh
+git merge --continue
+```

@@ -99,11 +99,7 @@ stow_config_files() {
   install_package_if_not_installed stow
   local success="true"
   local stow_dir
-<<<<<<< HEAD
-  local -a stow_packages=(shell nvim kitty alacritty wezterm)
-=======
   local -a stow_packages=(shell nvim kitty alacritty)
->>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
   local pkg
   stow_dir="$(mktemp -d)"
 
@@ -111,30 +107,6 @@ stow_config_files() {
     "$stow_dir/shell" \
     "$stow_dir/nvim/.config" \
     "$stow_dir/kitty/.config/kitty" \
-<<<<<<< HEAD
-    "$stow_dir/alacritty/.config/alacritty" \
-    "$stow_dir/wezterm/.config/wezterm"
-
-  ln -snf "$REPO_ROOT/config/.zshrc" "$stow_dir/shell/.zshrc"
-  ln -snf "$REPO_ROOT/config/.bashrc" "$stow_dir/shell/.bashrc"
-  [[ -f "$REPO_ROOT/config/.zsh_aliases" ]] && ln -snf "$REPO_ROOT/config/.zsh_aliases" "$stow_dir/shell/.zsh_aliases"
-
-  ln -snf "$REPO_ROOT/config/nvim" "$stow_dir/nvim/.config/nvim"
-  ln -snf "$REPO_ROOT/config/kitty.conf" "$stow_dir/kitty/.config/kitty/kitty.conf"
-  ln -snf "$REPO_ROOT/config/alacritty/alacritty.toml" "$stow_dir/alacritty/.config/alacritty/alacritty.toml"
-  ln -snf "$REPO_ROOT/config/wezterm.lua" "$stow_dir/wezterm/.config/wezterm/wezterm.lua"
-
-  for pkg in "${stow_packages[@]}"; do
-    if [[ -d "$stow_dir/$pkg" ]]; then
-      stow --restow --dir "$stow_dir" --target "$HOME" "$pkg" \
-        && ok "Paquete Stow '$pkg' aplicado" \
-        || success="false"
-    else
-      warn "Paquete Stow '$pkg' no encontrado. Saltando..."
-    fi
-  done
-
-=======
     "$stow_dir/alacritty/.config/alacritty"
 
   # Limpia enlaces simbólicos heredados (modo link antiguo) para evitar conflictos con Stow.
@@ -169,7 +141,6 @@ stow_config_files() {
     fi
   done
 
->>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
   rm -rf "$stow_dir"
   [[ "$success" = true ]] && ok "Dotfiles aplicados con Stow" || die "Error aplicando dotfiles con Stow."
 }
@@ -312,35 +283,6 @@ install_alacritty() {
   ok "Alacritty instalado."
 }
 
-<<<<<<< HEAD
-install_wezterm() {
-  if command -v wezterm >/dev/null 2>&1; then
-    ok "WezTerm ya está instalado. Saltando..."
-    return
-  fi
-
-  log "Instalando WezTerm..."
-  if apt-cache show wezterm >/dev/null 2>&1; then
-    sudo apt-get install -y wezterm || die "Fallo instalando WezTerm con APT."
-    ok "WezTerm instalado con APT."
-    return
-  fi
-
-  ensure_snapd
-  if snap_is_installed wezterm; then
-    ok "WezTerm (snap) ya está instalado. Saltando..."
-    return
-  fi
-
-  if sudo snap install wezterm --classic; then
-    ok "WezTerm instalado con snap."
-  else
-    warn "No se pudo instalar WezTerm automáticamente (APT/Snap). Instalalo manualmente desde https://wezfurlong.org/wezterm/install/linux.html"
-  fi
-}
-
-=======
->>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
 # ---- Yarn (keyring) ----
 install_yarn() {
   if command -v yarn >/dev/null 2>&1; then
@@ -438,10 +380,6 @@ install_all() {
   install_vscode
   install_nvim
   install_alacritty
-<<<<<<< HEAD
-  install_wezterm
-=======
->>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -478,8 +416,6 @@ select opcion in \
   "Instalar Spotify" \
   "Instalar Visual Studio Code" \
   "Instalar nvim" \
-  "Instalar Alacritty" \
-  "Instalar WezTerm" \
   "Instalar Node.js" \
   "Instalar Yarn" \
   "Instalar lazygit" \
@@ -490,22 +426,6 @@ select opcion in \
     2) install_packages ;;
     3) stow_config_files ;;
     4) copy_config_files ;;
-<<<<<<< HEAD
-    5) install_bun ;;
-    6) install_oh_my_zsh ;;
-    7) install_kitty_themes ;;
-    8) install_android_studio ;;
-    9) install_spotify ;;
-    10) install_vscode ;;
-    11) install_nvim ;;
-    12) install_alacritty ;;
-    13) install_wezterm ;;
-    14) install_nodejs ;;
-    15) install_yarn ;;
-    16) install_lazygit ;;
-    17) clean ;;
-    18) exit 0 ;;
-=======
     5) install_alacritty ;;
     6) install_bun ;;
     7) install_oh_my_zsh ;;
@@ -519,7 +439,6 @@ select opcion in \
     15) install_lazygit ;;
     16) clean ;;
     17) exit 0 ;;
->>>>>>> origin/codex/update-configuration-for-gnu-stow-usage-2ddx2w
     *) echo "Opción inválida." ;;
   esac
 done
