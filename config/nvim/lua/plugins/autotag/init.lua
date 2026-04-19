@@ -36,10 +36,12 @@ M.config = function()
   end
 
   require('nvim-ts-autotag').setup({
-    -- opciones globales (nuevo layout, sin `opts` legado)
-    enable_close = true,
-    enable_rename = true,
-    enable_close_on_slash = true,
+    -- opciones globales (layout nuevo requerido por nvim-ts-autotag)
+    opts = {
+      enable_close = true,
+      enable_rename = true,
+      enable_close_on_slash = true,
+    },
     -- overrides por filetype (mantengo tus ajustes)
     per_filetype = {
       html = { enable_close = true, enable_rename = true },
