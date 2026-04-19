@@ -59,23 +59,13 @@ return {
     local function ensure_parsers()
       local ensure_installed = {
         "vim", "regex", "rust", "markdown", "json",
-        "javascript", "typescript", "yaml", "html",
-        "css", "bash", "lua", "dockerfile",
+        "javascript", "typescript", "tsx",
+        "yaml", "html", "css", "bash", "lua", "dockerfile",
         "solidity", "gitignore", "python",
         "vue", "svelte", "toml", "go",
       }
 
-      local installed = require("nvim-treesitter.config").get_installed()
-
-      local to_install = vim.iter(ensure_installed)
-        :filter(function(parser)
-          return not vim.tbl_contains(installed, parser)
-        end)
-        :totable()
-
-      if #to_install > 0 then
-        require("nvim-treesitter").install(to_install)
-      end
+      require("nvim-treesitter").install(ensure_installed)
     end
 
     ---------------------------------------------------------------
@@ -94,5 +84,6 @@ return {
         vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
       end,
     })
+
   end,
 }

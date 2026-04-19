@@ -24,14 +24,15 @@ return {
         view = 'mini',
         view_error = has_notify and 'notify' or 'mini',
         view_warn = has_notify and 'notify' or 'mini',
-        view_search = false, -- no superponga el buscador con mensajes
+        view_search = false,
       },
+
       notify = {
         enabled = has_notify,
         view = 'notify',
       },
 
-      -- Línea de comandos (:) y búsquedas
+      -- Línea de comandos y búsquedas
       cmdline = {
         view = 'cmdline_popup',
         format = {
@@ -43,6 +44,7 @@ return {
           help = { icon = '󰋖' },
         },
       },
+
       views = {
         cmdline_popup = {
           position = { row = '35%', col = '50%' },
@@ -61,13 +63,12 @@ return {
 
       -- LSP
       lsp = {
-        progress = { enabled = false }, -- menos ruido
+        progress = { enabled = false },
         hover = { enabled = true, silent = true },
         signature = {
           enabled = true,
           auto_open = { enabled = true, trigger = true, luasnip = true },
         },
-        -- Render MD con TS (mejor formato para hover/completion docs)
         override = {
           ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
           ['vim.lsp.util.stylize_markdown'] = true,
@@ -75,32 +76,52 @@ return {
         },
       },
 
-      -- Presets rápidos
+      -- Presets
       presets = {
-        bottom_search = true,   -- "/" y "?" abajo (clásico)
-        command_palette = true, -- cmdline + popupmenu juntos
+        bottom_search = true,
+        command_palette = true,
         long_message_to_split = true,
         inc_rename = false,
-        lsp_doc_border = true, -- bordes en hover/signature
+        lsp_doc_border = true,
       },
 
-      -- Rutas (filtros) para reducir spam
+      -- 🔥 FILTROS (routes)
       routes = {
-        -- Oculta conteos de búsqueda y mensajes triviales
-        { filter = { event = 'msg_show', kind = 'search_count' },                              opts = { skip = true } },
-        { filter = { event = 'msg_show', find = 'written' },                                   opts = { skip = true } },
-        { filter = { event = 'msg_show', find = 'lines? yanked' },                             view = 'mini' },
-        { filter = { event = 'msg_show', find = 'fewer lines' },                               opts = { skip = true } },
-        -- Silenciar progreso LSP si molesta
-        { filter = { event = 'lsp', kind = 'progress' },                                       opts = { skip = true } },
+        -- 🔴 Elimina el warning de nvim-ts-autotag
+        {
+          filter = {
+            event = 'notify',
+            find = 'nvim%-ts%-autotag: Using the legacy setup opts!',
+          },
+          opts = { skip = true },
+        },
+
+        -- Oculta mensajes molestos comunes
+        { filter = { event = 'msg_show', kind = 'search_count' }, opts = { skip = true } },
+        { filter = { event = 'msg_show', find = 'written' }, opts = { skip = true } },
+        { filter = { event = 'msg_show', find = 'lines? yanked' }, view = 'mini' },
+        { filter = { event = 'msg_show', find = 'fewer lines' }, opts = { skip = true } },
+
+        -- Silenciar progreso LSP
+        { filter = { event = 'lsp', kind = 'progress' }, opts = { skip = true } },
+
         -- Mensajes largos a split
-        { filter = { min_width = 80, any = { { event = 'msg_show' }, { event = 'notify' } } }, view = 'split' },
+        {
+          filter = {
+            min_width = 80,
+            any = {
+              { event = 'msg_show' },
+              { event = 'notify' },
+            },
+          },
+          view = 'split',
+        },
       },
 
-      throttle = 60, -- ~60 fps
+      throttle = 60,
     })
 
-    -- (Opcional) Scroll en popups LSP con <C-f>/<C-b>
+    -- Scroll en popups LSP
     local function map_scroll(lhs, delta)
       for _, mode in ipairs({ 'n', 'i', 's' }) do
         vim.keymap.set(mode, lhs, function()
@@ -111,6 +132,7 @@ return {
         end, { silent = true, expr = true, desc = 'Noice scroll' })
       end
     end
+
     pcall(map_scroll, '<C-f>', 4)
     pcall(map_scroll, '<C-b>', -4)
   end,
