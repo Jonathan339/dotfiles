@@ -27,15 +27,7 @@ local M = {
   event = { 'BufReadPre', 'BufNewFile' },
 
   dependencies = { 'nvim-treesitter/nvim-treesitter' },
-}
-
-M.config = function()
-  -- Evita trabajo innecesario en archivos enormes si usas este flag
-  if vim.b.large_file then
-    return
-  end
-
-  require('nvim-ts-autotag').setup({
+  opts = {
     -- opciones globales (layout nuevo requerido por nvim-ts-autotag)
     opts = {
       enable_close = true,
@@ -65,7 +57,7 @@ M.config = function()
       hbs = { enable_close = true },
       ejs = { enable_close = true },
     },
-  })
-end
+  },
+}
 
 return M
