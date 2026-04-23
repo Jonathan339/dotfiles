@@ -4,38 +4,29 @@ local M = {
   event = 'VeryLazy',
   cmd = { 'Mason', 'MasonInstall', 'MasonUpdate' },
   dependencies = {
-    -- Evitar carreras con auto_ensure (tu comentario es válido)
     { 'neovim/nvim-lspconfig', lazy = false },
-
     'williamboman/mason-lspconfig.nvim',
+    'WhoIsSethDaniel/mason-tool-installer.nvim',
 
-    -- UI de progreso (API legacy estable)
     { 'j-hui/fidget.nvim', tag = 'legacy', opts = { text = { done = '✓' }, window = { relative = 'win' } } },
-
-    -- Mejor experiencia para lua_ls (cargar antes de setup de lua_ls)
     {
       'folke/neodev.nvim',
-      -- si usás lazy.nvim podés cargarlo muy temprano
       event = 'VeryLazy',
       opts = {
-        -- evita advertencias por “third party”
         library = { plugins = true, types = true },
-        -- desactiva chequeos externos ruidosos
-        override = function(_, _)
-          -- podés dejar vacío; el punto es que se inicialice
-        end,
+        override = function(_, _) end,
       },
     },
   },
 }
 
 M.config = function()
-  -- 1) Diagnósticos unificados (si tenés el módulo)
+  local defaults = require('plugins.lsp.defaults')
+
   do
     local ok_cfg, cfg = pcall(require, 'plugins.lsp.diagnostics.config')
     if ok_cfg and cfg then
       vim.diagnostic.config(cfg)
-      -- signos por si tu módulo no los define
       local signs = { Error = ' ', Warn = ' ', Hint = ' ', Info = ' ' }
       for t, icon in pairs(signs) do
         local hl = 'DiagnosticSign' .. t
@@ -44,7 +35,6 @@ M.config = function()
     end
   end
 
-  -- 2) Mason UI
   require('mason').setup({
     ui = {
       border = 'rounded',
@@ -52,22 +42,29 @@ M.config = function()
     },
   })
 
-  -- 3) mason-lspconfig + lspconfig
   local ok_mlsp, mlsp = pcall(require, 'mason-lspconfig')
   if not ok_mlsp then
     return
   end
 
-  -- capabilities (si está cmp-nvim-lsp)
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
-  do
-    local ok_cmp, cmp_lsp = pcall(require, 'cmp_nvim_lsp')
-    if ok_cmp then
-      capabilities = cmp_lsp.default_capabilities(capabilities)
-    end
+  mlsp.setup({
+    ensure_installed = defaults.lsp_servers,
+    automatic_installation = true,
+  })
+
+  local ok_mti, mti = pcall(require, 'mason-tool-installer')
+  if ok_mti then
+    mti.setup({
+      ensure_installed = defaults.ensure_installed,
+      auto_update = false,
+      run_on_start = true,
+      start_delay = 3000,
+      debounce_hours = 12,
+    })
   end
 
-  -- on_attach básico (usa tu handlers.lua si lo preferís)
+  local capabilities = defaults.capabilities
+
   local function on_attach(_, bufnr)
     local map = function(m, lhs, rhs, desc)
       vim.keymap.set(m, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
@@ -83,9 +80,10 @@ M.config = function()
     map('n', '<leader>f', function()
       vim.lsp.buf.format({ async = true })
     end, 'Format')
+
+    defaults.on_attach(_, bufnr)
   end
 
-  -- 4) Lista de servidores y ajustes por servidor
   local server_opts = {
     lua_ls = {
       settings = {
@@ -102,34 +100,33 @@ M.config = function()
     html = {},
     cssls = {},
     jsonls = {},
+    yamlls = {},
+    tailwindcss = {},
+    dockerls = {},
+    marksman = {},
   }
 
-  -- Hook común para todos
   local function with_common(o)
     o = o or {}
     o.capabilities = capabilities
     o.on_attach = on_attach
+    o.on_init = defaults.on_init
     return o
   end
 
   local lsp = require('lspconfig')
 
-  -- 5) Compat: handlers API vieja vs nueva
   if type(mlsp.setup_handlers) == 'function' then
-    -- API nueva: callback por servidor
-    mlsp.setup({})
     mlsp.setup_handlers({
       function(server_name)
         local opts = with_common(server_opts[server_name] or {})
-        -- neodev debe estar antes de lua_ls
         if server_name == 'lua_ls' then
-          pcall(require, 'neodev') -- ya se cargó por dependencia, por las dudas
+          pcall(require, 'neodev')
         end
         lsp[server_name].setup(opts)
       end,
     })
   else
-    -- API vieja: pasar handlers en setup()
     mlsp.setup({
       handlers = {
         function(server_name)
