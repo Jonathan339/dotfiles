@@ -2,7 +2,7 @@ return {
 	{
 		"nvim-neo-tree/neo-tree.nvim",
 		branch = "v3.x",
-		lazy = true,
+		lazy = false,
 
 		dependencies = {
 			"nvim-lua/plenary.nvim",
@@ -10,15 +10,8 @@ return {
 			"nvim-tree/nvim-web-devicons",
 		},
 
-		-- keys = {
-		-- 	{
-		-- 		"<leader>e",
-		-- 		"<cmd>Neotree toggle<cr>",
-		-- 		desc = "Explorer",
-		-- 	},
-		-- },
-
 		opts = {
+			popup_border_style = "",
 			filesystem = {
 				filtered_items = {
 					hide_dotfiles = true,
