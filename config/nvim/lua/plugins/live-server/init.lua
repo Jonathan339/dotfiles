@@ -1,18 +1,18 @@
-local M = {
-  'ngtuonghy/live-server-nvim',
-  event = 'VeryLazy',
-  build = ':LiveServerInstall',
+return {
+	{
+		"hyperstown/nvim-live-server",
+		cmd = {
+			"LiveServerStart",
+			"LiveServerStop",
+			"LiveServerToggle",
+		},
+		opts = {
+			host = "127.0.0.1",
+			port = 5550,
+			bind_attempts = 3,
+			ignore_files = { "*.env" },
+			ignore_dotfiles = true,
+			open_browser = true,
+		},
+	},
 }
-
-function M.config()
-  require('live-server-nvim').setup({
-    custom = {
-      '--port=8080',
-      '--no-css-inject',
-    },
-    serverPath = vim.fn.stdpath('data') .. '/live-server/', --default
-    open = 'folder',                                        -- folder|cwd     --default
-  })
-end
-
-return M
