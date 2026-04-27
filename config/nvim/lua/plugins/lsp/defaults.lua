@@ -1,50 +1,51 @@
 -- lua/plugins/lsp/defaults.lua
 local M = {}
 
--- Esta lista es para mason-tool-installer (IDs de Mason, no nombres de lspconfig)
-M.ensure_installed = {
-  -- ===== LSP servers =====
-  'bash-language-server',
-  'css-lsp',
-  'custom-elements-languageserver', -- si no lo usás, podés quitarlo
-  'dockerfile-language-server',
-  'efm',
-  'vscode-eslint-language-server',
-  'graphql-language-service-cli',
-  'html-lsp',
-  'htmx-lsp', -- opcional
-  'json-lsp',
-  'lua-language-server',
+-- Nombres de servidores para mason-lspconfig (lspconfig IDs)
+M.lsp_servers = {
+  'lua_ls',
+  'ts_ls',
   'pyright',
-  'rust-analyzer',
-  'spectral-language-server', -- OpenAPI linter LSP (opcional)
-  'sqls',
-  'typescript-language-server', -- para lspconfig "ts_ls"
-  'tailwindcss-language-server',
-  'typos-lsp',
-  'vim-language-server',
-  'vtsls', -- alternativa a ts_ls
-  'vls', -- Vue (vuels). Alternativa moderna: "vue-language-server" (Volar)
-  'yaml-language-server',
-  'marksman', -- Markdown LSP
+  'bashls',
+  'html',
+  'cssls',
+  'jsonls',
+  'yamlls',
+  'tailwindcss',
+  'dockerls',
+  'marksman',
+}
 
-  -- ===== Formatters / Linters / Tools =====
-  'prettier',
+-- Paquetes Mason (LSP + formatters/linters realmente usados en tu config)
+M.ensure_installed = {
+  -- LSP servers
+  'lua-language-server',
+  'typescript-language-server',
+  'pyright',
+  'bash-language-server',
+  'html-lsp',
+  'css-lsp',
+  'json-lsp',
+  'yaml-language-server',
+  'tailwindcss-language-server',
+  'dockerfile-language-server',
+  'marksman',
+
+  -- Formatters / Linters (Conform)
+  'eslint_d',
   'prettierd',
-  'stylelint', -- CLI; si querés LSP: "stylelint-lsp"
-  'shellcheck',
-  'shfmt',
-  'black',
-  'isort',
+  'prettier',
   'stylua',
-  'rubocop',
-  'pint',
-  'dprint',
-  'fixjson',
-  'autopep8',
-  'goimports', -- si tu registry no lo tiene, usa "goimports-reviser"
-  'goimports-reviser',
+  'isort',
+  'black',
+  'shfmt',
+  'shellcheck',
+  'taplo',
+  'alejandra',
   'gofumpt',
+  'goimports-reviser',
+  'clang-format',
+  'rustfmt',
 }
 
 -- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
