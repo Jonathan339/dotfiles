@@ -1,4 +1,29 @@
-# Alias personales
-alias ll='ls -alF'
+# -------------------------
+# Navegación y Sistema (Seguros)
+# -------------------------
+alias ls='ls --color=auto'
 alias la='ls -A'
+alias ll='ls -alF'
 alias l='ls -CF'
+alias grep='grep --color=auto'
+
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'      # Te pregunta antes de borrar. ¡Tu "yo" del futuro te lo agradecerá!
+alias rmf='rm -rf'    # Conservas el poder del -rf, pero bajo un comando consciente.
+
+# -------------------------
+# Git Shortcuts
+# -------------------------
+alias gs='git status'
+alias gp='git pull'
+alias gpp='git push'   # Consejo: a veces se usa 'gps' (git push), pero 'gpp' está perfecto.
+alias gc='git commit -am'
+
+# -------------------------
+# Desarrollo (React Native / Expo / Mobile)
+# -------------------------
+alias android='yarn android && code .'
+alias run-react='yarn react-native run-android && yarn react-native start'
+alias exp='bunx create-expo-app@latest'
+alias em='androidemulator'
