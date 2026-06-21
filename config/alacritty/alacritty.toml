@@ -2,29 +2,43 @@
 TERM = "xterm-256color"
 
 [window]
-opacity = 1.00
+opacity = 1.0
 decorations = "full"
-# startup_mode = "Windowed"
 dynamic_padding = true
 dimensions = { columns = 141, lines = 42 }
+
 [window.padding]
 x = 0
 y = 0
 
 [font]
-size = 12.0
+size = 12
 
 [font.normal]
-family = "Hack Nerd Font"
+family = "DroidSansM Nerd Font"
 style = "Regular"
 
 [font.bold]
-family = "Hack Nerd Font"
+family = "DroidSansM Nerd Font"
 style = "Bold"
 
 [font.italic]
-family = "Hack Nerd Font"
+family = "DroidSansM Nerd Font"
 style = "Italic"
+
+[font.bold_italic]
+family = "DroidSansM Nerd Font"
+style = "Bold Italic"
+
+[terminal]
+osc52 = "CopyPaste"
+
+[keyboard]
+bindings = [
+{ key = "Insert", mods = "Shift", action = "Paste" },
+{ key = "Insert", mods = "Control", action = "Copy" },
+{ key = "Return", mods = "Shift", chars = "\u001B\r" }
+]
 
 [cursor]
 style = { shape = "Beam", blinking = "Off" }
