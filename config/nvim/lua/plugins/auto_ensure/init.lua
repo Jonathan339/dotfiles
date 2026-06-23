@@ -41,19 +41,10 @@ return {
     local pyproject = { 'pyproject.toml', 'requirements.txt', 'poetry.lock' }
     local eslint_cwd = { 'package.json', 'eslint.config.js', '.eslintrc', '.eslintrc.js', '.eslintrc.json' }
 
+    local ok_defaults, defaults = pcall(require, 'plugins.lsp.defaults')
+
     require('auto_ensure').setup({
-      tools = {
-        'clang-format',
-        'eslint_d',
-        'prettier',
-        'stylua',
-        'shfmt',
-        'shellcheck',
-        'taplo',
-        'black',
-        'isort',
-        'ruff',
-      },
+      tools = ok_defaults and defaults.ensure_installed or {},
       formatters = {
         formatters_by_ft = {
           javascript = { 'eslint_d', 'prettier' },

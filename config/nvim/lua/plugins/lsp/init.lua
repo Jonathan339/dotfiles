@@ -67,12 +67,7 @@ M.config = function()
     end
   end
 
-  local ok_defaults, defaults = pcall(require, 'plugins.lsp.defaults')
-  if ok_defaults and defaults.ensure_installed then
-    mlsp.setup({ ensure_installed = defaults.ensure_installed })
-  else
-    mlsp.setup({})
-  end
+  mlsp.setup({})
 
   -- on_attach básico (usa tu handlers.lua si lo preferís)
   local function on_attach(_, bufnr)
@@ -147,9 +142,6 @@ M.config = function()
         end,
       },
     }
-    if ok_defaults and defaults.ensure_installed then
-      old_api_opts.ensure_installed = defaults.ensure_installed
-    end
     mlsp.setup(old_api_opts)
   end
 end
