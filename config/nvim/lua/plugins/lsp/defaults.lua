@@ -19,18 +19,16 @@ M.ensure_installed = {
   'rust-analyzer',
   'spectral-language-server', -- OpenAPI linter LSP (opcional)
   'sqls',
-  'typescript-language-server', -- para lspconfig "ts_ls"
   'tailwindcss-language-server',
   'typos-lsp',
   'vim-language-server',
-  'vtsls', -- alternativa a ts_ls
+  'vtsls', -- TypeScript (vtsls, alternativa moderna a ts_ls)
   'vls', -- Vue (vuels). Alternativa moderna: "vue-language-server" (Volar)
   'yaml-language-server',
   'marksman', -- Markdown LSP
 
   -- ===== Formatters / Linters / Tools =====
   'prettier',
-  'prettierd',
   'stylelint', -- CLI; si querés LSP: "stylelint-lsp"
   'shellcheck',
   'shfmt',

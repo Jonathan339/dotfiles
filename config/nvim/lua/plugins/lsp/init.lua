@@ -96,7 +96,7 @@ M.config = function()
         },
       },
     },
-    ts_ls = {},
+    vtsls = {},
     pyright = {},
     bashls = {},
     html = {},

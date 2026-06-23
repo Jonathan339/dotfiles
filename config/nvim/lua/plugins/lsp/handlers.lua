@@ -85,7 +85,57 @@ M['jsonls'] = function()
   })
 end
 
--- TypeScript/JavaScript (nuevo nombre: ts_ls)
+-- TypeScript/JavaScript con vtsls (TypeScript language server)
+M['vtsls'] = function()
+  setup('vtsls', {
+    handlers = {
+      ['textDocument/definition'] = function(err, result, ctx, ...)
+        if type(result) == 'table' and #result > 1 then
+          result = { result[1] }
+        end
+        vim.lsp.handlers['textDocument/definition'](err, result, ctx, ...)
+      end,
+    },
+    root_dir = function(fname)
+      return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or util.find_git_ancestor(fname) or (vim.uv and vim.uv.cwd() or vim.loop.cwd())
+    end,
+    settings = {
+      typescript = {
+        inlayHints = {
+          includeInlayEnumMemberValueHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayParameterNameHints = 'all',
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+        },
+      },
+      javascript = {
+        inlayHints = {
+          includeInlayEnumMemberValueHints = true,
+          includeInlayFunctionLikeReturnTypeHints = true,
+          includeInlayFunctionParameterTypeHints = true,
+          includeInlayParameterNameHints = 'all',
+          includeInlayPropertyDeclarationTypeHints = true,
+          includeInlayVariableTypeHints = true,
+          includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+        },
+      },
+    },
+    on_attach = function(client, bufnr)
+      client.server_capabilities.documentFormattingProvider = false
+      client.server_capabilities.documentRangeFormattingProvider = false
+      if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
+        pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
+      elseif vim.lsp.inlay_hint then
+        pcall(vim.lsp.inlay_hint, bufnr, true)
+      end
+    end,
+  })
+end
+
+-- TypeScript/JavaScript (nuevo nombre: ts_ls) — deprecado, usar vtsls
 M['ts_ls'] = function()
   setup('ts_ls', {
     handlers = {
