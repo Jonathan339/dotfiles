@@ -1,36 +1,44 @@
 -- lua/plugins/lsp/defaults.lua
 local M = {}
 
--- Nombres de lspconfig para mason-lspconfig (LSPs) + formateadores/linters
--- Los LSPs los instala mason-lspconfig vía ensure_installed,
--- los formateadores/linters los instala auto_ensure vía mason-registry.
+-- IDs de Mason. auto_ensure instala todo vía mason-registry.
 M.ensure_installed = {
   -- C / C++
   'clangd',
+  'clang-format',
   -- JS / TS / React
   'vtsls',
-  'eslint',
+  'eslint-lsp',
+  'eslint_d',
+  'prettier',
   -- HTML / CSS / Emmet
-  'html',
-  'cssls',
-  'emmet_language_server',
+  'html-lsp',
+  'css-lsp',
+  'emmet-language-server',
   -- Docker
-  'dockerls',
+  'dockerfile-language-server',
   -- SQL
   'sqls',
   -- Vim
-  'vimls',
+  'vim-language-server',
   -- Lua (Neovim)
-  'lua_ls',
+  'lua-language-server',
+  'stylua',
   -- Bash
-  'bashls',
+  'bash-language-server',
+  'shfmt',
+  'shellcheck',
   -- Markdown
   'marksman',
   -- JSON / YAML / TOML
-  'jsonls',
-  'yamlls',
+  'json-lsp',
+  'yaml-language-server',
+  'taplo',
   -- Python
   'pyright',
+  'black',
+  'isort',
+  'ruff',
 }
 
 -- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
