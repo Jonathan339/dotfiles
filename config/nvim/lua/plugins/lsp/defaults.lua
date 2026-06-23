@@ -9,7 +9,7 @@ M.ensure_installed = {
   'custom-elements-languageserver', -- si no lo usás, podés quitarlo
   'dockerfile-language-server',
   'efm',
-  'vscode-eslint-language-server',
+  'eslint-lsp',
   'graphql-language-service-cli',
   'html-lsp',
   'htmx-lsp', -- opcional
