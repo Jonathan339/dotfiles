@@ -42,6 +42,18 @@ return {
     local eslint_cwd = { 'package.json', 'eslint.config.js', '.eslintrc', '.eslintrc.js', '.eslintrc.json' }
 
     require('auto_ensure').setup({
+      tools = {
+        'clang-format',
+        'eslint_d',
+        'prettier',
+        'stylua',
+        'shfmt',
+        'shellcheck',
+        'taplo',
+        'black',
+        'isort',
+        'ruff',
+      },
       formatters = {
         formatters_by_ft = {
           javascript = { 'eslint_d', 'prettier' },

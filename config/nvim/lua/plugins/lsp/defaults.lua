@@ -1,7 +1,8 @@
 -- lua/plugins/lsp/defaults.lua
 local M = {}
 
--- Esta lista es para mason-tool-installer (IDs de Mason, no nombres de lspconfig)
+-- IDs de Mason (no nombres de lspconfig). Los LSPs los instala mason-lspconfig,
+-- los formateadores/linters los instala auto_ensure vía mason-registry.
 M.ensure_installed = {
   -- C / C++
   'clangd',
