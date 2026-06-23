@@ -29,20 +29,26 @@ M.ensure_installed = {
 
   -- ===== Formatters / Linters / Tools =====
   'prettier',
+  'eslint_d',
   'stylelint', -- CLI; si querés LSP: "stylelint-lsp"
   'shellcheck',
   'shfmt',
   'black',
   'isort',
+  'ruff',
   'stylua',
   'rubocop',
   'pint',
   'dprint',
   'fixjson',
   'autopep8',
+  'clang-format',
   'goimports', -- si tu registry no lo tiene, usa "goimports-reviser"
   'goimports-reviser',
   'gofumpt',
+  'rustfmt',
+  'alejandra',
+  'taplo',
 }
 
 -- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
