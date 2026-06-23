@@ -17,13 +17,10 @@ M.ensure_installed = {
   'lua-language-server',
   'pyright',
   'rust-analyzer',
-  'spectral-language-server', -- OpenAPI linter LSP (opcional)
-  'sqls',
   'tailwindcss-language-server',
   'typos-lsp',
   'vim-language-server',
-  'vtsls', -- TypeScript (vtsls, alternativa moderna a ts_ls)
-  'vls', -- Vue (vuels). Alternativa moderna: "vue-language-server" (Volar)
+  'vtsls', -- TypeScript
   'yaml-language-server',
   'marksman', -- Markdown LSP
 
