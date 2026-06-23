@@ -42,32 +42,6 @@ return {
     local eslint_cwd = { 'package.json', 'eslint.config.js', '.eslintrc', '.eslintrc.js', '.eslintrc.json' }
 
     require('auto_ensure').setup({
-      ensure_installed = {
-        lua = { 'stylua' },
-        python = { 'isort', 'black', 'ruff' },
-        javascript = { 'eslint_d', 'prettier' },
-        javascriptreact = { 'eslint_d', 'prettier' },
-        typescript = { 'eslint_d', 'prettier' },
-        typescriptreact = { 'eslint_d', 'prettier' },
-        jsx = { 'eslint_d', 'prettier' },
-        tsx = { 'eslint_d', 'prettier' },
-        json = { 'prettier' },
-        yaml = { 'prettier' },
-        markdown = { 'prettier' },
-        sh = { 'shfmt' },
-        bash = { 'shfmt' },
-        c = { 'clang-format' },
-        cpp = { 'clang-format' },
-        go = { 'gofumpt', 'goimports-reviser' },
-        rust = { 'rustfmt' },
-        nix = { 'alejandra' },
-        toml = { 'taplo' },
-        css = { 'prettier' },
-        html = { 'prettier' },
-        vue = { 'eslint_d', 'prettier' },
-        svelte = { 'eslint_d', 'prettier' },
-        astro = { 'eslint_d', 'prettier' },
-      },
       formatters = {
         formatters_by_ft = {
           javascript = { 'eslint_d', 'prettier' },
