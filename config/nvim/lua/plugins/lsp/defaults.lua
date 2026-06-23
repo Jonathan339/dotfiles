@@ -46,7 +46,6 @@ M.ensure_installed = {
   'goimports', -- si tu registry no lo tiene, usa "goimports-reviser"
   'goimports-reviser',
   'gofumpt',
-  'rustfmt',
   'alejandra',
   'taplo',
 }
