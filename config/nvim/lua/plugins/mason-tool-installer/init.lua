@@ -1,6 +1,6 @@
 return {
   "WhoIsSethDaniel/mason-tool-installer.nvim",
-  event = "VeryLazy",
+  lazy = false,
   dependencies = { "williamboman/mason.nvim" },
   config = function()
     local ok, defaults = pcall(require, "plugins.lsp.defaults")
@@ -8,7 +8,8 @@ return {
       require("mason-tool-installer").setup({
         ensure_installed = defaults.ensure_installed,
         run_on_start = true,
-        start_delay = 3000,
+        start_delay = 1000,
+        auto_update = false,
       })
     end
   end,
