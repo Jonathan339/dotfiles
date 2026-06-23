@@ -67,6 +67,13 @@ M.config = function()
     end
   end
 
+  local ok_defaults, defaults = pcall(require, 'plugins.lsp.defaults')
+  if ok_defaults and defaults.ensure_installed then
+    mlsp.setup({ ensure_installed = defaults.ensure_installed })
+  else
+    mlsp.setup({})
+  end
+
   -- on_attach básico (usa tu handlers.lua si lo preferís)
   local function on_attach(_, bufnr)
     local map = function(m, lhs, rhs, desc)
@@ -117,7 +124,6 @@ M.config = function()
   -- 5) Compat: handlers API vieja vs nueva
   if type(mlsp.setup_handlers) == 'function' then
     -- API nueva: callback por servidor
-    mlsp.setup({})
     mlsp.setup_handlers({
       function(server_name)
         local opts = with_common(server_opts[server_name] or {})
@@ -130,7 +136,7 @@ M.config = function()
     })
   else
     -- API vieja: pasar handlers en setup()
-    mlsp.setup({
+    local old_api_opts = {
       handlers = {
         function(server_name)
           local opts = with_common(server_opts[server_name] or {})
@@ -140,7 +146,11 @@ M.config = function()
           lsp[server_name].setup(opts)
         end,
       },
-    })
+    }
+    if ok_defaults and defaults.ensure_installed then
+      old_api_opts.ensure_installed = defaults.ensure_installed
+    end
+    mlsp.setup(old_api_opts)
   end
 end
 

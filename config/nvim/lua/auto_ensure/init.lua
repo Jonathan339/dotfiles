@@ -2,6 +2,7 @@ local M = {}
 
 local defaults = {
   formatters = nil,
+  tools = nil,
   log_level = vim.log.levels.INFO,
 }
 
@@ -14,6 +15,38 @@ local function log(msg, level)
   level = level or state.opts.log_level
   vim.schedule(function()
     pcall(vim.notify, '[auto-ensure] ' .. msg, level)
+  end)
+end
+
+local function ensure_tools(tools)
+  if not tools or #tools == 0 then return end
+
+  local ok, mason_registry = pcall(require, 'mason-registry')
+  if not ok then
+    log('mason not available, skipping tool installation', vim.log.levels.WARN)
+    return
+  end
+
+  local to_install = {}
+  for _, name in ipairs(tools) do
+    if not mason_registry.is_installed(name) then
+      table.insert(to_install, name)
+    end
+  end
+
+  if #to_install == 0 then return end
+
+  log('installing ' .. #to_install .. ' Mason packages: ' .. table.concat(to_install, ', '))
+
+  vim.schedule(function()
+    for _, name in ipairs(to_install) do
+      local ok_pkg, pkg = pcall(mason_registry.get_package, name)
+      if ok_pkg then
+        pkg:install():once('closed', function()
+          log('installed: ' .. name, vim.log.levels.INFO)
+        end)
+      end
+    end
   end)
 end
 
@@ -76,6 +109,8 @@ end
 
 function M.setup(opts)
   state.opts = vim.tbl_deep_extend('force', {}, defaults, opts or {})
+
+  ensure_tools(state.opts.tools)
 
   if state.opts.formatters then
     setup_formatting(state.opts.formatters)
