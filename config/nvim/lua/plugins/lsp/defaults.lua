@@ -3,48 +3,42 @@ local M = {}
 
 -- Esta lista es para mason-tool-installer (IDs de Mason, no nombres de lspconfig)
 M.ensure_installed = {
-  -- ===== LSP servers =====
-  'bash-language-server',
-  'css-lsp',
-  'custom-elements-languageserver', -- si no lo usás, podés quitarlo
-  'dockerfile-language-server',
-  'efm',
+  -- C / C++
+  'clangd',
+  'clang-format',
+  -- JS / TS / React
+  'vtsls',
   'eslint-lsp',
-  'graphql-language-service-cli',
-  'html-lsp',
-  'htmx-lsp', -- opcional
-  'json-lsp',
-  'lua-language-server',
-  'pyright',
-  'rust-analyzer',
-  'tailwindcss-language-server',
-  'typos-lsp',
-  'vim-language-server',
-  'vtsls', -- TypeScript
-  'yaml-language-server',
-  'marksman', -- Markdown LSP
-
-  -- ===== Formatters / Linters / Tools =====
-  'prettier',
   'eslint_d',
-  'stylelint', -- CLI; si querés LSP: "stylelint-lsp"
-  'shellcheck',
+  'prettier',
+  -- HTML / CSS / Emmet
+  'html-lsp',
+  'css-lsp',
+  'emmet-language-server',
+  -- Docker
+  'dockerfile-language-server',
+  -- SQL
+  'sqls',
+  -- Vim
+  'vim-language-server',
+  -- Lua (Neovim)
+  'lua-language-server',
+  'stylua',
+  -- Bash
+  'bash-language-server',
   'shfmt',
+  'shellcheck',
+  -- Markdown
+  'marksman',
+  -- JSON / YAML / TOML
+  'json-lsp',
+  'yaml-language-server',
+  'taplo',
+  -- Python
+  'pyright',
   'black',
   'isort',
   'ruff',
-  'stylua',
-  'rubocop',
-  'pint',
-  'dprint',
-  'fixjson',
-  'autopep8',
-  'clang-format',
-  'goimports', -- si tu registry no lo tiene, usa "goimports-reviser"
-  'goimports-reviser',
-  'gofumpt',
-  'alejandra',
-  'taplo',
 }
 
 -- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
