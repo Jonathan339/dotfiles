@@ -19,7 +19,7 @@ typeset -U path PATH
 
 export ANDROID_HOME="$HOME/Android/Sdk"
 export FNM_PATH="$HOME/.local/share/fnm"
-
+export PATH="$HOME/.opencode/bin:$PATH"
 path=(
   "$HOME/.local/bin"
   "$HOME/.local/share/pnpm"
