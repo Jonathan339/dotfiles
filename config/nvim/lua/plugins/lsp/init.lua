@@ -6,13 +6,7 @@ return {
     'neovim/nvim-lspconfig',
     'WhoIsSethDaniel/mason-tool-installer.nvim',
     { 'j-hui/fidget.nvim', tag = 'legacy', opts = { text = { done = '✓' }, window = { relative = 'win' } } },
-    {
-      'folke/neodev.nvim',
-      event = 'VeryLazy',
-      opts = {
-        library = { plugins = true, types = true },
-      },
-    },
+
   },
   config = function()
     vim.diagnostic.config({
