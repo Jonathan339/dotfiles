@@ -1,7 +1,7 @@
 -- Bootstrap lazy.nvim ---------------------------------------------------------
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -24,7 +24,7 @@ require("lazy").setup({
     version = false,
   },
   install = {
-    colorscheme = { "catppuccin" },
+    colorscheme = { "gruvbox-minor" },
   },
   checker = {
     enabled = true,

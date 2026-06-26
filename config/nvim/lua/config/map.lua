@@ -95,7 +95,14 @@ end, {
 })
 
 map("n", "<Leader>l", function()
-	require("telescope").extensions.live_grep_args.live_grep_args()
+	local ok, lga = pcall(function()
+		return require("telescope").extensions.live_grep_args
+	end)
+	if ok and lga then
+		lga.live_grep_args()
+	else
+		require("telescope.builtin").live_grep()
+	end
 end, {
 	desc = "Buscar palabras",
 })
@@ -164,27 +171,5 @@ end, {
 	desc = "Redimensionar derecha",
 })
 
-map("n", "<C-h>", function()
-	require("smart-splits").move_cursor_left()
-end, {
-	desc = "Mover cursor izquierda",
-})
 
-map("n", "<C-j>", function()
-	require("smart-splits").move_cursor_down()
-end, {
-	desc = "Mover cursor abajo",
-})
-
-map("n", "<C-k>", function()
-	require("smart-splits").move_cursor_up()
-end, {
-	desc = "Mover cursor arriba",
-})
-
-map("n", "<C-l>", function()
-	require("smart-splits").move_cursor_right()
-end, {
-	desc = "Mover cursor derecha",
-})
 

@@ -75,15 +75,5 @@ return {
       ensure_parsers()
     end)
 
-    ---------------------------------------------------------------
-    -- 4. Activar Treesitter
-    ---------------------------------------------------------------
-    vim.api.nvim_create_autocmd("FileType", {
-      callback = function()
-        pcall(vim.treesitter.start)
-        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-      end,
-    })
-
   end,
 }

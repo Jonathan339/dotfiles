@@ -16,40 +16,6 @@ autocmd('VimLeave', {
   end,
 })
 -----------------------------------------------------------------------
--- Formato al guardar: usa Conform si existe; si no, LSP (fallback)
------------------------------------------------------------------------
-local fmt_group = augroup('format_on_save')
-
-autocmd('LspAttach', {
-  group = fmt_group,
-  desc = 'Configurar formateo al guardar (fallback si no hay Conform)',
-  callback = function(ev)
-    local has_conform = pcall(require, 'conform')
-    if has_conform then
-      -- Conform ya maneja BufWritePre; no dupliquemos autocmds.
-      return
-    end
-
-    local client = vim.lsp.get_client_by_id(ev.data.client_id)
-    if not client or not client.supports_method('textDocument/formatting') then
-      return
-    end
-
-    autocmd('BufWritePre', {
-      group = fmt_group,
-      buffer = ev.buf,
-      desc = 'Formatear por LSP antes de guardar (fallback)',
-      callback = function()
-        if vim.b._formatting_disabled then
-          return
-        end
-        pcall(vim.lsp.buf.format, { bufnr = ev.buf, async = false, timeout_ms = 1000 })
-      end,
-    })
-  end,
-})
-
------------------------------------------------------------------------
 -- Crear directorios automáticamente antes de guardar
 -----------------------------------------------------------------------
 autocmd('BufWritePre', {
@@ -140,19 +106,6 @@ end
 autocmd({ 'ColorScheme', 'VimEnter' }, {
   group = augroup('cmp_hls'),
   callback = set_cmp_highlights,
-})
-
------------------------------------------------------------------------
--- Trim de espacios al guardar (sin mover el cursor)
------------------------------------------------------------------------
-autocmd('BufWritePre', {
-  group = augroup('trim_trailing_spaces'),
-  desc = 'Eliminar espacios al final de línea',
-  callback = function()
-    local view = vim.fn.winsaveview()
-    vim.cmd([[keeppatterns %s/\s\+$//e]])
-    vim.fn.winrestview(view)
-  end,
 })
 
 -----------------------------------------------------------------------

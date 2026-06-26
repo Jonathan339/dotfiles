@@ -1,11 +1,17 @@
 local M = {}
--- local defaults = require("plugins.lsp.defaults")
--- local lspconfig = require("lspconfig")
 
 M.setup_lsp = function(server, config)
-  lspconfig[server].setup(vim.tbl_deep_extend("force", {
+  local defaults = require("plugins.lsp.defaults")
+  local user_on_attach = config.on_attach
+  config.on_attach = function(client, bufnr)
+    if user_on_attach then
+      user_on_attach(client, bufnr)
+    end
+    defaults.on_attach(client, bufnr)
+  end
+
+  vim.lsp.config(server, vim.tbl_deep_extend("force", {
     capabilities = defaults.capabilities,
-    on_attach = defaults.on_attach,
     on_init = defaults.on_init,
   }, config))
 end

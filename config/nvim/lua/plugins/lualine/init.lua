@@ -47,14 +47,16 @@ local function recording_status()
   return ' ' .. reg
 end
 
+local noice_api = nil
 local function noice_mode()
-  local ok, api = pcall(function()
-    return require('noice').api
-  end)
-  if not ok or not api.status.mode.has() then
+  if noice_api == nil then
+    local ok, api = pcall(require, 'noice')
+    noice_api = ok and api or false
+  end
+  if not noice_api or not noice_api.status.mode.has() then
     return ''
   end
-  return api.status.mode.get()
+  return noice_api.status.mode.get()
 end
 
 local config = {
@@ -204,10 +206,7 @@ ins_right({ lsp_status, cond = conditions.hide_in_width, color = { fg = colors.c
 ins_right({
   noice_mode,
   cond = function()
-    local ok, api = pcall(function()
-      return require('noice').api
-    end)
-    return ok and api.status.mode.has()
+    return noice_api and noice_api.status.mode.has() or false
   end,
   color = { fg = colors.yellow },
 })

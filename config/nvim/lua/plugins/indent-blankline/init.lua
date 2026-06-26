@@ -12,7 +12,7 @@ M.config = function()
   -- desactivar en archivos muy grandes (>1MB) para evitar lag
   vim.api.nvim_create_autocmd('BufReadPost', {
     callback = function(args)
-      local ok, stat = pcall(vim.loop.fs_stat, args.file)
+      local ok, stat = pcall(vim.uv.fs_stat, args.file)
       if ok and stat and stat.size > 1024 * 1024 then
         -- ibl permite deshabilitar por buffer:
         local ok_ibl, ibl = pcall(require, 'ibl')

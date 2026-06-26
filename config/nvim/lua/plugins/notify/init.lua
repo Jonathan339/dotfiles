@@ -58,7 +58,7 @@ M.config = function(_, opts)
   -- Anti-spam: colapsa notificaciones idénticas en intervalos cortos
   local last_msg, last_time = nil, 0
   vim.notify = function(msg, level, nopts)
-    local now = vim.loop.hrtime() / 1e6
+    local now = vim.uv.hrtime() / 1e6
     if msg == last_msg and (now - last_time) < 250 then
       return
     end
