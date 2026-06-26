@@ -1,30 +1,21 @@
----@diagnostic disable: undefined-global
 -- lua/plugins/luasnip/init.lua
-local ok_user, user_config = pcall(require, 'config.user')
-if not ok_user then
-  user_config = {}
-end
-
 return {
   'L3MON4D3/LuaSnip',
   event = 'InsertEnter',
   dependencies = {
     'rafamadriz/friendly-snippets',
   },
-  enabled = not (user_config.disable_builtin_plugins and vim.tbl_contains(user_config.disable_builtin_plugins, 'luasnip')),
   config = function()
     local ls = require('luasnip')
 
-    -- Config base + overrides de usuario (si existen)
-    ls.config.set_config(vim.tbl_deep_extend('force', {
+    ls.config.set_config({
       history = true,
       updateevents = 'TextChanged,TextChangedI',
       enable_autosnippets = true,
       region_check_events = 'CursorMoved,CursorHold,InsertEnter',
       delete_check_events = 'TextChanged,InsertLeave',
-      -- para seleccionar texto y convertirlo en snippet (visual + Tab, por ej.)
       store_selection_keys = '<Tab>',
-    }, (user_config.plugins and user_config.plugins.luasnip) or {}))
+    })
 
     -- Extender snippets de HTML a React
     ls.filetype_extend('javascriptreact', { 'html' })

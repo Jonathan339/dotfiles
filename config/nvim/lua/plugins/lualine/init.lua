@@ -227,7 +227,7 @@ ins_right({
 
 return {
   'nvim-lualine/lualine.nvim',
-  lazy = false, -- ← cargar siempre
+  event = 'UIEnter',
   dependencies = { 'nvim-tree/nvim-web-devicons' },
   config = function()
     -- fuerza globalstatus por si tu Neovim/tema no lo setea solo

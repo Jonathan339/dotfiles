@@ -18,9 +18,6 @@ load_modules({
   'config.map',
 })
 
--- Módulos secundarios
-vim.schedule(function()
-  load_modules({
-    'config.autocmd',
-  })
-end)
+load_modules({
+  'config.autocmd',
+})

@@ -64,7 +64,7 @@ M['typos_lsp'] = function()
   })
 end
 
--- JSON LS (con schemastore si está) — formatea via Conform (prettier/prettierd)
+-- JSON LS (con schemastore si está)
 M['jsonls'] = function()
   local has_schemastore, schemastore = pcall(require, 'schemastore')
   local schemas = has_schemastore and schemastore.json.schemas() or nil
@@ -78,118 +78,60 @@ M['jsonls'] = function()
         validate = { enable = true },
       },
     },
-    on_attach = function(client, _)
-      client.server_capabilities.documentFormattingProvider = false
-      client.server_capabilities.documentRangeFormattingProvider = false
-    end,
   })
 end
 
--- TypeScript/JavaScript con vtsls (TypeScript language server)
-M['vtsls'] = function()
-  setup('vtsls', {
-    handlers = {
-      ['textDocument/definition'] = function(err, result, ctx, ...)
-        if type(result) == 'table' and #result > 1 then
-          result = { result[1] }
-        end
-        vim.lsp.handlers['textDocument/definition'](err, result, ctx, ...)
+local function ts_handler(name)
+  return function()
+    setup(name, {
+      handlers = {
+        ['textDocument/definition'] = function(err, result, ctx, ...)
+          if type(result) == 'table' and #result > 1 then
+            result = { result[1] }
+          end
+          vim.lsp.handlers['textDocument/definition'](err, result, ctx, ...)
+        end,
+      },
+      root_dir = function(fname)
+        return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or util.find_git_ancestor(fname) or vim.uv.cwd()
       end,
-    },
-    root_dir = function(fname)
-      return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or util.find_git_ancestor(fname) or (vim.uv and vim.uv.cwd() or vim.loop.cwd())
-    end,
-    settings = {
-      typescript = {
-        inlayHints = {
-          includeInlayEnumMemberValueHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayParameterNameHints = 'all',
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+      settings = {
+        typescript = {
+          inlayHints = {
+            includeInlayEnumMemberValueHints = true,
+            includeInlayFunctionLikeReturnTypeHints = true,
+            includeInlayFunctionParameterTypeHints = true,
+            includeInlayParameterNameHints = 'all',
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayVariableTypeHints = true,
+            includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+          },
+        },
+        javascript = {
+          inlayHints = {
+            includeInlayEnumMemberValueHints = true,
+            includeInlayFunctionLikeReturnTypeHints = true,
+            includeInlayFunctionParameterTypeHints = true,
+            includeInlayParameterNameHints = 'all',
+            includeInlayPropertyDeclarationTypeHints = true,
+            includeInlayVariableTypeHints = true,
+            includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+          },
         },
       },
-      javascript = {
-        inlayHints = {
-          includeInlayEnumMemberValueHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayParameterNameHints = 'all',
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-        },
-      },
-    },
-    on_attach = function(client, bufnr)
-      client.server_capabilities.documentFormattingProvider = false
-      client.server_capabilities.documentRangeFormattingProvider = false
-      if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-        pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
-      elseif vim.lsp.inlay_hint then
-        pcall(vim.lsp.inlay_hint, bufnr, true)
-      end
-    end,
-  })
-end
-
--- TypeScript/JavaScript (nuevo nombre: ts_ls) — deprecado, usar vtsls
-M['ts_ls'] = function()
-  setup('ts_ls', {
-    handlers = {
-      ['textDocument/definition'] = function(err, result, ctx, ...)
-        if type(result) == 'table' and #result > 1 then
-          result = { result[1] }
+      on_attach = function(client, bufnr)
+        if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
+          pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
         end
-        vim.lsp.handlers['textDocument/definition'](err, result, ctx, ...)
       end,
-    },
-    -- Soporte TS/JS: roots comunes
-    root_dir = function(fname)
-      return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or util.find_git_ancestor(fname) or (vim.uv and vim.uv.cwd() or vim.loop.cwd())
-    end,
-    settings = {
-      typescript = {
-        inlayHints = {
-          includeInlayEnumMemberValueHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayParameterNameHints = 'all',
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-        },
-      },
-      javascript = {
-        inlayHints = {
-          includeInlayEnumMemberValueHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayParameterNameHints = 'all',
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayVariableTypeHintsWhenTypeMatchesName = true,
-        },
-      },
-    },
-    on_attach = function(client, bufnr)
-      -- evitar doble formateo (Conform se encarga)
-      client.server_capabilities.documentFormattingProvider = false
-      client.server_capabilities.documentRangeFormattingProvider = false
-      -- habilitar inlay hints si existe la API
-      if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
-        pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
-      elseif vim.lsp.inlay_hint then
-        -- Neovim 0.10 signature antigua: enable(bufnr, true)
-        pcall(vim.lsp.inlay_hint, bufnr, true)
-      end
-    end,
-  })
+    })
+  end
 end
 
--- ESLint LSP (solo diagnósticos y code actions; formato via eslint_d en Conform)
+M['vtsls'] = ts_handler('vtsls')
+M['ts_ls'] = ts_handler('ts_ls')
+
+-- ESLint LSP (solo diagnósticos y code actions)
 M['eslint'] = function()
   setup('eslint', {
     cmd = { 'vscode-eslint-language-server', '--stdio' },
@@ -211,14 +153,10 @@ M['eslint'] = function()
         showDocumentation = { enable = true },
       },
       codeActionOnSave = { enable = false, mode = 'all' },
-      format = false, -- 🔴 no formatea (lo hace Conform)
+      format = false,
       validate = 'on',
       workingDirectory = { mode = 'location' },
     },
-    on_attach = function(client, _)
-      client.server_capabilities.documentFormattingProvider = false
-      client.server_capabilities.documentRangeFormattingProvider = false
-    end,
   })
 end
 
@@ -232,19 +170,14 @@ M['lua_ls'] = function()
           globals = { 'vim', 'it', 'describe', 'before_each', 'after_each' },
         },
         workspace = {
-          checkThirdParty = false, -- evita warnings de libs externas
-          library = vim.api.nvim_get_runtime_file('', true), -- neodev igual la extiende
+          checkThirdParty = false,
+          library = vim.api.nvim_get_runtime_file('', true),
         },
-        format = { enable = false }, -- formatea Conform (stylua)
+        format = { enable = false },
         telemetry = { enable = false },
         completion = { callSnippet = 'Replace' },
       },
     },
-    on_attach = function(client, _)
-      -- evitar doble formateo (lo hace Conform)
-      client.server_capabilities.documentFormattingProvider = false
-      client.server_capabilities.documentRangeFormattingProvider = false
-    end,
   })
 end
 

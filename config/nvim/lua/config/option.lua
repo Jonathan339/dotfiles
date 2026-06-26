@@ -2,7 +2,7 @@
 ---@diagnostic disable: undefined-global
 
 -- Cargador nativo (arranque más rápido)
-if vim.loader and vim.loader.enable then
+if vim.loader then
   vim.loader.enable()
 end
 
@@ -69,7 +69,7 @@ vim.opt.showcmd = true
 vim.opt.inccommand = 'split'
 
 --
-vim.o.conceallevel = 1
+vim.opt.conceallevel = 1
 
 -- Paths / ignore
 vim.opt.path:append({ '**' })
@@ -91,7 +91,7 @@ vim.opt.undofile = true
 vim.opt.formatoptions:append({ 'r' }) -- * en comentarios al hacer Enter
 
 -- Undercurl (si tu terminal lo soporta)
-pcall(vim.cmd, [[let &t_Cs = "\e[4:3m"]])
-pcall(vim.cmd, [[let &t_Ce = "\e[4:0m"]])
+pcall(function() vim.o.t_Cs = '\027[4:3m' end)
+pcall(function() vim.o.t_Ce = '\027[4:0m' end)
 
 -- Nota: no tocamos swap/backup; tus autocmds ya manejan casos grandes.
