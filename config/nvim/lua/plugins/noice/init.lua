@@ -6,17 +6,7 @@ return {
     'rcarriga/nvim-notify',
   },
   config = function()
-    -- Configurar nvim-notify e integrarlo como vim.notify
-    local has_notify, notify = pcall(require, 'notify')
-    if has_notify then
-      notify.setup({
-        stages = 'fade_in_slide_out',
-        timeout = 2000,
-        render = 'compact',
-        top_down = false,
-      })
-      vim.notify = notify
-    end
+    local has_notify = true
 
     require('noice').setup({
       -- Mensajes y notificaciones

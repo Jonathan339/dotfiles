@@ -11,7 +11,7 @@ autocmd('VimLeave', {
   group = augroup('reset_terminal_background'),
   desc = 'Evitar que quede fondo forzado al salir',
   callback = function()
-    vim.cmd('set t_ut=')
+    pcall(function() vim.o.t_ut = '' end)
     vim.cmd('highlight Normal guibg=NONE ctermbg=NONE')
   end,
 })
@@ -46,18 +46,8 @@ autocmd('FileType', {
 })
 
 -----------------------------------------------------------------------
--- Luasnip: limpiar snippets colgados
+-- Luasnip: limpiar snippets al salir de Insert
 -----------------------------------------------------------------------
-autocmd('CursorHold', {
-  group = augroup('luasnip_unlink_hold'),
-  callback = function()
-    local ok, ls = pcall(require, 'luasnip')
-    if ok and ls.expand_or_jumpable() then
-      pcall(ls.unlink_current)
-    end
-  end,
-})
-
 autocmd('InsertLeave', {
   group = augroup('luasnip_unlink_leave'),
   callback = function()

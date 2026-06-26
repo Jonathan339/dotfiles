@@ -65,6 +65,4 @@ function M.get(category)
   return {}
 end
 
-M.lspkind = {}
-
 return M

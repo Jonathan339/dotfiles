@@ -75,7 +75,7 @@ local function setup_formatting(fmt_opts)
   local function safe_format(bufnr)
     local name = vim.api.nvim_buf_get_name(bufnr)
     if name == '' then return end
-    local ok_st, st = pcall((vim.uv or vim.loop).fs_stat, name)
+    local ok_st, st = pcall(vim.uv.fs_stat, name)
     if ok_st and st and st.size and st.size > max_size then return end
 
     conform.format({

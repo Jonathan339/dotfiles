@@ -32,16 +32,10 @@ return {
     if not has_codeium then
       table.insert(opts.sources, 1, {
         name = 'codeium',
-        group_index = 1, -- mismo grupo que LSP para competir, o usa 2 para separarlo
-        priority = 90, -- < LSP si querés priorizar lenguaje (subí a 110 si querés AI primero)
+        group_index = 2,
+        priority = 90,
         max_item_count = 5,
       })
-    end
-
-    -- (opcional) ghost text: vista previa inline del item seleccionado
-    opts.experimental = opts.experimental or {}
-    if opts.experimental.ghost_text == nil then
-      opts.experimental.ghost_text = true
     end
 
     -- (opcional) orden: da prioridad a LSP sobre AI, dejando AI después
