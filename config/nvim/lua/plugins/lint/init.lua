@@ -27,8 +27,5 @@ return {
       end,
     })
 
-    vim.keymap.set("n", "<leader>li", function()
-      lint.try_lint()
-    end, { desc = "Lint: ejecutar linters" })
   end,
 }

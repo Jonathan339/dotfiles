@@ -2,11 +2,12 @@
 -- lua/config/autocmd.lua
 local agroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
+local M = {}
 
 local function augroup(name)
   return agroup(name, { clear = true })
-end ----------------------------------------------------------------------- Fix: no dejar fondo forzado al salir de Neovim
------------------------------------------------------------------------
+end
+
 autocmd('VimLeave', {
   group = augroup('reset_terminal_background'),
   desc = 'Evitar que quede fondo forzado al salir',
@@ -237,8 +238,7 @@ local function run_c_cpp()
   }, { detach = true })
 end
 
--- ==========================================
--- Atajo
--- ==========================================
+M.run_c_cpp = run_c_cpp
 
-vim.keymap.set('n', '<leader>ru', run_c_cpp, { noremap = true, silent = true })
+return M
+

@@ -116,6 +116,72 @@ map("n", "<Leader>m", ":RunCode<CR>", {
 })
 
 -- ======================================================
+-- LINT
+-- ======================================================
+
+map("n", "<leader>li", function()
+  require("lint").try_lint()
+end, {
+  desc = "Lint: ejecutar linters",
+})
+
+-- ======================================================
+-- SMART SPLITS — Navegación
+-- ======================================================
+
+map("n", "<C-h>", function()
+  require("smart-splits").move_cursor_left()
+end, {
+  desc = "Mover a split izquierda",
+})
+
+map("n", "<C-j>", function()
+  require("smart-splits").move_cursor_down()
+end, {
+  desc = "Mover a split abajo",
+})
+
+map("n", "<C-k>", function()
+  require("smart-splits").move_cursor_up()
+end, {
+  desc = "Mover a split arriba",
+})
+
+map("n", "<C-l>", function()
+  require("smart-splits").move_cursor_right()
+end, {
+  desc = "Mover a split derecha",
+})
+
+-- ======================================================
+-- SMART SPLITS — Swap buffers entre splits
+-- ======================================================
+
+map("n", "<leader>wh", function()
+  require("smart-splits").swap_buf_left()
+end, {
+  desc = "Swap split izquierda",
+})
+
+map("n", "<leader>wj", function()
+  require("smart-splits").swap_buf_down()
+end, {
+  desc = "Swap split abajo",
+})
+
+map("n", "<leader>wk", function()
+  require("smart-splits").swap_buf_up()
+end, {
+  desc = "Swap split arriba",
+})
+
+map("n", "<leader>wl", function()
+  require("smart-splits").swap_buf_right()
+end, {
+  desc = "Swap split derecha",
+})
+
+-- ======================================================
 -- MOVIMIENTO DE LÍNEAS
 -- ======================================================
 
@@ -169,4 +235,14 @@ map("n", "<A-l>", function()
 	require("smart-splits").resize_right()
 end, {
 	desc = "Redimensionar derecha",
+})
+
+-- ======================================================
+-- COMPILAR Y EJECUTAR C/C++
+-- ======================================================
+
+map("n", "<leader>ru", function()
+  require("config.autocmd").run_c_cpp()
+end, {
+  desc = "Compilar y ejecutar C/C++",
 })

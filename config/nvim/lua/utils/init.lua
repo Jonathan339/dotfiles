@@ -16,17 +16,6 @@ M.setup_lsp = function(server, config)
   }, config))
 end
 
-M.create_buf_map = function(bufnr, opts)
-  return function(mode, lhs, rhs, map_opts)
-    M.map(
-      mode,
-      lhs,
-      rhs,
-      vim.tbl_deep_extend("force", { buffer = bufnr }, opts or {}, map_opts or {})
-    )
-  end
-end
-
 local function map(mode, lhs, rhs, opts)
   local default_opts = {
     desc = "",
@@ -44,5 +33,16 @@ local function map(mode, lhs, rhs, opts)
 end
 
 M.map = map
+
+M.create_buf_map = function(bufnr, opts)
+  return function(mode, lhs, rhs, map_opts)
+    M.map(
+      mode,
+      lhs,
+      rhs,
+      vim.tbl_deep_extend("force", { buffer = bufnr }, opts or {}, map_opts or {})
+    )
+  end
+end
 
 return M

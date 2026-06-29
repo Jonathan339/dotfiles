@@ -55,22 +55,22 @@ return {
       formatters = {
         eslint_d = {
           condition = has_eslintrc,
-          cwd = require('conform.util').root_file_name({
+          cwd = require('conform.util').root_file({
             'package.json', 'eslint.config.js', '.eslintrc', '.eslintrc.js', '.eslintrc.json',
           }),
         },
         prettier = {
-          cwd = require('conform.util').root_file_name({
+          cwd = require('conform.util').root_file({
             '.prettierrc', 'prettier.config.js', 'package.json',
           }),
         },
         black = {
-          cwd = require('conform.util').root_file_name({
+          cwd = require('conform.util').root_file({
             'pyproject.toml', 'requirements.txt', 'poetry.lock',
           }),
         },
         isort = {
-          cwd = require('conform.util').root_file_name({
+          cwd = require('conform.util').root_file({
             'pyproject.toml', 'requirements.txt', 'poetry.lock',
           }),
         },
