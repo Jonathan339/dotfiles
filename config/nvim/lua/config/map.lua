@@ -119,7 +119,7 @@ map("n", "<Leader>m", ":RunCode<CR>", {
 -- LINT
 -- ======================================================
 
-map("n", "<leader>li", function()
+map("n", "<leader>L", function()
   require("lint").try_lint()
 end, {
   desc = "Lint: ejecutar linters",
@@ -157,25 +157,25 @@ end, {
 -- SMART SPLITS — Swap buffers entre splits
 -- ======================================================
 
-map("n", "<leader>wh", function()
+map("n", "<leader>sh", function()
   require("smart-splits").swap_buf_left()
 end, {
   desc = "Swap split izquierda",
 })
 
-map("n", "<leader>wj", function()
+map("n", "<leader>sj", function()
   require("smart-splits").swap_buf_down()
 end, {
   desc = "Swap split abajo",
 })
 
-map("n", "<leader>wk", function()
+map("n", "<leader>sk", function()
   require("smart-splits").swap_buf_up()
 end, {
   desc = "Swap split arriba",
 })
 
-map("n", "<leader>wl", function()
+map("n", "<leader>sl", function()
   require("smart-splits").swap_buf_right()
 end, {
   desc = "Swap split derecha",
@@ -241,7 +241,7 @@ end, {
 -- COMPILAR Y EJECUTAR C/C++
 -- ======================================================
 
-map("n", "<leader>ru", function()
+map("n", "<leader>R", function()
   require("config.autocmd").run_c_cpp()
 end, {
   desc = "Compilar y ejecutar C/C++",
