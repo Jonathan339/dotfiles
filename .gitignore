@@ -15,7 +15,7 @@ packer.nvim
 # =========================
 # Node
 # =========================
-nvim/node_modules/
+**/node_modules/
 
 # =========================
 # Vim / Neovim
