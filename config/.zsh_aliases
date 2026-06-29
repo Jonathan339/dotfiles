@@ -9,8 +9,8 @@ alias grep='grep --color=auto'
 
 alias cp='cp -i'
 alias mv='mv -i'
-alias rm='rm -i'      # Te pregunta antes de borrar. ¡Tu "yo" del futuro te lo agradecerá!
-alias rmf='rm -rf'    # Conservas el poder del -rf, pero bajo un comando consciente.
+alias rm='rm -rf'
+alias rmf='rm -rf'
 
 # -------------------------
 # Git Shortcuts
@@ -25,5 +25,5 @@ alias gc='git commit -am'
 # -------------------------
 alias android='yarn android && code .'
 alias run-react='yarn react-native run-android && yarn react-native start'
-alias exp='bunx create-expo-app@latest'
+alias exp='bunx create-expo-app@latest --template blank-typescript'
 alias em='androidemulator'
