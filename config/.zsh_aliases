@@ -21,6 +21,11 @@ alias gpp='git push'   # Consejo: a veces se usa 'gps' (git push), pero 'gpp' es
 alias gc='git commit -am'
 
 # -------------------------
+# Editor
+# -------------------------
+alias n='nvim'
+
+# -------------------------
 # Desarrollo (React Native / Expo / Mobile)
 # -------------------------
 alias android='yarn android && code .'
