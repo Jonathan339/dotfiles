@@ -82,7 +82,6 @@ return {
             buffer = '[BUF]',
             path = '[PATH]',
             nvim_lua = '[LUA]',
-            codeium = '[AI]',
           },
         }))(entry, vim_item)
       end
@@ -169,8 +168,6 @@ return {
         { name = 'nvim_lsp' },
         { name = 'luasnip' },
         { name = 'nvim_lua' },
-        -- fuentes opcionales: se usarán sólo si el plugin existe
-        { name = 'codeium', max_item_count = 5, group_index = 2 },
       }, {
         { name = 'path' },
         { name = 'buffer', keyword_length = 3 },
