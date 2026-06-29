@@ -56,6 +56,8 @@ return {
         'vim-language-server',
         'vtsls',
         'yaml-language-server',
+        'typos-lsp',
+        'efm-langserver',
       },
     })
 
