@@ -16,15 +16,6 @@ M.setup_lsp = function(server, config)
   }, config))
 end
 
-M.map = function(mode, lhs, rhs, opts)
-  vim.keymap.set(
-    mode,
-    lhs,
-    rhs,
-    vim.tbl_deep_extend("force", { silent = true, noremap = true }, opts or {})
-  )
-end
-
 M.create_buf_map = function(bufnr, opts)
   return function(mode, lhs, rhs, map_opts)
     M.map(
@@ -35,5 +26,23 @@ M.create_buf_map = function(bufnr, opts)
     )
   end
 end
+
+local function map(mode, lhs, rhs, opts)
+  local default_opts = {
+    desc = "",
+    noremap = true,
+    silent = true,
+  }
+
+  if opts then
+    for k, v in pairs(opts) do
+      default_opts[k] = v
+    end
+  end
+
+  vim.keymap.set(mode, lhs, rhs, default_opts)
+end
+
+M.map = map
 
 return M

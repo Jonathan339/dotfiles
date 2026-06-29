@@ -170,6 +170,3 @@ map("n", "<A-l>", function()
 end, {
 	desc = "Redimensionar derecha",
 })
-
-
-

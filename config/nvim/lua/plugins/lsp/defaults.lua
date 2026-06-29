@@ -28,7 +28,7 @@ M.capabilities.textDocument.completion.completionItem = vim.tbl_deep_extend('for
 
 -- Desactivar semantic tokens global (evita choques visuales con Treesitter)
 M.on_init = function(client, _)
-  if client.supports_method('textDocument/semanticTokens') then
+  if client:supports_method('textDocument/semanticTokens') then
     client.server_capabilities.semanticTokensProvider = nil
   end
 end

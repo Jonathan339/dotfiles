@@ -14,9 +14,18 @@ ERR="\e[31m[ERR]\e[0m"
 log() { echo -e "$INFO $*"; }
 ok() { echo -e "$OK $*"; }
 warn() { echo -e "$WARN $*"; }
-die() { echo -e "$ERR $*"; exit 1; }
 
-trap 'echo -e "\n${ERR} Ocurrió un error. Revisá el mensaje anterior."' ERR
+failed() {
+  echo -e "$ERR Fallo. Revisa el siguiente mensaje:"
+  return 1
+}
+
+die() {
+  echo -e "$ERR $*"
+  exit 1
+}
+
+trap 'echo -e "\n${ERR} Ocurrió un error. Revisá el siguiente mensaje."' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
@@ -34,7 +43,7 @@ APT_PACKAGES=(
 )
 
 package_is_installed() {
-  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "^$1 .* install ok installed"
 }
 
 snap_is_installed() { snap list "$1" &>/dev/null; }
