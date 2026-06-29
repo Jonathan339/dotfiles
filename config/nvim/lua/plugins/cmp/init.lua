@@ -32,16 +32,6 @@ return {
     local cmp = require('cmp')
     local luasnip = require('luasnip')
 
-    -- carga lazy de snippets VSCode
-    pcall(function()
-      require('luasnip.loaders.from_vscode').lazy_load()
-    end)
-    luasnip.config.set_config({
-      history = true,
-      updateevents = 'TextChanged,TextChangedI',
-      enable_autosnippets = true,
-    })
-
     -- deshabilitar cmp en comentarios (pero permitir en comandos/cmdline)
     local ok_ctx, context = pcall(require, 'cmp.config.context')
 
