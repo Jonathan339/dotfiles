@@ -1,4 +1,4 @@
-import = ["../colors/alacritty-colors.toml"]
+import = ["colors/alacritty-colors.toml"]
 
 [env]
 TERM = "xterm-256color"
