@@ -1,46 +1,6 @@
 -- lua/plugins/lsp/defaults.lua
 local M = {}
 
--- IDs de Mason. auto_ensure instala todo vía mason-registry.
-M.ensure_installed = {
-  -- C / C++
-  'clangd',
-  'clang-format',
-  -- JS / TS / React
-  'vtsls',
-  'eslint-lsp',
-  'eslint_d',
-  'prettier',
-  -- HTML / CSS / Emmet
-  'html-lsp',
-  'css-lsp',
-  'emmet-language-server',
-  -- Docker
-  'dockerfile-language-server',
-  -- SQL
-  'sqls',
-  -- Vim
-  'vim-language-server',
-  -- Lua (Neovim)
-  'lua-language-server',
-  'stylua',
-  -- Bash
-  'bash-language-server',
-  'shfmt',
-  'shellcheck',
-  -- Markdown
-  'marksman',
-  -- JSON / YAML / TOML
-  'json-lsp',
-  'yaml-language-server',
-  'taplo',
-  -- Python
-  'pyright',
-  'black',
-  'isort',
-  'ruff',
-}
-
 -- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
 local ok_cmp, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
 local base_caps = vim.lsp.protocol.make_client_capabilities()

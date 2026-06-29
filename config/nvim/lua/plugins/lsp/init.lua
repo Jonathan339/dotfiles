@@ -45,6 +45,8 @@ return {
         'marksman',
         'prettier',
         'pyright',
+        'black',
+        'isort',
         'ruff',
         'shfmt',
         'shellcheck',
