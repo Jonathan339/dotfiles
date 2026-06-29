@@ -26,6 +26,9 @@ require("lazy").setup({
   install = {
     colorscheme = { "gruvbox-minor" },
   },
+  rocks = {
+    enabled = false,
+  },
   checker = {
     enabled = true,
     notify = false,
