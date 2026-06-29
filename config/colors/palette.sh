@@ -1,10 +1,11 @@
 # ==============================================================================
 # Solo Leveling Palette — Single Source of Truth
 # ==============================================================================
-# Edita SOLO este archivo, luego regenera los formatos específicos:
-#   kitty:    config/colors/kitty-colors.conf
-#   alacritty: config/colors/alacritty-colors.toml
-#   tmux:     config/.tmux.conf (colores inline)
+# Edita SOLO este archivo, luego regenera los formatos con:
+#   scripts/generate-palette.sh
+# Archivos generados:
+#   config/colors/kitty-colors.conf
+#   config/colors/alacritty-colors.toml
 # ==============================================================================
 
 PALETTE_BG='#252525'

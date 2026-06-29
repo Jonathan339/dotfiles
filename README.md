@@ -49,9 +49,9 @@ También podés usar modo rápido sin menú:
 
 ### Paquetes Stow
 
-> Nota: no se guarda una carpeta `stow/` en el repo. El instalador genera una estructura temporal de paquetes desde `config/` para evitar duplicación.
+La carpeta `stow/` contiene symlinks que apuntan a `config/`. Al ejecutar `stow`, se crean los symlinks en `$HOME`.
 
-- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`
+- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`, `~/.tmux.conf`
 - `nvim` → `~/.config/nvim`
 - `kitty` → `~/.config/kitty/kitty.conf`
 - `alacritty` → `~/.config/alacritty/alacritty.toml`
@@ -61,6 +61,7 @@ También podés usar modo rápido sin menú:
 - `~/.zshrc`
 - `~/.zsh_aliases`
 - `~/.bashrc`
+- `~/.tmux.conf`
 - `~/.config/nvim`
 - `~/.config/kitty/kitty.conf`
 - `~/.config/alacritty/alacritty.toml`
