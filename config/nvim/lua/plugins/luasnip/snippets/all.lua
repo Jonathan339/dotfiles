@@ -1,5 +1,5 @@
 return {
-  s('log', t('console.log()', { i(1) })),
+  s('log', fmta('console.log(<>)', { i(1) })),
   s('fn', fmta([[
 function(<>) {
   <>
