@@ -1,0 +1,62 @@
+[user]
+	name = Jonathan D. Dominguez
+	email = dominguez.jonathan.david@gmail.com
+
+[core]
+	editor = nvim
+	autocrlf = input
+	ignorecase = false
+[color]
+	ui = auto
+
+[color "branch"]
+	current = yellow reverse
+	local = yellow
+	remote = green
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red bold
+	new = green bold
+
+[color "status"]
+	added = green
+	changed = yellow
+	untracked = red
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[pull]
+	rebase = false
+
+[fetch]
+	prune = true
+
+[alias]
+	s = status --short
+	d = diff
+	dc = diff --cached
+	lg = log --oneline --graph --decorate --all -20
+	co = checkout
+	br = branch
+	ci = commit
+	amend = commit --amend --no-edit
+	undo = reset --soft HEAD~1
+	stash-all = stash --include-untracked
+	last = log -1 HEAD
+	who = shortlog -sn --no-merges
+	root = rev-parse --show-toplevel
+
+[merge]
+	tool = nvimdiff
+	conflictstyle = zdiff3
+
+[diff]
+	tool = nvimdiff
+	algorithm = histogram
+
+[init]
+	defaultBranch = main

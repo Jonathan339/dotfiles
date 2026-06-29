@@ -51,7 +51,7 @@ También podés usar modo rápido sin menú:
 
 La carpeta `stow/` contiene symlinks que apuntan a `config/`. Al ejecutar `stow`, se crean los symlinks en `$HOME`.
 
-- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`, `~/.tmux.conf`
+- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`, `~/.tmux.conf`, `~/.gitconfig`
 - `nvim` → `~/.config/nvim`
 - `kitty` → `~/.config/kitty/kitty.conf`
 - `alacritty` → `~/.config/alacritty/alacritty.toml`
@@ -62,6 +62,7 @@ La carpeta `stow/` contiene symlinks que apuntan a `config/`. Al ejecutar `stow`
 - `~/.zsh_aliases`
 - `~/.bashrc`
 - `~/.tmux.conf`
+- `~/.gitconfig`
 - `~/.config/nvim`
 - `~/.config/kitty/kitty.conf`
 - `~/.config/alacritty/alacritty.toml`

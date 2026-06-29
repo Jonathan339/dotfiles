@@ -59,6 +59,8 @@ cleanup_conflicting_symlinks() {
   local files=(
     "$HOME/.bashrc"
     "$HOME/.zshrc"
+    "$HOME/.gitconfig"
+    "$HOME/.tmux.conf"
     "$HOME/.config/nvim"
     "$HOME/.config/kitty/kitty.conf"
     "$HOME/.config/alacritty/alacritty.toml"
@@ -121,12 +123,18 @@ install_oh_my_zsh() {
 }
 
 install_kitty_themes() {
+  local themes_dir="$HOME/.config/kitty/kitty-themes"
+
+  [[ -d "$themes_dir" ]] && {
+    warn "kitty-themes ya existe."
+    return
+  }
+
   mkdir -p "$HOME/.config/kitty"
-  rm -rf "$HOME/.config/kitty/kitty-themes"
 
   git clone --depth=1 \
     https://github.com/dexpota/kitty-themes.git \
-    "$HOME/.config/kitty/kitty-themes"
+    "$themes_dir"
 
   ok "kitty-themes instalado."
 }
