@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # =========================
 #  .bashrc optimizado
 #  Fecha: 2026-04-12

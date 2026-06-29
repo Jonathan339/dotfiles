@@ -1,3 +1,4 @@
+# shellcheck shell=zsh
 # =========================
 # Zsh config — ULTRA CLEAN
 # =========================
