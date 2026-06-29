@@ -1,0 +1,36 @@
+# ==============================================================================
+# Solo Leveling Palette — Alacritty
+# Source of truth: config/colors/palette.sh
+# ==============================================================================
+
+[colors.primary]
+background = "#252525"
+foreground = "#ffffff"
+
+[colors.cursor]
+text = "#252525"
+cursor = "#ffffff"
+
+[colors.selection]
+text = "#ffffff"
+background = "#170830"
+
+[colors.normal]
+black = "#130728"
+red = "#8f45e3"
+green = "#8f59aa"
+yellow = "#c47be8"
+blue = "#8f45e3"
+magenta = "#f485ed"
+cyan = "#8f45e3"
+white = "#fab1ed"
+
+[colors.bright]
+black = "#583e53"
+red = "#ac53ff"
+green = "#ac6bcc"
+yellow = "#e18dff"
+blue = "#b356ff"
+magenta = "#ffa6ff"
+cyan = "#ac53ff"
+white = "#ffbaf9"

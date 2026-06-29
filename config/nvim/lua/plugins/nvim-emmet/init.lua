@@ -1,6 +1,7 @@
 return {
 	{
 		"olrtg/nvim-emmet",
+		ft = { 'html', 'xml', 'jsx', 'tsx', 'svelte', 'vue', 'astro' },
 		config = function()
 			vim.keymap.set("i", "<CR>", function()
 				local emmet = require("nvim-emmet")
