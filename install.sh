@@ -62,7 +62,6 @@ cleanup_conflicting_symlinks() {
     "$HOME/.config/nvim"
     "$HOME/.config/kitty/kitty.conf"
     "$HOME/.config/alacritty/alacritty.toml"
-    "$HOME/.config/wezterm/wezterm.lua"
   )
 
   for file in "${files[@]}"; do
@@ -87,7 +86,7 @@ stow_config_files() {
   cleanup_conflicting_symlinks
 
   local stow_dir="$REPO_ROOT/stow"
-  local packages=(shell nvim kitty alacritty wezterm)
+  local packages=(shell nvim kitty alacritty)
 
   [[ -d "$stow_dir" ]] || die "No existe: $stow_dir"
 
