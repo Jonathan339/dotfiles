@@ -6,17 +6,17 @@ local fmta = require('luasnip.extras.fmt').fmta
 return {
   s('usest', fmta("const [<>, set<>] = useState(<>)", { i(1, 'state'), i(2, 'State'), i(3) })),
   s('useef', fmta([[
-useEffect(() => {
+useEffect(() =>> {
   <>
 }, [<>])
 ]], { i(1), i(2) })),
   s('usecb', fmta([[
-const <> = useCallback((<>) => {
+const <> = useCallback((<>) =>> {
   <>
 }, [<>])
 ]], { i(1, 'cb'), i(2), i(3), i(4) })),
   s('usem', fmta([[
-const <> = useMemo(() => <>, [<>])
+const <> = useMemo(() =>> <>, [<>])
 ]], { i(1, 'val'), i(2), i(3) })),
   s('userf', fmta('const <> = useRef(<>)', { i(1, 'ref'), i(2) })),
   s('usecx', fmta('const <> = useContext(<>)', { i(1, 'value'), i(2, 'Context') })),
@@ -29,7 +29,7 @@ export default function <>({ <> }) {
 }
 ]], { i(1, 'Component'), i(2), i(3) })),
   s('rafc', fmta([[
-const <> = ({ <> }) => {
+const <> = ({ <> }) =>> {
   return (
     <>
     </>
@@ -37,9 +37,9 @@ const <> = ({ <> }) => {
 }
 ]], { i(1, 'Component'), i(2), i(3) })),
   s('onch', fmta([[
-onChange={(<>) => <>}
+onChange={(<>) =>> <>}
 ]], { i(1, 'e'), i(2) })),
   s('oncl', fmta([[
-onClick={(<>) => <>}
+onClick={(<>) =>> <>}
 ]], { i(1, 'e'), i(2) })),
 }
