@@ -17,9 +17,11 @@ return {
       store_selection_keys = '<Tab>',
     })
 
-    -- Extender snippets de HTML a React
+    -- Compartir snippets entre filetypes
     ls.filetype_extend('javascriptreact', { 'html' })
     ls.filetype_extend('typescriptreact', { 'html' })
+    ls.filetype_extend('typescript', { 'javascript' })
+    ls.filetype_extend('typescriptreact', { 'javascriptreact' })
 
     -- Cargar VSCode snippets
     pcall(function()
@@ -30,18 +32,6 @@ return {
     local custom_dir = vim.fn.stdpath('config') .. '/lua/plugins/luasnip/snippets'
     local lua_loader = require('luasnip.loaders.from_lua')
     pcall(lua_loader.lazy_load, { paths = custom_dir })
-
-    -- fallback por si tus archivos no devuelven tablas (usan ls.add_snippets adentro)
-    local function cargar_snippets_fallback()
-      local files = vim.api.nvim_get_runtime_file('lua/plugins/luasnip/snippets/*.lua', true)
-      for _, f in ipairs(files) do
-        pcall(dofile, f)
-      end
-    end
-    -- Si el loader no encontró nada, intentá fallback
-    if vim.tbl_isempty(vim.api.nvim_get_runtime_file('lua/plugins/luasnip/snippets/*.lua', true)) == false then
-      pcall(cargar_snippets_fallback)
-    end
 
     -- Autoreload de snippets propios al guardar
     vim.api.nvim_create_autocmd('BufWritePost', {
