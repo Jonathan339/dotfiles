@@ -181,6 +181,13 @@ M['lua_ls'] = function()
   })
 end
 
+M['tailwindcss'] = function()
+  local root_pattern = require('lspconfig.util').root_pattern
+  setup('tailwindcss', {
+    root_dir = root_pattern('.git'),
+  })
+end
+
 -- Compat: si algo intenta usar "tsserver", redirigimos a ts_ls
 M['tsserver'] = function()
   return M['ts_ls']()
