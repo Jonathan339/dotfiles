@@ -4,28 +4,6 @@ local setup = require('utils').setup_lsp
 local util = require('lspconfig.util')
 local root_pattern = util.root_pattern
 
--- dprint LSP (formatea y/o diagnostica con su config local)
-M['dprint'] = function()
-  setup('dprint', {
-    cmd = { 'dprint', 'lsp' },
-    filetypes = {
-      'javascript',
-      'javascriptreact',
-      'typescript',
-      'typescriptreact',
-      'json',
-      'jsonc',
-      'markdown',
-      'python',
-      'toml',
-      'rust',
-      'roslyn',
-      'graphql',
-    },
-    root_dir = root_pattern('dprint.json', '.dprint.json', 'dprint.jsonc', '.dprint.jsonc'),
-  })
-end
-
 -- EFM (agregador genérico) -> sin formato para no chocar con Conform
 M['efm'] = function()
   setup('efm', {

@@ -36,7 +36,6 @@ return {
         'css-lsp',
         'tailwindcss-language-server',
         'dockerfile-language-server',
-        'dprint',
         'emmet-language-server',
         'eslint-lsp',
         'eslint_d',
@@ -76,7 +75,7 @@ return {
     end
 
     local handlers = require('plugins.lsp.handlers')
-    for _, name in ipairs({ 'vtsls', 'eslint', 'lua_ls', 'dprint', 'efm', 'typos_lsp', 'jsonls', 'tailwindcss' }) do
+    for _, name in ipairs({ 'vtsls', 'eslint', 'lua_ls', 'efm', 'typos_lsp', 'jsonls', 'tailwindcss' }) do
       if handlers[name] then
         handlers[name]()
         table.insert(servers, name)
