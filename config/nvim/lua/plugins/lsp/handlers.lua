@@ -166,6 +166,20 @@ M['tailwindcss'] = function()
   })
 end
 
+-- marksman (Markdown LSP)
+M['marksman'] = function()
+  setup('marksman', {
+    root_dir = function(fname)
+      return root_pattern('.git', '.marksman.toml', 'markdown.json')(fname) or util.find_git_ancestor(fname) or vim.uv.cwd()
+    end,
+    settings = {
+      markdown = {
+        link_validate = { enabled = true },
+      },
+    },
+  })
+end
+
 -- Compat: si algo intenta usar "tsserver", redirigimos a ts_ls
 M['tsserver'] = function()
   return M['ts_ls']()

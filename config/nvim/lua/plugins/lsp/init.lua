@@ -75,7 +75,7 @@ return {
     end
 
     local handlers = require('plugins.lsp.handlers')
-    for _, name in ipairs({ 'vtsls', 'eslint', 'lua_ls', 'efm', 'typos_lsp', 'jsonls', 'tailwindcss' }) do
+    for _, name in ipairs({ 'vtsls', 'eslint', 'lua_ls', 'efm', 'typos_lsp', 'jsonls', 'tailwindcss', 'marksman' }) do
       if handlers[name] then
         handlers[name]()
         table.insert(servers, name)
