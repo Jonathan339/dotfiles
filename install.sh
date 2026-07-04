@@ -31,6 +31,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
 CONFIG_MODE="${DOTFILES_CONFIG_MODE:-stow}"
 STOW_ADOPT="${DOTFILES_STOW_ADOPT:-false}"
+ALL_MODE=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --all) ALL_MODE=true; shift ;;
+    --copy) CONFIG_MODE="copy"; shift ;;
+    *) shift ;;
+  esac
+done
 
 command -v sudo >/dev/null || die "Necesitás sudo."
 command -v curl >/dev/null || die "Necesitás curl."
@@ -114,10 +123,35 @@ stow_config_files() {
   done
 }
 
+copy_config_files() {
+  log "Copiando dotfiles a $HOME..."
+
+  cleanup_conflicting_symlinks
+
+  local config_dir="$REPO_ROOT/config"
+
+  mkdir -p "$HOME/.config/nvim"
+  mkdir -p "$HOME/.config/kitty/colors"
+  mkdir -p "$HOME/.config/alacritty/colors"
+
+  for f in .zshrc .zsh_aliases .bashrc .tmux.conf .gitconfig; do
+    [[ -f "$config_dir/$f" ]] && cp -f "$config_dir/$f" "$HOME/$f"
+  done
+
+  cp -rf "$config_dir/nvim/." "$HOME/.config/nvim/"
+  cp -f "$config_dir/kitty.conf" "$HOME/.config/kitty/kitty.conf"
+  cp -f "$config_dir/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
+  cp -f "$config_dir/colors/kitty-colors.conf" "$HOME/.config/kitty/colors/kitty-colors.conf"
+  cp -f "$config_dir/colors/alacritty-colors.toml" "$HOME/.config/alacritty/colors/alacritty-colors.toml"
+
+  ok "Dotfiles copiados a $HOME."
+}
+
 apply_config_files() {
   case "$CONFIG_MODE" in
     stow) stow_config_files ;;
-    *) die "Modo inválido." ;;
+    copy) copy_config_files ;;
+    *) die "Modo inválido. Usá 'stow' o 'copy'." ;;
   esac
 }
 
@@ -280,6 +314,11 @@ install_all() {
 
   ok "Instalación completa finalizada."
 }
+
+if [[ "$ALL_MODE" == "true" ]]; then
+  install_all
+  exit 0
+fi
 
 PS3="Elegí una opción: "
 
