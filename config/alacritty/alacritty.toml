@@ -1,6 +1,7 @@
 
 [env]
-TERM = "xterm-256color"
+# Usar 'alacritty' requiere la terminfo (viene con Alacritty o se instala con `tic -x`)
+TERM = "alacritty"
 
 [window]
 opacity = 1.0
