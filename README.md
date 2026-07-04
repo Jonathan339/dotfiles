@@ -53,8 +53,7 @@ La carpeta `stow/` contiene symlinks que apuntan a `config/`. Al ejecutar `stow`
 
 - `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`, `~/.tmux.conf`, `~/.gitconfig`
 - `nvim` → `~/.config/nvim`
-- `kitty` → `~/.config/kitty/kitty.conf`, `~/.config/kitty/colors/kitty-colors.conf`
-- `alacritty` → `~/.config/alacritty/alacritty.toml`, `~/.config/alacritty/colors/alacritty-colors.toml`
+- `terminal` → `~/.config/kitty/kitty.conf`, `~/.config/kitty/colors/kitty-colors.conf`, `~/.config/alacritty/alacritty.toml`, `~/.config/alacritty/colors/alacritty-colors.toml`
 
 ## Ruta de configs destino
 

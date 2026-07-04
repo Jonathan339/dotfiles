@@ -81,7 +81,9 @@ cleanup_conflicting_symlinks() {
     "$HOME/.tmux.conf"
     "$HOME/.config/nvim"
     "$HOME/.config/kitty/kitty.conf"
+    "$HOME/.config/kitty/colors/kitty-colors.conf"
     "$HOME/.config/alacritty/alacritty.toml"
+    "$HOME/.config/alacritty/colors/alacritty-colors.toml"
   )
 
   for file in "${files[@]}"; do
@@ -106,7 +108,7 @@ stow_config_files() {
   cleanup_conflicting_symlinks
 
   local stow_dir="$REPO_ROOT/stow"
-  local packages=(shell nvim kitty alacritty)
+  local packages=(shell nvim terminal)
 
   [[ -d "$stow_dir" ]] || die "No existe: $stow_dir"
 
