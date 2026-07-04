@@ -6,12 +6,12 @@ TERM = "alacritty"
 [window]
 opacity = 1.0
 decorations = "full"
-dynamic_padding = true
+dynamic_padding = false
 dimensions = { columns = 141, lines = 42 }
 
 [window.padding]
-x = 0
-y = 0
+x = 2
+y = 2
 
 [font]
 size = 12
