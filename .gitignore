@@ -1,45 +1,23 @@
 # =========================
-# Vim
-# =========================
-S.vim/plugged/
-.vim/autoload/
-.DS_Store
-dotfiles/nvim/plugin/packer_compiled.lua
-Session.vimSS
-.vim/bundle/
-.vimrc_sample
-.vim/ftdetect/Dockerfile.vim
-.vim/syntax/Dockerfile.vim
-.vim/snippets/
-packer.nvim
-# =========================
 # Node
 # =========================
 **/node_modules/
 
 # =========================
-# Vim / Neovim
+# Neovim
 # =========================
-
-# Swap
 *.swp
 *.swo
 *.un~
-
-# Backup
 *.bak
-
-# Sessions
 Session.vim
 Sessionx.vim
-
-# NetRW history
 .netrwhist
-
-# Logs
 *.log
 *.nvim-log
 crash.log
 
-# macOS (si alguna vez usas Mac)
+# =========================
+# macOS
+# =========================
 .DS_Store
