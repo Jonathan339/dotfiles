@@ -165,6 +165,16 @@ M['tailwindcss'] = function()
   })
 end
 
+-- emmet_ls (Emmet LSP)
+M['emmet_ls'] = function()
+  setup('emmet_ls', {
+    filetypes = { 'html', 'xml', 'jsx', 'tsx', 'svelte', 'vue', 'astro', 'css', 'scss' },
+    root_dir = function(fname)
+      return util.find_git_ancestor(fname) or vim.uv.cwd()
+    end,
+  })
+end
+
 -- marksman (Markdown LSP)
 M['marksman'] = function()
   setup('marksman', {
