@@ -1,5 +1,13 @@
 local NVIM_DIR = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
 
+local PARSERS = {
+  "vim", "regex", "rust", "markdown", "json",
+  "javascript", "typescript", "tsx",
+  "yaml", "html", "css", "bash", "lua", "dockerfile",
+  "solidity", "gitignore", "python",
+  "vue", "svelte", "toml", "go",
+}
+
 local function tree_sitter_path()
   local local_path = NVIM_DIR .. "/node_modules/.bin/tree-sitter"
   if vim.fn.executable(local_path) == 1 then
@@ -12,25 +20,29 @@ local function tree_sitter_path()
 end
 
 local function ensure_parsers()
-  local ensure_installed = {
-    "vim", "regex", "rust", "markdown", "json",
-    "javascript", "typescript", "tsx",
-    "yaml", "html", "css", "bash", "lua", "dockerfile",
-    "solidity", "gitignore", "python",
-    "vue", "svelte", "toml", "go",
-  }
-
-  require("nvim-treesitter").install(ensure_installed)
+  require("nvim-treesitter.install").update({ ensure_installed = PARSERS })
 end
 
 return {
   "nvim-treesitter/nvim-treesitter",
   branch = "main",
   event = { "BufReadPre", "BufNewFile" },
-
-  init = function()
+  build = function()
     if tree_sitter_path() then
       ensure_parsers()
+    end
+  end,
+  cmd = { "TSInstall", "TSInstallSync", "TSUpdate", "TSUpdateSync" },
+  config = function()
+    require("nvim-treesitter.configs").setup({
+      ensure_installed = PARSERS,
+      auto_install = true,
+      highlight = { enable = true, additional_vim_regex_highlighting = false },
+      indent = { enable = true },
+    })
+  end,
+  init = function()
+    if tree_sitter_path() then
       return
     end
 
@@ -55,7 +67,6 @@ return {
         vim.schedule(function()
           if tree_sitter_path() then
             vim.notify("tree-sitter-cli instalado localmente", vim.log.levels.INFO)
-            ensure_parsers()
           else
             vim.notify("tree-sitter se instaló pero no está en node_modules/.bin", vim.log.levels.ERROR)
           end

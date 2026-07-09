@@ -45,10 +45,4 @@ M.on_attach = function(client, bufnr)
   end)
 end
 
--- Root genérico (útil para la mayoría de servidores)
-M.root_dir = function(fname)
-  local util = require('lspconfig').util
-  return util.root_pattern('.git', 'tsconfig.base.json', 'tsconfig.json', 'package.json', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs', 'eslint.config.ts')(fname)
-end
-
 return M

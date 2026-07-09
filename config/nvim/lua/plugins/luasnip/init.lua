@@ -4,7 +4,11 @@ return {
   event = 'InsertEnter',
   dependencies = {
     'rafamadriz/friendly-snippets',
+    'benfowler/telescope-luasnip.nvim',
   },
+  build = (function()
+    return (vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1) and 'make install_jsregexp' or nil
+  end)(),
   config = function()
     local ls = require('luasnip')
 

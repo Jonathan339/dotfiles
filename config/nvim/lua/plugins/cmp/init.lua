@@ -10,18 +10,6 @@ return {
     'hrsh7th/cmp-cmdline',
     'hrsh7th/cmp-nvim-lua', -- ← la necesitabas: usabas { name = "nvim_lua" }
 
-    -- snippets
-    {
-      'L3MON4D3/LuaSnip',
-      dependencies = {
-        'rafamadriz/friendly-snippets',
-        'benfowler/telescope-luasnip.nvim',
-      },
-      build = (function()
-        -- build opcional para Windows (evita errores en no-Windows)
-        return (vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1) and 'make install_jsregexp' or nil
-      end)(),
-    },
     'saadparwaiz1/cmp_luasnip',
 
     -- iconitos y colores bonitos (opcionales)
