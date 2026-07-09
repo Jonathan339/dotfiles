@@ -4,6 +4,7 @@ set -euo pipefail
 # ==============================================================================
 # generate-palette.sh
 # Regenera config/colors/{kitty-colors.conf,alacritty-colors.toml}
+# y stow/terminal/.config/ghostty/colors/ghostty-colors
 # desde config/colors/palette.sh (fuente única).
 # ==============================================================================
 
@@ -12,6 +13,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 PALETTE="$REPO_ROOT/config/colors/palette.sh"
 KITTY_OUT="$REPO_ROOT/config/colors/kitty-colors.conf"
 ALACRITTY_OUT="$REPO_ROOT/config/colors/alacritty-colors.toml"
+GHOSTTY_OUT="$REPO_ROOT/stow/terminal/.config/ghostty/colors/ghostty-colors"
 
 [[ -f "$PALETTE" ]] || { echo "No existe: $PALETTE"; exit 1; }
 
@@ -86,6 +88,37 @@ cyan = "$PALETTE_COLOR14"
 white = "$PALETTE_COLOR15"
 EOF
 
+cat > "$GHOSTTY_OUT" <<EOF
+# ==============================================================================
+# Solo Leveling Palette — Ghostty (generado por scripts/generate-palette.sh)
+# Source of truth: config/colors/palette.sh
+# ==============================================================================
+
+background = $PALETTE_BG
+foreground = $PALETTE_FG
+cursor-color = $PALETTE_CURSOR
+selection-foreground = $PALETTE_SEL_FG
+selection-background = $PALETTE_SEL_BG
+
+palette = 0=$PALETTE_COLOR0
+palette = 1=$PALETTE_COLOR1
+palette = 2=$PALETTE_COLOR2
+palette = 3=$PALETTE_COLOR3
+palette = 4=$PALETTE_COLOR4
+palette = 5=$PALETTE_COLOR5
+palette = 6=$PALETTE_COLOR6
+palette = 7=$PALETTE_COLOR7
+palette = 8=$PALETTE_COLOR8
+palette = 9=$PALETTE_COLOR9
+palette = 10=$PALETTE_COLOR10
+palette = 11=$PALETTE_COLOR11
+palette = 12=$PALETTE_COLOR12
+palette = 13=$PALETTE_COLOR13
+palette = 14=$PALETTE_COLOR14
+palette = 15=$PALETTE_COLOR15
+EOF
+
 echo "Regenerado:"
 echo "  $KITTY_OUT"
 echo "  $ALACRITTY_OUT"
+echo "  $GHOSTTY_OUT"

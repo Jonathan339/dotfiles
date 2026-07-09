@@ -84,6 +84,8 @@ cleanup_conflicting_symlinks() {
     "$HOME/.config/kitty/colors/kitty-colors.conf"
     "$HOME/.config/alacritty/alacritty.toml"
     "$HOME/.config/alacritty/colors/alacritty-colors.toml"
+    "$HOME/.config/ghostty/config"
+    "$HOME/.config/ghostty/colors/ghostty-colors"
   )
 
   for file in "${files[@]}"; do
@@ -135,6 +137,7 @@ copy_config_files() {
   mkdir -p "$HOME/.config/nvim"
   mkdir -p "$HOME/.config/kitty/colors"
   mkdir -p "$HOME/.config/alacritty/colors"
+  mkdir -p "$HOME/.config/ghostty/colors"
 
   for f in .zshrc .zsh_aliases .bashrc .tmux.conf .gitconfig; do
     [[ -f "$config_dir/$f" ]] && cp -f "$config_dir/$f" "$HOME/$f"
@@ -145,6 +148,8 @@ copy_config_files() {
   cp -f "$config_dir/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
   cp -f "$config_dir/colors/kitty-colors.conf" "$HOME/.config/kitty/colors/kitty-colors.conf"
   cp -f "$config_dir/colors/alacritty-colors.toml" "$HOME/.config/alacritty/colors/alacritty-colors.toml"
+  cp -f "$REPO_ROOT/stow/terminal/.config/ghostty/config" "$HOME/.config/ghostty/config"
+  cp -f "$REPO_ROOT/stow/terminal/.config/ghostty/colors/ghostty-colors" "$HOME/.config/ghostty/colors/ghostty-colors"
 
   ok "Dotfiles copiados a $HOME."
 }

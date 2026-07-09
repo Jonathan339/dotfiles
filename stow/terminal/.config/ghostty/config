@@ -1,0 +1,46 @@
+# ==============================================================================
+# Ghostty Config — Solo Leveling Theme (Shadow Monarch Edition)
+# ==============================================================================
+
+# ====== Fuente ======
+font-family = DroidSansM Nerd Font
+font-size = 12
+
+# ====== Ventana ======
+background-opacity = 0.9
+window-padding-x = 2
+window-padding-y = 2
+
+# ====== Colores ======
+config-file = colors/ghostty-colors
+
+# ====== Cursor ======
+cursor-style = bar
+cursor-style-blink = false
+
+# ====== Shell ======
+command = zsh
+
+# ====== Mouse ======
+mouse-hide-while-typing = true
+
+# ====== Keybindings ======
+# Ventanas (Splits)
+keybind = super+shift+enter=new_split:right
+keybind = super+shift+n=new_split:right
+keybind = super+shift+q=close_surface
+keybind = super+shift+left=goto_split:previous
+keybind = super+shift+right=goto_split:next
+keybind = super+shift+r=reload_config
+
+# Pestañas
+keybind = super+t=new_tab
+keybind = super+w=close_tab
+keybind = super+right=next_tab
+keybind = super+tab=next_tab
+keybind = super+left=previous_tab
+keybind = super+shift+tab=previous_tab
+
+# Copiar/Pegar
+keybind = super+shift+c=copy_to_clipboard
+keybind = super+shift+v=paste_from_clipboard

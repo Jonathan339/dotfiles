@@ -1,0 +1,27 @@
+# ==============================================================================
+# Solo Leveling Palette — Ghostty (generado por scripts/generate-palette.sh)
+# Source of truth: config/colors/palette.sh
+# ==============================================================================
+
+background = #252525
+foreground = #ffffff
+cursor-color = #ffffff
+selection-foreground = #ffffff
+selection-background = #170830
+
+palette = 0=#130728
+palette = 1=#8f45e3
+palette = 2=#8f59aa
+palette = 3=#c47be8
+palette = 4=#8f45e3
+palette = 5=#f485ed
+palette = 6=#8f45e3
+palette = 7=#fab1ed
+palette = 8=#583e53
+palette = 9=#ac53ff
+palette = 10=#ac6bcc
+palette = 11=#e18dff
+palette = 12=#b356ff
+palette = 13=#ffa6ff
+palette = 14=#ac53ff
+palette = 15=#ffbaf9
