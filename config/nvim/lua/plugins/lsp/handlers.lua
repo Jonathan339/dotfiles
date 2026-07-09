@@ -1,33 +1,32 @@
 -- lua/plugins/lsp/handlers.lua
 local M = {}
+local defaults = require('plugins.lsp.defaults')
 local setup = require('utils').setup_lsp
 local util = require('lspconfig.util')
 local root_pattern = util.root_pattern
 
--- EFM (agregador genérico) -> sin formato para no chocar con Conform
+local function simple(name)
+  M[name] = function()
+    setup(name, {
+      capabilities = defaults.capabilities,
+      on_attach = defaults.on_attach,
+      on_init = defaults.on_init,
+    })
+  end
+end
+
+simple('bashls')
+simple('pyright')
+simple('html')
+simple('cssls')
+simple('clangd')
+
+-- EFM (agregador genérico) -> requiere configurar linters en efm-langserver
 M['efm'] = function()
   setup('efm', {
     cmd = { 'efm-langserver' },
     init_options = { documentFormatting = false, documentRangeFormatting = false },
     root_dir = root_pattern('.git', '.efm.json', '.efmrc', '.config/efm-langserver/config.yaml'),
-    filetypes = {
-      'python',
-      'cpp',
-      'lua',
-      'javascript',
-      'typescript',
-      'javascriptreact',
-      'typescriptreact',
-      'html',
-      'css',
-      'scss',
-      'json',
-      'yaml',
-      'markdown',
-      'markdown.pandoc',
-      'astro',
-      'svelte',
-    },
     settings = {
       rootMarkers = { '.git/' },
       lintDebounce = '500ms',

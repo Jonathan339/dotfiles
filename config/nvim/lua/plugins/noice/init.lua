@@ -6,7 +6,7 @@ return {
     'rcarriga/nvim-notify',
   },
   config = function()
-    local has_notify = true
+    local has_notify = pcall(require, 'notify')
 
     require('noice').setup({
       -- Mensajes y notificaciones
