@@ -10,6 +10,9 @@ return {
       zsh = { "shellcheck" },
       markdown = { "markdownlint" },
       yaml = { "yamllint" },
+      python = { "ruff" },
+      go = { "staticcheck" },
+      lua = { "luacheck" },
     }
 
     local lint_augroup = vim.api.nvim_create_augroup("nvim-lint", { clear = true })
