@@ -6,11 +6,17 @@ on:
     paths:
       - "*.sh"
       - "scripts/**"
+      - "config/shell/**"
+      - "config/colors/palette.sh"
+      - ".shellcheckrc"
       - ".github/workflows/shellcheck.yml"
   pull_request:
     paths:
       - "*.sh"
       - "scripts/**"
+      - "config/shell/**"
+      - "config/colors/palette.sh"
+      - ".shellcheckrc"
 
 jobs:
   shellcheck:

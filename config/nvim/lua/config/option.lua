@@ -32,31 +32,6 @@ vim.opt.laststatus = 3 -- 🔥 globalstatus para lualine
 vim.opt.showmode = false -- lualine muestra el modo
 vim.opt.signcolumn = 'yes' -- evita “salto” al aparecer diagnósticos
 
--- Notificaciones (noice.nvim)
-if vim.fn.exists("*noice") == 1 then
-  vim.opt.cmdheight = 0
-  vim.opt.showmode = false
-  pcall(function()
-    require('noice').setup({
-      messages = {
-        view = 'mini',
-        view_error = 'notify',
-        view_warn = 'notify',
-        view_search = false,
-      },
-      notify = { enabled = true },
-      cmdline = { view = 'cmdline_popup' },
-      views = {
-        cmdline_popup = {
-          position = { row = '35%', col = '50%' },
-          size = { width = 60, height = 'auto' },
-          border = { style = 'rounded' },
-        },
-      },
-    })
-  end)
-end
-
 -- Búsqueda
 vim.opt.incsearch = true
 vim.opt.ignorecase = true

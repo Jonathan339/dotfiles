@@ -1,0 +1,1 @@
+../../../../config/shell/path.sh

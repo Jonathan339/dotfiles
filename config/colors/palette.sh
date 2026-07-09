@@ -6,6 +6,7 @@
 # Archivos generados:
 #   config/colors/kitty-colors.conf
 #   config/colors/alacritty-colors.toml
+#   config/colors/ghostty-colors
 # ==============================================================================
 
 PALETTE_BG='#252525'

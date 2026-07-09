@@ -1,0 +1,4 @@
+disable=SC1090,SC1091
+source-path=SCRIPTDIR
+external-sources=true
+severity=warning

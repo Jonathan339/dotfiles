@@ -17,21 +17,17 @@ M.config = function()
       border = 'curved', -- 'single' | 'double' | 'shadow' | 'curved' | ...,
     },
     highlights = {
-      -- Resaltado para el texto normal dentro de la terminal
       Normal = {
-        guibg = '#ffffff', -- Color de fondo del texto normal
-        guifg = '#000000', -- Color del texto normal
+        guibg = '#252525',
+        guifg = '#ffffff',
       },
-      -- Resaltado para el texto normal dentro de una ventana flotante
       NormalFloat = {
-        link = 'Normal', -- Enlace al resaltado de texto normal
+        link = 'Normal',
       },
-      -- Resaltado para el borde de la ventana flotante
-      -- FloatBorder = {
-      --   guifg = '#ff0000', -- Color del borde de la ventana flotante
-      --   guibg = '#000000', -- Color de fondo del borde de la ventana flotante
-      -- },
-      -- Agrega más resaltados según sea necesario...
+      FloatBorder = {
+        guifg = '#8f45e3',
+        guibg = '#252525',
+      },
     },
     winbar = {
       enabled = false,

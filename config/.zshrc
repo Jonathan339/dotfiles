@@ -13,27 +13,14 @@ setopt autocd correct \
        hist_ignore_all_dups share_history inc_append_history \
        extended_glob glob_dots no_beep notify nobanghist
 
+# Deshabilitar XON/XOFF para que <C-s> funcione en Neovim
+[[ -t 0 ]] && stty -ixon
+
 # -------------------------
-# PATH (sin duplicados)
+# PATH unificado
 # -------------------------
+[[ -f "$HOME/.config/shell/path.sh" ]] && source "$HOME/.config/shell/path.sh"
 typeset -U path PATH
-
-export ANDROID_HOME="$HOME/Android/Sdk"
-export FNM_PATH="$HOME/.local/share/fnm"
-export PATH="$HOME/.opencode/bin:$PATH"
-path=(
-  "$HOME/.local/bin"
-  "$HOME/.local/share/pnpm"
-  "$HOME/.bun/bin"
-  "$FNM_PATH"
-  "$ANDROID_HOME/emulator"
-  "$ANDROID_HOME/platform-tools"
-  "$ANDROID_HOME/tools"
-  "$ANDROID_HOME/tools/bin"
-  $path
-)
-
-export PATH
 
 # -------------------------
 # Editor
@@ -107,35 +94,36 @@ update() {
 
   echo
   echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
-  echo "${fg[cyan]}🚀 Iniciando actualización - $(date '+%H:%M:%S')${reset_color}"
+  echo "${fg[cyan]}Actualizando sistema - $(date '+%H:%M:%S')${reset_color}"
   echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
 
-  echo "${fg[yellow]}▶ Actualizando repositorios...${reset_color}"
-  if ! sudo apt update; then
-    echo "${fg[red]}✖ Error en apt update${reset_color}"
-    return 1
-  fi
+  echo "${fg[yellow]}> apt update${reset_color}"
+  sudo apt update || { echo "${fg[red]}x Error en apt update${reset_color}"; return 1; }
 
-  echo "${fg[yellow]}▶ Actualizando sistema...${reset_color}"
-  if ! sudo apt full-upgrade -y; then
-    echo "${fg[red]}✖ Error en full-upgrade${reset_color}"
-    return 1
-  fi
+  echo "${fg[yellow]}> apt full-upgrade${reset_color}"
+  sudo apt full-upgrade -y || { echo "${fg[red]}x Error en full-upgrade${reset_color}"; return 1; }
 
-  echo "${fg[yellow]}▶ Limpiando dependencias...${reset_color}"
-  if ! sudo apt autoremove -y; then
-    echo "${fg[red]}✖ Error en autoremove${reset_color}"
-    return 1
-  fi
+  echo "${fg[yellow]}> snap refresh${reset_color}"
+  command -v snap >/dev/null && timeout 60 sudo snap refresh 2>/dev/null || echo "  snap: timeout o error"
 
-  echo "${fg[yellow]}▶ Limpiando cache...${reset_color}"
+  echo "${fg[yellow]}> pip${reset_color}"
+  command -v pip3 >/dev/null && pip3 install --upgrade pip setuptools wheel --break-system-packages 2>/dev/null || true
+  command -v pip >/dev/null && pip install --upgrade pip setuptools wheel --break-system-packages 2>/dev/null || true
+
+  echo "${fg[yellow]}> bun upgrade${reset_color}"
+  command -v bun >/dev/null && bun upgrade || true
+
+  echo "${fg[yellow]}> apt autoremove${reset_color}"
+  sudo apt autoremove -y || { echo "${fg[red]}x Error en autoremove${reset_color}"; return 1; }
+
+  echo "${fg[yellow]}> apt clean${reset_color}"
   sudo apt clean
 
   end_time=$SECONDS
   duration=$(( end_time - start_time ))
 
-  echo "${fg[green]}✔ Sistema actualizado correctamente.${reset_color}"
-  echo "${fg[magenta]}⏱ Duración: ${duration}s${reset_color}"
+  echo
+  echo "${fg[green]}Sistema actualizado (${duration}s)${reset_color}"
   echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
   echo
 }

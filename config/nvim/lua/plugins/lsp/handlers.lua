@@ -107,7 +107,6 @@ local function ts_handler(name)
 end
 
 M['vtsls'] = ts_handler('vtsls')
-M['ts_ls'] = ts_handler('ts_ls')
 
 -- ESLint LSP (solo diagnósticos y code actions)
 M['eslint'] = function()
@@ -180,9 +179,9 @@ M['marksman'] = function()
   })
 end
 
--- Compat: si algo intenta usar "tsserver", redirigimos a ts_ls
+-- Compat: si algo intenta usar "tsserver", redirigimos a vtsls
 M['tsserver'] = function()
-  return M['ts_ls']()
+  return M['vtsls']()
 end
 
 return M

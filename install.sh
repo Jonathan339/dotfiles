@@ -154,7 +154,19 @@ copy_config_files() {
   ok "Dotfiles copiados a $HOME."
 }
 
+backup_dotfiles() {
+  local backup_dir="/tmp/dotfiles-backup-$(date +%s)"
+  log "Respaldando config actual en $backup_dir ..."
+  mkdir -p "$backup_dir"
+  for f in .zshrc .zsh_aliases .bashrc .tmux.conf .gitconfig; do
+    [[ -f "$HOME/$f" ]] && cp -L "$HOME/$f" "$backup_dir/"
+  done
+  [[ -d "$HOME/.config/nvim" ]] && cp -rL "$HOME/.config/nvim" "$backup_dir/nvim" 2>/dev/null || true
+  ok "Backup guardado en $backup_dir"
+}
+
 apply_config_files() {
+  backup_dotfiles
   case "$CONFIG_MODE" in
     stow) stow_config_files ;;
     copy) copy_config_files ;;

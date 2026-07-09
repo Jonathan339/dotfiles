@@ -3,9 +3,10 @@ set -euo pipefail
 
 # ==============================================================================
 # generate-palette.sh
-# Regenera config/colors/{kitty-colors.conf,alacritty-colors.toml}
-# y stow/terminal/.config/ghostty/colors/ghostty-colors
-# desde config/colors/palette.sh (fuente única).
+# Regenera desde config/colors/palette.sh (fuente única):
+#   config/colors/kitty-colors.conf
+#   config/colors/alacritty-colors.toml
+#   config/colors/ghostty-colors
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,7 +14,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 PALETTE="$REPO_ROOT/config/colors/palette.sh"
 KITTY_OUT="$REPO_ROOT/config/colors/kitty-colors.conf"
 ALACRITTY_OUT="$REPO_ROOT/config/colors/alacritty-colors.toml"
-GHOSTTY_OUT="$REPO_ROOT/stow/terminal/.config/ghostty/colors/ghostty-colors"
+GHOSTTY_OUT="$REPO_ROOT/config/colors/ghostty-colors"
 
 [[ -f "$PALETTE" ]] || { echo "No existe: $PALETTE"; exit 1; }
 

@@ -3,7 +3,6 @@
 #  .bashrc optimizado
 #  Fecha: 2026-04-12
 # =========================
-
 # 0) Salir si no es interactivo
 case $- in
   *i*) ;;
@@ -39,7 +38,7 @@ shopt -s checkwinsize
 # Prompt bash fallback
 # -------------------------
 case "$TERM" in
-  xterm-color|*-256color) color_prompt=yes ;;
+  xterm-color | *-256color) color_prompt=yes ;;
 esac
 
 if [ "$color_prompt" = yes ] && [ -x /usr/bin/tput ] && tput setaf 1 >/dev/null 2>&1; then
@@ -91,26 +90,9 @@ if command -v /home/linuxbrew/.linuxbrew/bin/brew >/dev/null 2>&1; then
 fi
 
 # -------------------------
-# PATH Tools
+# PATH unificado
 # -------------------------
-export BUN_INSTALL="$HOME/.bun"
-export PNPM_HOME="$HOME/.local/share/pnpm"
-export FNM_PATH="$HOME/.local/share/fnm"
-
-case ":$PATH:" in
-  *":$BUN_INSTALL/bin:"*) ;;
-  *) export PATH="$BUN_INSTALL/bin:$PATH" ;;
-esac
-
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-
-case ":$PATH:" in
-  *":$FNM_PATH:"*) ;;
-  *) export PATH="$FNM_PATH:$PATH" ;;
-esac
+[ -f "$HOME/.config/shell/path.sh" ] && source "$HOME/.config/shell/path.sh"
 
 # -------------------------
 # Deno

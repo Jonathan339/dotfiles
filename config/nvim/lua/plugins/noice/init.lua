@@ -77,15 +77,6 @@ return {
 
       -- 🔥 FILTROS (routes)
       routes = {
-        -- 🔴 Elimina el warning de nvim-ts-autotag
-        {
-          filter = {
-            event = 'notify',
-            find = 'nvim%-ts%-autotag: Using the legacy setup opts!',
-          },
-          opts = { skip = true },
-        },
-
         -- Oculta mensajes molestos comunes
         { filter = { event = 'msg_show', kind = 'search_count' }, opts = { skip = true } },
         { filter = { event = 'msg_show', find = 'written' }, opts = { skip = true } },

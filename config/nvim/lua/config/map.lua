@@ -64,7 +64,11 @@ map("n", "<A-Left>", ":bprevious<CR>", {
   desc = "Buffer anterior",
 })
 
-map("n", "<Leader>c", ":bp<bar>sp<bar>bn<bar>bd<CR>", {
+map("n", "<Leader>c", function()
+  if vim.api.nvim_buf_is_valid(vim.api.nvim_get_current_buf()) then
+    vim.api.nvim_buf_delete(vim.api.nvim_get_current_buf(), { force = false })
+  end
+end, {
   desc = "Cerrar buffer",
 })
 
