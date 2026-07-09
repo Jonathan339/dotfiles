@@ -1,4 +1,5 @@
 local M = {}
+local has_lsp_config = pcall(function() return vim.lsp.config end)
 
 M.setup_lsp = function(server, config)
   local defaults = require("plugins.lsp.defaults")
@@ -10,10 +11,17 @@ M.setup_lsp = function(server, config)
     defaults.on_attach(client, bufnr)
   end
 
-  vim.lsp.config(server, vim.tbl_deep_extend("force", {
+  local opts = vim.tbl_deep_extend("force", {
     capabilities = defaults.capabilities,
     on_init = defaults.on_init,
-  }, config))
+  }, config)
+
+  if has_lsp_config then
+    vim.lsp.config(server, opts)
+  else
+    local lspconfig = require("lspconfig")
+    lspconfig[server].setup(opts)
+  end
 end
 
 local function map(mode, lhs, rhs, opts)

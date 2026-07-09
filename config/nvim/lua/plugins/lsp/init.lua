@@ -62,26 +62,36 @@ return {
     })
 
     local defaults = require('plugins.lsp.defaults')
-
+    local has_lsp_config = pcall(function() return vim.lsp.config end)
+    local lspconfig = require('lspconfig')
     local servers = {}
 
     for _, name in ipairs({ 'bashls', 'pyright', 'html', 'cssls', 'clangd' }) do
-      vim.lsp.config(name, {
+      local opts = {
         capabilities = defaults.capabilities,
         on_attach = defaults.on_attach,
         on_init = defaults.on_init,
-      })
-      table.insert(servers, name)
+      }
+      if has_lsp_config then
+        vim.lsp.config(name, opts)
+        table.insert(servers, name)
+      else
+        lspconfig[name].setup(opts)
+      end
     end
 
     local handlers = require('plugins.lsp.handlers')
     for _, name in ipairs({ 'vtsls', 'eslint', 'lua_ls', 'efm', 'typos_lsp', 'jsonls', 'tailwindcss', 'marksman' }) do
       if handlers[name] then
         handlers[name]()
-        table.insert(servers, name)
+        if has_lsp_config then
+          table.insert(servers, name)
+        end
       end
     end
 
-    vim.lsp.enable(servers)
+    if has_lsp_config then
+      vim.lsp.enable(servers)
+    end
   end,
 }
