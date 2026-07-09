@@ -10,7 +10,9 @@ M.config = function()
   vim.api.nvim_set_hl(0, 'IBLScope', { link = 'Function', default = true })
 
   -- desactivar en archivos muy grandes (>1MB) para evitar lag
+  local ibl_group = vim.api.nvim_create_augroup('ibl_large_file', { clear = true })
   vim.api.nvim_create_autocmd('BufReadPost', {
+    group = ibl_group,
     callback = function(args)
       local ok, stat = pcall(vim.uv.fs_stat, args.file)
       if ok and stat and stat.size > 1024 * 1024 then
@@ -24,7 +26,7 @@ M.config = function()
   })
 
   -- scope solo si hay Treesitter
-  local has_ts = pcall(require, 'nvim-treesitter.configs')
+  local has_ts = pcall(require, 'nvim-treesitter.config')
 
   require('ibl').setup({
     indent = {

@@ -2,7 +2,7 @@ return {
   'stevearc/oil.nvim',
   cmd = 'Oil',
   opts = {
-    default_file_explorer = false,
+    default_file_explorer = true,
     float = {
       padding = 8,
       max_width = 80,

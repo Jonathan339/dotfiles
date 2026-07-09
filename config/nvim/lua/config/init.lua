@@ -11,13 +11,9 @@ local function load_modules(modules)
   end
 end
 
--- Módulos principales
 load_modules({
   'config.option',
   'config.lazy',
   'config.map',
-})
-
-load_modules({
   'config.autocmd',
 })

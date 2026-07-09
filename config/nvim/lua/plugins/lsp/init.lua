@@ -50,6 +50,8 @@ return {
         'shellcheck',
         'stylua',
         'taplo',
+        'gofumpt',
+        'goimports-reviser',
         'vtsls',
         'yaml-language-server',
         'typos-lsp',

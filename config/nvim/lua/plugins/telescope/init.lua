@@ -54,7 +54,7 @@ M.config = function()
           end,
         },
       },
-      sorting_strategy = "descending",
+      sorting_strategy = "ascending",
       scroll_strategy = "cycle",
       mappings = {
         i = {
