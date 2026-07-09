@@ -19,7 +19,19 @@ simple('bashls')
 simple('pyright')
 simple('html')
 simple('cssls')
-simple('clangd')
+M['clangd'] = function()
+  setup('clangd', {
+    cmd = {
+      'clangd',
+      '--clang-tidy',
+      '--clang-tidy-checks=-*,clang-*,bugprone-*,performance-*,readability-*,portability-*',
+      '--header-insertion=iwyu',
+    },
+    capabilities = defaults.capabilities,
+    on_attach = defaults.on_attach,
+    on_init = defaults.on_init,
+  })
+end
 
 -- EFM (agregador genérico) -> requiere configurar linters en efm-langserver
 M['efm'] = function()

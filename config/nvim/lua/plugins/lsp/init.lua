@@ -33,6 +33,7 @@ return {
         'bash-language-server',
         'clangd',
         'clang-format',
+        'clang-tidy',
         'css-lsp',
         'emmet-language-server',
         'tailwindcss-language-server',
