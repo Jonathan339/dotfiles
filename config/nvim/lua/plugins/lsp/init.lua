@@ -34,6 +34,7 @@ return {
         'clangd',
         'clang-format',
         'css-lsp',
+        'emmet-language-server',
         'tailwindcss-language-server',
         'eslint-lsp',
         'eslint_d',
