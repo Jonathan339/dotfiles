@@ -77,6 +77,7 @@ cleanup_conflicting_symlinks() {
   local files=(
     "$HOME/.bashrc"
     "$HOME/.zshrc"
+    "$HOME/.zsh_aliases"
     "$HOME/.gitconfig"
     "$HOME/.tmux.conf"
     "$HOME/.config/nvim"
@@ -86,6 +87,7 @@ cleanup_conflicting_symlinks() {
     "$HOME/.config/alacritty/colors/alacritty-colors.toml"
     "$HOME/.config/ghostty/config"
     "$HOME/.config/ghostty/colors/ghostty-colors"
+    "$HOME/.config/wezterm/wezterm.lua"
   )
 
   for file in "${files[@]}"; do
@@ -103,27 +105,30 @@ cleanup_conflicting_symlinks() {
   done
 }
 
-stow_config_files() {
-  log "Aplicando dotfiles con GNU Stow..."
+stow_single_pkg() {
+  local pkg="$1"
+  local stow_dir="$REPO_ROOT/stow"
 
   install_package_if_missing stow
+
+  [[ -d "$stow_dir/$pkg" ]] || { warn "Paquete stow no encontrado: $pkg"; return 1; }
+
+  if [[ "$STOW_ADOPT" == "true" ]]; then
+    stow --adopt --restow --dir "$stow_dir" --target "$HOME" "$pkg"
+  else
+    stow --restow --dir "$stow_dir" --target "$HOME" "$pkg"
+  fi
+
+  ok "Config aplicada: $pkg"
+}
+
+stow_config_files() {
+  log "Aplicando todos los dotfiles con GNU Stow..."
+
   cleanup_conflicting_symlinks
 
-  local stow_dir="$REPO_ROOT/stow"
-  local packages=(shell nvim terminal)
-
-  [[ -d "$stow_dir" ]] || die "No existe: $stow_dir"
-
-  for pkg in "${packages[@]}"; do
-    [[ -d "$stow_dir/$pkg" ]] || continue
-
-    if [[ "$STOW_ADOPT" == "true" ]]; then
-      stow --adopt --restow --dir "$stow_dir" --target "$HOME" "$pkg"
-    else
-      stow --restow --dir "$stow_dir" --target "$HOME" "$pkg"
-    fi
-
-    ok "Paquete aplicado: $pkg"
+  for pkg in shell nvim kitty alacritty ghostty wezterm; do
+    stow_single_pkg "$pkg" || true
   done
 }
 
@@ -138,6 +143,7 @@ copy_config_files() {
   mkdir -p "$HOME/.config/kitty/colors"
   mkdir -p "$HOME/.config/alacritty/colors"
   mkdir -p "$HOME/.config/ghostty/colors"
+  mkdir -p "$HOME/.config/wezterm"
 
   for f in .zshrc .zsh_aliases .bashrc .tmux.conf .gitconfig; do
     [[ -f "$config_dir/$f" ]] && cp -f "$config_dir/$f" "$HOME/$f"
@@ -148,8 +154,9 @@ copy_config_files() {
   cp -f "$config_dir/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
   cp -f "$config_dir/colors/kitty-colors.conf" "$HOME/.config/kitty/colors/kitty-colors.conf"
   cp -f "$config_dir/colors/alacritty-colors.toml" "$HOME/.config/alacritty/colors/alacritty-colors.toml"
-  cp -f "$REPO_ROOT/stow/terminal/.config/ghostty/config" "$HOME/.config/ghostty/config"
-  cp -f "$REPO_ROOT/stow/terminal/.config/ghostty/colors/ghostty-colors" "$HOME/.config/ghostty/colors/ghostty-colors"
+  cp -f "$config_dir/ghostty/config" "$HOME/.config/ghostty/config"
+  cp -f "$config_dir/colors/ghostty-colors" "$HOME/.config/ghostty/colors/ghostty-colors"
+  cp -f "$config_dir/wezterm/wezterm.lua" "$HOME/.config/wezterm/wezterm.lua"
 
   ok "Dotfiles copiados a $HOME."
 }
@@ -227,6 +234,52 @@ install_snap_app() {
   snap_is_installed "$name" && return
 
   sudo snap install "$name" $flag || warn "Falló snap: $name"
+}
+
+install_neovim() {
+  install_snap_app nvim --beta --classic
+  stow_single_pkg nvim
+  ok "Neovim instalado + config aplicada."
+}
+
+install_kitty() {
+  install_package_if_missing kitty
+  stow_single_pkg kitty
+  ok "Kitty instalado + config aplicada."
+}
+
+install_alacritty() {
+  install_package_if_missing alacritty
+  stow_single_pkg alacritty
+  ok "Alacritty instalado + config aplicada."
+}
+
+install_ghostty() {
+  stow_single_pkg ghostty
+  ok "Config de Ghostty aplicada (instalalo manualmente)."
+}
+
+install_wezterm() {
+  stow_single_pkg wezterm
+  ok "Config de WezTerm aplicada (instalalo manualmente)."
+}
+
+install_zsh() {
+  install_package_if_missing zsh
+  stow_single_pkg shell
+  install_oh_my_zsh
+  ok "Zsh instalado + config aplicada."
+}
+
+install_tmux() {
+  install_package_if_missing tmux
+  stow_single_pkg shell
+  ok "Tmux instalado + config aplicada."
+}
+
+install_spotify_snap() {
+  install_snap_app spotify
+  ok "Spotify instalado."
 }
 
 install_yarn() {
@@ -341,39 +394,89 @@ fi
 
 PS3="Elegí una opción: "
 
+echo "━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  SISTEMA"
+echo "━━━━━━━━━━━━━━━━━━━━━━━"
+
 select option in \
-  "Instalar todo" \
-  "Instalar paquetes" \
-  "Aplicar dotfiles" \
+  "Instalar TODO completo" \
+  "Instalar paquetes base" \
+  "Instalar aplicaciones Snap (android-studio, spotify, vscode)" \
+  "Limpiar sistema" \
+  "" \
+  "━━━ HERRAMIENTAS ━━━" \
+  "Instalar Neovim (snap) + config" \
+  "Instalar Kitty + config" \
+  "Instalar Alacritty + config" \
+  "Aplicar config de Ghostty (instalar manual)" \
+  "Aplicar config de WezTerm (instalar manual)" \
+  "Instalar Zsh + config" \
+  "Instalar Tmux + config" \
+  "" \
+  "━━━ DOTFILES ━━━" \
+  "Aplicar TODOS los dotfiles (stow)" \
+  "Aplicar solo config de shell" \
+  "Aplicar solo config de nvim" \
+  "Aplicar solo config de kitty" \
+  "Aplicar solo config de alacritty" \
+  "Aplicar solo config de ghostty" \
+  "Aplicar solo config de wezterm" \
+  "" \
+  "━━━ EXTRAS ━━━" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
   "Instalar kitty-themes" \
-  "Instalar Android Studio" \
-  "Instalar Spotify" \
-  "Instalar VSCode" \
-  "Instalar Nvim" \
-  "Instalar Node.js" \
+  "Instalar Node.js (via FNM)" \
   "Instalar Yarn" \
   "Instalar Lazygit" \
-  "Limpiar" \
+  "Instalar Nerd Fonts" \
+  "" \
+  "━━━ SNAP ━━━" \
+  "Instalar Spotify (snap)" \
+  "" \
+  "━━━ SALIR ━━━" \
   "Salir"
 do
-  case $REPLY in
-    1) install_all ;;
-    2) install_packages ;;
-    3) apply_config_files ;;
-    4) install_bun ;;
-    5) install_oh_my_zsh ;;
-    6) install_kitty_themes ;;
-    7) install_snap_app android-studio --classic ;;
-    8) install_snap_app spotify ;;
-    9) install_snap_app code --classic ;;
-    10) install_snap_app nvim --beta --classic ;;
-    11) install_nodejs ;;
-    12) install_yarn ;;
-    13) install_lazygit ;;
-    14) clean ;;
-    15) exit 0 ;;
+  [[ -z "$REPLY" || "$REPLY" == "0" ]] && continue
+
+  case $option in
+    "Instalar TODO completo") install_all ;;
+    "Instalar paquetes base") install_packages ;;
+    "Instalar aplicaciones Snap (android-studio, spotify, vscode)")
+      install_snap_app android-studio --classic
+      install_snap_app spotify
+      install_snap_app code --classic
+      ok "Apps Snap instaladas."
+      ;;
+    "Limpiar sistema") clean ;;
+
+    "Instalar Neovim (snap) + config") install_neovim ;;
+    "Instalar Kitty + config") install_kitty ;;
+    "Instalar Alacritty + config") install_alacritty ;;
+    "Aplicar config de Ghostty (instalar manual)") install_ghostty ;;
+    "Aplicar config de WezTerm (instalar manual)") install_wezterm ;;
+    "Instalar Zsh + config") install_zsh ;;
+    "Instalar Tmux + config") install_tmux ;;
+
+    "Aplicar TODOS los dotfiles (stow)") apply_config_files ;;
+    "Aplicar solo config de shell") stow_single_pkg shell ;;
+    "Aplicar solo config de nvim") stow_single_pkg nvim ;;
+    "Aplicar solo config de kitty") stow_single_pkg kitty ;;
+    "Aplicar solo config de alacritty") stow_single_pkg alacritty ;;
+    "Aplicar solo config de ghostty") stow_single_pkg ghostty ;;
+    "Aplicar solo config de wezterm") stow_single_pkg wezterm ;;
+
+    "Instalar Bun") install_bun ;;
+    "Instalar Oh My Zsh") install_oh_my_zsh ;;
+    "Instalar kitty-themes") install_kitty_themes ;;
+    "Instalar Node.js (via FNM)") install_nodejs ;;
+    "Instalar Yarn") install_yarn ;;
+    "Instalar Lazygit") install_lazygit ;;
+    "Instalar Nerd Fonts") install_nerd_fonts ;;
+
+    "Instalar Spotify (snap)") install_spotify_snap ;;
+
+    "Salir") exit 0 ;;
     *) warn "Opción inválida." ;;
   esac
 done
