@@ -51,9 +51,12 @@ También podés usar modo rápido sin menú:
 
 La carpeta `stow/` contiene symlinks que apuntan a `config/`. Al ejecutar `stow`, se crean los symlinks en `$HOME`.
 
-- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`, `~/.tmux.conf`, `~/.gitconfig`
+- `shell` → `~/.zshrc`, `~/.zsh_aliases`, `~/.bashrc`, `~/.tmux.conf`, `~/.gitconfig`, `~/.config/shell/path.sh`
 - `nvim` → `~/.config/nvim`
-- `terminal` → `~/.config/kitty/kitty.conf`, `~/.config/kitty/colors/kitty-colors.conf`, `~/.config/alacritty/alacritty.toml`, `~/.config/alacritty/colors/alacritty-colors.toml`
+- `kitty` → `~/.config/kitty/kitty.conf`, `~/.config/kitty/colors/kitty-colors.conf`
+- `alacritty` → `~/.config/alacritty/alacritty.toml`, `~/.config/alacritty/colors/alacritty-colors.toml`
+- `ghostty` → `~/.config/ghostty/config`, `~/.config/ghostty/colors/ghostty-colors`
+- `wezterm` → `~/.config/wezterm/wezterm.lua`
 
 ## Ruta de configs destino
 
@@ -67,6 +70,10 @@ La carpeta `stow/` contiene symlinks que apuntan a `config/`. Al ejecutar `stow`
 - `~/.config/kitty/colors/kitty-colors.conf`
 - `~/.config/alacritty/alacritty.toml`
 - `~/.config/alacritty/colors/alacritty-colors.toml`
+- `~/.config/ghostty/config`
+- `~/.config/ghostty/colors/ghostty-colors`
+- `~/.config/wezterm/wezterm.lua`
+- `~/.config/shell/path.sh`
 
 ## Nota
 
