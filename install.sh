@@ -46,9 +46,9 @@ command -v git >/dev/null || die "Necesitás git."
 
 PACMAN_PACKAGES=(
   curl wget vlc gnupg seahorse git python-pip rust
-  openssl jdk21-openjdk fzf tmux kitty
+  openssl jdk21-openjdk fzf tmux kitty neovim
   xclip zsh ca-certificates ripgrep stow
-  yarn python-virtualenvwrapper
+  yarn python-virtualenvwrapper lazygit
 )
 
 AUR_PACKAGES=(
@@ -293,32 +293,7 @@ install_nodejs() {
 }
 
 install_lazygit() {
-  command -v lazygit >/dev/null && return
-
-  local arch
-  case "$(uname -m)" in
-    x86_64) arch="x86_64" ;;
-    aarch64|arm64) arch="arm64" ;;
-    *) die "Arquitectura no soportada: $(uname -m)" ;;
-  esac
-
-  local version
-  version=$(
-    curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest |
-      grep -Po '"tag_name": "v\K[^"]*'
-  )
-
-  [[ -n "$version" ]] || die "No se pudo obtener versión de Lazygit"
-
-  curl -Lo lazygit.tar.gz \
-    "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${version}_Linux_${arch}.tar.gz"
-
-  tar xf lazygit.tar.gz lazygit
-
-  sudo install -m 755 lazygit /usr/local/bin/lazygit
-
-  rm -f lazygit lazygit.tar.gz
-
+  install_package_if_missing lazygit
   ok "Lazygit instalado."
 }
 

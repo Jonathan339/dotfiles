@@ -32,7 +32,11 @@ shopt -s checkwinsize
 # -------------------------
 # Less inteligente
 # -------------------------
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+if [ -x /usr/bin/lesspipe ]; then
+  eval "$(SHELL=/bin/sh lesspipe)"
+elif [ -x /usr/bin/lesspipe.sh ]; then
+  eval "$(SHELL=/bin/sh lesspipe.sh)"
+fi
 
 # -------------------------
 # Prompt bash fallback
@@ -80,7 +84,11 @@ fi
 # -------------------------
 # FZF
 # -------------------------
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash
+if [ -f ~/.fzf.bash ]; then
+  source ~/.fzf.bash
+elif [ -f /usr/share/fzf/key-bindings.bash ]; then
+  source /usr/share/fzf/key-bindings.bash
+fi
 
 # -------------------------
 # Homebrew

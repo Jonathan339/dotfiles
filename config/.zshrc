@@ -65,7 +65,11 @@ fi
 # -------------------------
 # Lazy loads reales
 # -------------------------
-[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+if [[ -f ~/.fzf.zsh ]]; then
+  source ~/.fzf.zsh
+elif [[ -f /usr/share/fzf/key-bindings.zsh ]]; then
+  source /usr/share/fzf/key-bindings.zsh
+fi
 [[ -f "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
 
 # -------------------------
@@ -76,7 +80,8 @@ export WORKON_HOME="$HOME/.virtualenvs"
 load_virtualenvwrapper() {
   for f in \
     "$HOME/.local/bin/virtualenvwrapper.sh" \
-    "/usr/share/virtualenvwrapper/virtualenvwrapper.sh"
+    "/usr/share/virtualenvwrapper/virtualenvwrapper.sh" \
+    "/usr/bin/virtualenvwrapper.sh"
   do
     [[ -r "$f" ]] && source "$f" && unfunction load_virtualenvwrapper && return
   done
