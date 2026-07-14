@@ -47,7 +47,7 @@ command -v git >/dev/null || die "Necesitás git."
 PACMAN_PACKAGES=(
   curl wget vlc gnupg seahorse git python-pip rust
   openssl jdk21-openjdk fzf tmux kitty neovim
-  xclip zsh ca-certificates ripgrep stow
+  xclip wl-clipboard zsh ca-certificates ripgrep stow
   yarn python-virtualenvwrapper lazygit
 )
 
@@ -149,7 +149,7 @@ stow_config_files() {
   cleanup_conflicting_symlinks
 
   local stow_dir="$REPO_ROOT/stow"
-  local packages=(shell nvim terminal)
+  local packages=(shell nvim terminal wezterm)
 
   [[ -d "$stow_dir" ]] || die "No existe: $stow_dir"
 

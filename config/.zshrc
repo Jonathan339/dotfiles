@@ -79,9 +79,8 @@ export WORKON_HOME="$HOME/.virtualenvs"
 
 load_virtualenvwrapper() {
   for f in \
-    "$HOME/.local/bin/virtualenvwrapper.sh" \
-    "/usr/share/virtualenvwrapper/virtualenvwrapper.sh" \
-    "/usr/bin/virtualenvwrapper.sh"
+    "/usr/bin/virtualenvwrapper.sh" \
+    "$HOME/.local/bin/virtualenvwrapper.sh"
   do
     [[ -r "$f" ]] && source "$f" && unfunction load_virtualenvwrapper && return
   done

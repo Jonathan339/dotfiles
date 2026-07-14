@@ -16,6 +16,7 @@ shellcheck:
 	@shellcheck scripts/generate-palette.sh install.sh config/shell/path.sh config/colors/palette.sh
 
 backup:
-	@mkdir -p /tmp/dotfiles-backup-$$(date +%s) && \
-	cp -r config /tmp/dotfiles-backup-$$(date +%s)/ && \
-	echo "Backup guardado en /tmp/dotfiles-backup-$$(date +%s)"
+	@ts=$$(date +%s); \
+	mkdir -p /tmp/dotfiles-backup-$$ts && \
+	cp -r config /tmp/dotfiles-backup-$$ts/ && \
+	echo "Backup guardado en /tmp/dotfiles-backup-$$ts"

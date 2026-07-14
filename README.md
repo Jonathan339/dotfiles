@@ -12,7 +12,7 @@ Repositorio de configuración personal para entorno Linux (terminal + shell + Ne
 
 ## Requisitos mínimos
 
-- Ubuntu/Debian con `sudo`.
+- Arch Linux o Manjaro con `sudo`.
 - `curl` y `git`.
 
 ## Uso rápido
@@ -24,11 +24,11 @@ chmod +x install.sh
 
 El script permite:
 
-- Instalar dependencias APT comunes de desarrollo.
+- Instalar paquetes del sistema con `pacman`.
+- Instalar paquetes desde AUR (Android Studio, Spotify, VS Code).
+- Inicializar paru como helper de AUR.
 - Aplicar dotfiles con **GNU Stow** (default y recomendado) o copiarlos al `$HOME`.
-- Instalar herramientas opcionales (Bun, Node.js con FNM, Yarn, lazygit y Alacritty).
-- Instalar aplicaciones por `snap` (VS Code, Spotify, Android Studio, Neovim).
-- Instalar Alacritty desde el menú (`5) Alacritty`).
+- Instalar herramientas (Bun, Node.js con FNM, Yarn, lazygit, Nerd Fonts).
 
 > Si venías del modo de enlaces antiguo, el instalador limpia symlinks heredados en rutas administradas antes de aplicar Stow para evitar conflictos.
 
