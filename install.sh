@@ -105,6 +105,13 @@ install_aur_packages() {
   ok "Paquetes AUR instalados."
 }
 
+install_aur_pkg() {
+  local pkg="$1"
+  detect_aur_helper || init_pacman
+  $AUR_HELPER -S --noconfirm "$pkg" || warn "Falló la instalación de $pkg"
+  ok "$pkg instalado."
+}
+
 install_package_if_missing() {
   package_is_installed "$1" && return
   sudo pacman -S --noconfirm "$1"
@@ -421,6 +428,9 @@ select option in \
   "Instalar Lazygit" \
   "Instalar Nerd Fonts" \
   "" \
+  "━━━ AUR ━━━" \
+  "Instalar Spotify" \
+  "" \
   "━━━ SALIR ━━━" \
   "Salir"
 do
@@ -456,6 +466,8 @@ do
     "Instalar Yarn") install_yarn ;;
     "Instalar Lazygit") install_lazygit ;;
     "Instalar Nerd Fonts") install_nerd_fonts ;;
+
+    "Instalar Spotify") install_aur_pkg spotify ;;
 
     "Salir") exit 0 ;;
     *) warn "Opción inválida." ;;
