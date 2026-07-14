@@ -2,8 +2,7 @@
 set -euo pipefail
 
 # ===============================
-# Dotfiles Installer Optimizado
-# Fecha: 2026-04-12
+# Dotfiles Installer — Arch/Manjaro
 # ===============================
 
 INFO="\e[34m[INFO]\e[0m"
@@ -45,30 +44,70 @@ command -v sudo >/dev/null || die "Necesitás sudo."
 command -v curl >/dev/null || die "Necesitás curl."
 command -v git >/dev/null || die "Necesitás git."
 
-APT_PACKAGES=(
-  libstdc++6 curl wget vlc gnupg2 seahorse git python3-pip cargo
-  libssl-dev openjdk-21-jre fzf tmux fonts-powerline kitty
-  xclip zsh ca-certificates ripgrep
+PACMAN_PACKAGES=(
+  curl wget vlc gnupg seahorse git python-pip rust
+  openssl jdk21-openjdk fzf tmux kitty
+  xclip zsh ca-certificates ripgrep stow
+  yarn python-virtualenvwrapper
 )
 
-package_is_installed() {
-  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "^$1 .* install ok installed"
+AUR_PACKAGES=(
+  android-studio
+  spotify
+  visual-studio-code-bin
+)
+
+AUR_HELPER=""
+
+detect_aur_helper() {
+  if command -v paru &>/dev/null; then
+    AUR_HELPER="paru"
+  elif command -v yay &>/dev/null; then
+    AUR_HELPER="yay"
+  fi
+  [[ -n "$AUR_HELPER" ]]
 }
 
-snap_is_installed() { snap list "$1" &>/dev/null; }
+package_is_installed() {
+  pacman -Q "$1" &>/dev/null
+}
+
+init_pacman() {
+  if [[ ! -f /etc/pacman.d/mirrorlist ]]; then
+    die "No se detectó pacman. ¿Esto es Arch/Manjaro?"
+  fi
+
+  if ! command -v paru &>/dev/null && ! command -v yay &>/dev/null; then
+    log "Instalando paru (AUR helper)..."
+    sudo pacman -S --noconfirm --needed base-devel git
+    local tmpdir; tmpdir="$(mktemp -d)"
+    git clone https://aur.archlinux.org/paru.git "$tmpdir/paru"
+    (cd "$tmpdir/paru" && makepkg -si --noconfirm)
+    rm -rf "$tmpdir"
+    AUR_HELPER="paru"
+    ok "paru instalado."
+  else
+    detect_aur_helper
+  fi
+}
 
 install_packages() {
-  log "Instalando paquetes necesarios..."
-  sudo apt update
+  log "Instalando paquetes del sistema..."
+  sudo pacman -Syu --noconfirm "${PACMAN_PACKAGES[@]}"
+  ok "Paquetes base instalados."
+}
 
-  sudo apt install -y "${APT_PACKAGES[@]}"
+install_aur_packages() {
+  detect_aur_helper || init_pacman
 
-  ok "Paquetes instalados."
+  log "Instalando paquetes desde AUR..."
+  $AUR_HELPER -S --noconfirm "${AUR_PACKAGES[@]}" || warn "Algunos paquetes AUR fallaron"
+  ok "Paquetes AUR instalados."
 }
 
 install_package_if_missing() {
   package_is_installed "$1" && return
-  sudo apt install -y "$1"
+  sudo pacman -S --noconfirm "$1"
 }
 
 cleanup_conflicting_symlinks() {
@@ -214,34 +253,8 @@ install_nerd_fonts() {
   ok "Nerd Font instalada."
 }
 
-ensure_snapd() {
-  command -v snap >/dev/null || sudo apt install -y snapd
-}
-
-install_snap_app() {
-  local name="$1"
-  local flag="${2:-}"
-
-  ensure_snapd
-
-  snap_is_installed "$name" && return
-
-  sudo snap install "$name" $flag || warn "Falló snap: $name"
-}
-
 install_yarn() {
-  command -v yarn >/dev/null && return
-
-  curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg |
-    sudo gpg --dearmor -o /usr/share/keyrings/yarn.gpg
-
-  echo \
-    "deb [signed-by=/usr/share/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian stable main" |
-    sudo tee /etc/apt/sources.list.d/yarn.list >/dev/null
-
-  sudo apt update
-  sudo apt install -y yarn
-
+  install_package_if_missing yarn
   ok "Yarn instalado."
 }
 
@@ -310,20 +323,24 @@ install_lazygit() {
 }
 
 clean() {
-  sudo apt autoremove -y
-  sudo apt clean
+  log "Limpiando caché de paquetes..."
+  sudo pacman -Sc --noconfirm 2>/dev/null || true
+
+  local orphans; orphans=$(pacman -Qdtq 2>/dev/null) || true
+  if [[ -n "$orphans" ]]; then
+    echo "$orphans" | sudo pacman -Rns --noconfirm - 2>/dev/null || true
+  fi
+
   ok "Sistema limpiado."
 }
 
 install_all() {
+  init_pacman
   install_packages
+  install_aur_packages
   install_oh_my_zsh
   apply_config_files
   install_bun
-  install_snap_app android-studio --classic
-  install_snap_app spotify
-  install_snap_app code --classic
-  install_snap_app nvim --beta --classic
   install_nerd_fonts
   install_yarn
   install_kitty_themes
@@ -343,37 +360,35 @@ PS3="Elegí una opción: "
 
 select option in \
   "Instalar todo" \
-  "Instalar paquetes" \
+  "Instalar paquetes base" \
+  "Instalar paquetes AUR (android-studio, spotify, vscode)" \
   "Aplicar dotfiles" \
+  "Inicializar pacman + AUR helper" \
   "Instalar Bun" \
   "Instalar Oh My Zsh" \
   "Instalar kitty-themes" \
-  "Instalar Android Studio" \
-  "Instalar Spotify" \
-  "Instalar VSCode" \
-  "Instalar Nvim" \
-  "Instalar Node.js" \
+  "Instalar Node.js (via FNM)" \
   "Instalar Yarn" \
   "Instalar Lazygit" \
+  "Instalar Nerd Fonts" \
   "Limpiar" \
   "Salir"
 do
   case $REPLY in
     1) install_all ;;
     2) install_packages ;;
-    3) apply_config_files ;;
-    4) install_bun ;;
-    5) install_oh_my_zsh ;;
-    6) install_kitty_themes ;;
-    7) install_snap_app android-studio --classic ;;
-    8) install_snap_app spotify ;;
-    9) install_snap_app code --classic ;;
-    10) install_snap_app nvim --beta --classic ;;
-    11) install_nodejs ;;
-    12) install_yarn ;;
-    13) install_lazygit ;;
-    14) clean ;;
-    15) exit 0 ;;
+    3) install_aur_packages ;;
+    4) apply_config_files ;;
+    5) init_pacman ;;
+    6) install_bun ;;
+    7) install_oh_my_zsh ;;
+    8) install_kitty_themes ;;
+    9) install_nodejs ;;
+    10) install_yarn ;;
+    11) install_lazygit ;;
+    12) install_nerd_fonts ;;
+    13) clean ;;
+    14) exit 0 ;;
     *) warn "Opción inválida." ;;
   esac
 done

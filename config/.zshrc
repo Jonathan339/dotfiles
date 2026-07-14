@@ -97,27 +97,33 @@ update() {
   echo "${fg[cyan]}Actualizando sistema - $(date '+%H:%M:%S')${reset_color}"
   echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
 
-  echo "${fg[yellow]}> apt update${reset_color}"
-  sudo apt update || { echo "${fg[red]}x Error en apt update${reset_color}"; return 1; }
+  echo "${fg[yellow]}> pacman -Syu${reset_color}"
+  sudo pacman -Syu || { echo "${fg[red]}x Error en pacman -Syu${reset_color}"; return 1; }
 
-  echo "${fg[yellow]}> apt full-upgrade${reset_color}"
-  sudo apt full-upgrade -y || { echo "${fg[red]}x Error en full-upgrade${reset_color}"; return 1; }
+  local aur_helper=""
+  command -v paru &>/dev/null && aur_helper="paru"
+  command -v yay &>/dev/null && aur_helper="yay"
 
-  echo "${fg[yellow]}> snap refresh${reset_color}"
-  command -v snap >/dev/null && timeout 60 sudo snap refresh 2>/dev/null || echo "  snap: timeout o error"
+  if [[ -n "$aur_helper" ]]; then
+    echo "${fg[yellow]}> $aur_helper -Syu${reset_color}"
+    $aur_helper -Syu || { echo "${fg[red]}x Error en $aur_helper${reset_color}"; return 1; }
+  fi
 
-  echo "${fg[yellow]}> pip${reset_color}"
-  command -v pip3 >/dev/null && pip3 install --upgrade pip setuptools wheel --break-system-packages 2>/dev/null || true
-  command -v pip >/dev/null && pip install --upgrade pip setuptools wheel --break-system-packages 2>/dev/null || true
+  echo "${fg[yellow]}> pip upgrade${reset_color}"
+  command -v pip >/dev/null && pip install --upgrade pip setuptools wheel 2>/dev/null || true
 
   echo "${fg[yellow]}> bun upgrade${reset_color}"
   command -v bun >/dev/null && bun upgrade || true
 
-  echo "${fg[yellow]}> apt autoremove${reset_color}"
-  sudo apt autoremove -y || { echo "${fg[red]}x Error en autoremove${reset_color}"; return 1; }
+  echo "${fg[yellow]}> limpiando huerfanos${reset_color}"
+  local orphans
+  orphans=$(pacman -Qdtq 2>/dev/null) || true
+  if [[ -n "$orphans" ]]; then
+    echo "$orphans" | sudo pacman -Rns --noconfirm - 2>/dev/null || true
+  fi
 
-  echo "${fg[yellow]}> apt clean${reset_color}"
-  sudo apt clean
+  echo "${fg[yellow]}> pacman -Sc${reset_color}"
+  sudo pacman -Sc --noconfirm 2>/dev/null || true
 
   end_time=$SECONDS
   duration=$(( end_time - start_time ))
