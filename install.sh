@@ -48,7 +48,7 @@ command -v git >/dev/null || die "Necesitás git."
 APT_PACKAGES=(
   libstdc++6 curl wget vlc gnupg2 seahorse git python3-pip cargo
   libssl-dev openjdk-21-jre fzf tmux fonts-powerline kitty
-  xclip zsh ca-certificates ripgrep
+  xclip zsh ca-certificates ripgrep loupe
 )
 
 package_is_installed() {
