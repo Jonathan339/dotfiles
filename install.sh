@@ -103,6 +103,9 @@ cleanup_conflicting_symlinks() {
       else
         warn "Symlink externo preservado: $file"
       fi
+    elif [[ -f "$file" ]]; then
+      rm "$file"
+      warn "Archivo regular eliminado: $file (stow creará symlink)"
     fi
   done
 }
