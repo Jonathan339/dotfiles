@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# post-checkout hook — Valida symlinks después de git checkout/pull/switch
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+CHECK="$DOTFILES_DIR/check.sh"
+
+# Solo ejecutar si el hook es checkout (no merge)
+# $3: 1 = checkout branch, 0 = merge
+if [[ "${3:-0}" != "1" ]]; then
+  exit 0
+fi
+
+# Ejecutar check silenciosamente, solo mostrar si hay errores
+output=$("$CHECK" 2>&1)
+exit_code=$?
+
+if [[ $exit_code -gt 0 ]]; then
+  echo ""
+  echo "⚠  Symlinks de dotfiles con problemas detectados después de checkout."
+  echo "   Ejecutá: ./link.sh --fix"
+  echo ""
+fi

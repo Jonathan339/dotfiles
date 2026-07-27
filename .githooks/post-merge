@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# post-merge hook — Valida symlinks después de git pull/merge
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+CHECK="$DOTFILES_DIR/check.sh"
+
+output=$("$CHECK" 2>&1)
+exit_code=$?
+
+if [[ $exit_code -gt 0 ]]; then
+  echo ""
+  echo "⚠  Symlinks de dotfiles con problemas detectados después de merge."
+  echo "   Ejecutá: ./link.sh --fix"
+  echo ""
+fi
