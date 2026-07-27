@@ -220,8 +220,29 @@ install_bun() {
   fi
 
   log "Instalando Bun..."
-  curl -fsSL https://bun.sh/install | bash -s -- --no-modify-path
-  ok "Bun instalado."
+
+  local arch
+  case "$(uname -m)" in
+    x86_64) arch="x64" ;;
+    aarch64|arm64) arch="aarch64" ;;
+    *) die "Arquitectura no soportada: $(uname -m)" ;;
+  esac
+
+  local bun_dir="$HOME/.bun"
+  local bin_dir="$bun_dir/bin"
+
+  mkdir -p "$bin_dir"
+
+  curl -fsLo /tmp/bun.zip \
+    "https://github.com/oven-sh/bun/releases/latest/download/bun-linux-${arch}.zip"
+
+  unzip -oq /tmp/bun.zip -d /tmp/bun-extract
+  mv /tmp/bun-extract/bun-linux-${arch}/bun "$bin_dir/bun"
+  chmod +x "$bin_dir/bun"
+
+  rm -rf /tmp/bun.zip /tmp/bun-extract
+
+  ok "Bun instalado en $bin_dir/bun"
 }
 
 install_fnm() {
