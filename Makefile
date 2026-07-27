@@ -1,4 +1,4 @@
-.PHONY: install install-all palette lint shellcheck backup
+.PHONY: install install-all link link-fix check palette lint shellcheck backup
 
 install:
 	./install.sh
@@ -6,16 +6,26 @@ install:
 install-all:
 	./install.sh --all
 
+link:
+	./link.sh
+
+link-fix:
+	./link.sh --fix
+
+check:
+	./check.sh
+
 palette:
 	./scripts/generate-palette.sh
 
 lint:
-	shellcheck scripts/*.sh install.sh config/shell/path.sh config/colors/palette.sh
+	shellcheck scripts/*.sh install.sh link.sh check.sh config/shell/path.sh config/colors/palette.sh
 
 shellcheck:
-	@shellcheck scripts/generate-palette.sh install.sh config/shell/path.sh config/colors/palette.sh
+	@shellcheck scripts/generate-palette.sh install.sh link.sh check.sh config/shell/path.sh config/colors/palette.sh
 
 backup:
-	@mkdir -p /tmp/dotfiles-backup-$$(date +%s) && \
-	cp -r config /tmp/dotfiles-backup-$$(date +%s)/ && \
-	echo "Backup guardado en /tmp/dotfiles-backup-$$(date +%s)"
+	@backup_dir="/tmp/dotfiles-backup-$$(date +%s)" && \
+	mkdir -p "$$backup_dir" && \
+	cp -r config "$$backup_dir/" && \
+	echo "Backup guardado en $$backup_dir"
