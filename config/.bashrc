@@ -110,3 +110,7 @@ fi
 if [ -d "$FNM_PATH" ]; then
   eval "$(fnm env --shell bash)"
 fi
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
