@@ -6,9 +6,11 @@
  * Configuration For Rofi Version: 1.7.3
  **/
 
+@theme "launchers/type-1/style-5.rasi"
+
 configuration {
 	/*---------- General setting ----------*/
-	modi: "drun,run,filebrowser,window";
+	modes: "drun,run,filebrowser,window,combi";
 	case-sensitive: false;
 	cycle: true;
 	filter: "";
@@ -62,7 +64,7 @@ configuration {
 	window-thumbnail: false;
 
 	/*---------- Combi settings ----------*/
-/*	combi-modi: "window,run";*/
+	combi-modes: "drun,run,window";
 /*	combi-hide-mode-prefix: false;*/
 /*	combi-display-format: "{mode} {text}";*/
 
