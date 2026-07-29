@@ -66,6 +66,16 @@ ALL_PACKAGES=(
   rofi
 )
 
+# Programas requeridos por cada paquete (comando a verificar antes de stow)
+declare -A REQUIREMENTS
+REQUIREMENTS[kitty]="kitty"
+REQUIREMENTS[alacritty]="alacritty"
+REQUIREMENTS[ghostty]="ghostty"
+REQUIREMENTS[wezterm]="wezterm"
+REQUIREMENTS[nvim]="nvim"
+REQUIREMENTS[tmux]="tmux"
+REQUIREMENTS[rofi]="rofi"
+
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
   PACKAGES=("${ALL_PACKAGES[@]}")
 fi
@@ -82,6 +92,21 @@ if $CHECK_ONLY; then
   log "Validando symlinks..."
   exec "$REPO_ROOT/check.sh"
 fi
+
+# ==============================================================================
+# Validar requisitos antes de stow
+# ==============================================================================
+check_requirements() {
+  local pkg="$1"
+  local cmd="${REQUIREMENTS[$pkg]:-}"
+
+  [[ -z "$cmd" ]] && return 0
+
+  if ! command -v "$cmd" &>/dev/null; then
+    warn "'$cmd' no está instalado. Saltando stow/$pkg."
+    return 1
+  fi
+}
 
 # ==============================================================================
 # Resolver conflictos antes de stow
@@ -180,6 +205,8 @@ applied=0
 skipped=0
 
 for pkg in "${PACKAGES[@]}"; do
+  check_requirements "$pkg" || { ((skipped++)) || true; continue; }
+
   if $FIX_MODE; then
     resolve_conflicts "$pkg"
   fi
