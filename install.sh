@@ -37,7 +37,7 @@ command -v git >/dev/null || die "Necesitás git."
 APT_PACKAGES=(
   libstdc++6 curl wget vlc gnupg2 seahorse git python3-pip cargo
   libssl-dev openjdk-21-jre fzf tmux fonts-powerline kitty
-  xclip zsh ca-certificates ripgrep loupe
+  xclip zsh ca-certificates ripgrep loupe rofi
 )
 
 package_is_installed() {
@@ -193,6 +193,11 @@ install_tmux() {
   ok "Tmux instalado."
 }
 
+install_rofi() {
+  install_package_if_missing rofi
+  ok "Rofi instalado."
+}
+
 install_spotify_snap() {
   install_snap_app spotify
   ok "Spotify instalado."
@@ -315,6 +320,7 @@ install_all() {
   install_nerd_fonts
   install_yarn
   install_kitty_themes
+  install_rofi
   install_nodejs
   install_lazygit
   clean
@@ -352,6 +358,7 @@ select option in \
   "Instalar Alacritty" \
   "Instalar Zsh + Oh My Zsh" \
   "Instalar Tmux" \
+  "Instalar Rofi" \
   "" \
   "━━━ DOTFILES ━━━" \
   "Aplicar TODOS los dotfiles" \
@@ -361,6 +368,7 @@ select option in \
   "Aplicar solo config de alacritty" \
   "Aplicar solo config de ghostty" \
   "Aplicar solo config de wezterm" \
+  "Aplicar solo config de rofi" \
   "" \
   "━━━ EXTRAS ━━━" \
   "Instalar Bun" \
@@ -397,6 +405,7 @@ do
     "Instalar Alacritty") install_alacritty ;;
     "Instalar Zsh + Oh My Zsh") install_zsh ;;
     "Instalar Tmux") install_tmux ;;
+    "Instalar Rofi") install_rofi ;;
 
     "Aplicar TODOS los dotfiles") apply_config_files ;;
     "Aplicar solo config de shell") "$REPO_ROOT/link.sh" shell ;;
@@ -405,6 +414,7 @@ do
     "Aplicar solo config de alacritty") "$REPO_ROOT/link.sh" alacritty ;;
     "Aplicar solo config de ghostty") "$REPO_ROOT/link.sh" ghostty ;;
     "Aplicar solo config de wezterm") "$REPO_ROOT/link.sh" wezterm ;;
+    "Aplicar solo config de rofi") "$REPO_ROOT/link.sh" rofi ;;
 
     "Instalar Bun") install_bun ;;
     "Instalar Oh My Zsh") install_oh_my_zsh ;;

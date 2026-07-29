@@ -63,6 +63,7 @@ ALL_PACKAGES=(
   alacritty
   ghostty
   wezterm
+  rofi
 )
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
