@@ -60,6 +60,10 @@ declare -A TERMINAL_WEZTERM=(
   ["dir"]="$HOME/.config/wezterm"
   ["files"]=".config/wezterm/wezterm.lua"
 )
+declare -A TERMINAL_ROFI=(
+  ["dir"]="$HOME/.config/rofi"
+  ["files"]=".config/rofi/config.rasi"
+)
 
 # ==============================================================================
 # Funciones de validación
@@ -187,7 +191,7 @@ done
 check_symlink "$NVIM_LINK" "nvim → $NVIM_LINK" || true
 
 # Terminales
-for term_name in kitty alacritty ghostty wezterm; do
+for term_name in kitty alacritty ghostty wezterm rofi; do
   var_name="TERMINAL_${term_name^^}"
   eval 'dir="${'"$var_name"'[dir]}"'
   eval 'files="${'"$var_name"'[files]}"'

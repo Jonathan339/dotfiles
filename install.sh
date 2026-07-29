@@ -325,6 +325,9 @@ install_all() {
   install_lazygit
   clean
 
+  log "Re-aplicando stow con todos los programas instalados..."
+  "$REPO_ROOT/link.sh" --fix
+
   log "Validando symlinks finales..."
   "$REPO_ROOT/check.sh" || true
 

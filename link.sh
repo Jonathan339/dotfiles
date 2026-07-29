@@ -73,7 +73,6 @@ REQUIREMENTS[alacritty]="alacritty"
 REQUIREMENTS[ghostty]="ghostty"
 REQUIREMENTS[wezterm]="wezterm"
 REQUIREMENTS[nvim]="nvim"
-REQUIREMENTS[tmux]="tmux"
 REQUIREMENTS[rofi]="rofi"
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
