@@ -1,0 +1,41 @@
+#!/bin/bash
+# hypr-border: borde activo SOLO cuando hay más de una ventana en un workspace.
+# Con una sola ventana por workspace, el borde queda transparente.
+
+ACTIVE="rgba(00ff99ee)"
+NONE="rgba(00000000)"
+BORDER_W="2"
+BORDER_W_NONE="0"
+
+update() {
+    local multi cur bw
+    multi=$(hyprctl workspaces -j | python3 -c "
+import json, sys
+print('yes' if any(w['windows'] > 1 for w in json.load(sys.stdin)) else 'no')" 2>/dev/null)
+    cur=$(hyprctl getoption general:col.active_border -j 2>/dev/null)
+    bw=$(hyprctl getoption general:border_size -j 2>/dev/null)
+    if [ "$multi" = "yes" ]; then
+        case "$cur" in *ee00ff99*) : ;; *) hyprctl keyword general:col.active_border "$ACTIVE" >/dev/null ;; esac
+        case "$bw" in *"\"$BORDER_W\""*) : ;; *) hyprctl keyword general:border_size "$BORDER_W" >/dev/null ;; esac
+    else
+        case "$cur" in *ee00ff99*) hyprctl keyword general:col.active_border "$NONE" >/dev/null ;; esac
+        case "$bw" in *"\"$BORDER_W_NONE\""*) : ;; *) hyprctl keyword general:border_size "$BORDER_W_NONE" >/dev/null ;; esac
+    fi
+}
+
+update
+# Chequeo periódico (red de seguridad)
+(
+    while true; do
+        sleep 5
+        update
+    done
+) &
+
+# Reacciona a eventos de ventanas/workspaces (con reconexión)
+while true; do
+    hyprctl subscribe windowopenv2 closewindowv2 movewindowv2 workspacev2 | while read -r _line; do
+        update
+    done
+    sleep 1
+done
