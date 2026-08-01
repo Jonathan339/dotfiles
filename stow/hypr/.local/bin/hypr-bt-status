@@ -1,0 +1,14 @@
+#!/bin/bash
+# Estado bluetooth para waybar: icono + dispositivo conectado (tooltip con todos)
+if [ "$(bluetoothctl show | awk '/Powered:/{print $2}')" != "yes" ]; then
+    echo "󰂲"
+    exit
+fi
+connected=$(bluetoothctl devices Connected)
+if [ -n "$connected" ]; then
+    name=$(echo "$connected" | head -1 | sed 's/^Device\s*[0-9A-F:]*\s*//')
+    echo "󰂯 $name"
+    echo "$connected" | sed 's/^Device\s*[0-9A-F:]*\s*//'
+else
+    echo "󰂯"
+fi

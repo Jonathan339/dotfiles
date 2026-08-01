@@ -1,0 +1,27 @@
+#!/bin/bash
+# Cambiar color de las islas de waybar
+CSS="$HOME/.config/waybar/style.css"
+
+apply() {
+    sed -i "s|@define-color island_bg .*|@define-color island_bg $1;|" "$CSS"
+    pkill waybar
+    sleep 0.5
+    nohup waybar >/dev/null 2>&1 &
+}
+
+preset=$(printf "Oscuro translúcido\nOscuro sólido\nClaro translúcido\nAzul\nVerde\nRojo\nRosa\nColor personalizado\nCerrar" | rofi -dmenu -p "Color de islas" -i)
+
+case "$preset" in
+    "Oscuro translúcido"*) apply "rgba(15, 15, 15, 0.35)" ;;
+    "Oscuro sólido"*) apply "rgba(15, 15, 15, 0.95)" ;;
+    "Claro translúcido"*) apply "rgba(255, 255, 255, 0.25)" ;;
+    "Azul"*) apply "rgba(51, 204, 255, 0.25)" ;;
+    "Verde"*) apply "rgba(0, 255, 153, 0.25)" ;;
+    "Rojo"*) apply "rgba(255, 107, 107, 0.25)" ;;
+    "Rosa"*) apply "rgba(255, 105, 180, 0.25)" ;;
+    "Color personalizado"*)
+        hex=$(rofi -dmenu -p "Color hex (ej: 33ccff)" -i | tr -d '#')
+        [ ${#hex} -eq 6 ] || hex=33ccff
+        apply "rgba($(printf '%d' 0x${hex:0:2}), $(printf '%d' 0x${hex:2:2}), $(printf '%d' 0x${hex:4:2}), 0.35)"
+        ;;
+esac

@@ -1,0 +1,85 @@
+#!/bin/bash
+# Panel Wi-Fi + Bluetooth (rofi) - se abre desde la barra
+
+notify() { dunstify -h string:x-dunst-stack-tag:net "Red y Bluetooth" "$1"; }
+
+# ---------- Wi-Fi ----------
+menu_wifi() {
+    local opt ssid
+    if [ "$(nmcli radio wifi)" = "enabled" ]; then
+        opt=$(printf "Conectarse a una red\nApagar Wi-Fi\nDesconectar\nCerrar" | rofi -dmenu -p "Wi-Fi" -i)
+    else
+        opt=$(printf "Encender Wi-Fi\nCerrar" | rofi -dmenu -p "Wi-Fi" -i)
+    fi
+    case "$opt" in
+        "Conectarse"*)
+            ssid=$(nmcli -t -f SSID,SIGNAL dev wifi list --rescan yes | awk -F: '$1!="--" && $1!="" {printf "%.0f%%  %s\n", $2, $1}' | rofi -dmenu -p "Redes Wi-Fi" -i | sed 's/^.*%  //')
+            [ -z "$ssid" ] && return
+            if nmcli dev wifi connect "$ssid"; then notify "Conectado a: $ssid"; else notify "No se pudo conectar a: $ssid (¿contraseña?)"; fi ;;
+        "Apagar Wi-Fi"*)
+            nmcli radio wifi off && notify "Wi-Fi apagado" ;;
+        "Encender Wi-Fi"*)
+            nmcli radio wifi on && notify "Wi-Fi encendido" ;;
+        "Desconectar"*)
+            nmcli -t -f NAME,TYPE,DEVICE con show --active | grep ':802-11-wireless:' | cut -d: -f1 | xargs -r -I{} nmcli con down "{}" && notify "Wi-Fi desconectado" ;;
+    esac
+}
+
+# ---------- Bluetooth ----------
+bt_powered() { [ "$(bluetoothctl show | awk '/Powered:/{print $2}')" = "yes" ]; }
+
+menu_dev() {
+    local mac="$1" name="$2" opt card cur prof
+    opt=$(printf "Información del dispositivo\nPerfil de audio\nDesconectar\nCerrar" | rofi -dmenu -p "$name" -i)
+    case "$opt" in
+        "Información"*)
+            info=$(bluetoothctl info "$mac" | grep -E '^(Name|Alias|Icon|Address|Battery|Connected)' | sed 's/\t/ /g')
+            dunstify -t 10000 -h string:x-dunst-stack-tag:net "Bluetooth — $name" "$info" ;;
+        "Perfil de audio"*)
+            card=$(LC_ALL=C pactl list cards short | awk '/bluez/{print $2; exit}')
+            [ -z "$card" ] && notify "No hay tarjeta de audio bluetooth" && return
+            cur=$(LC_ALL=C pactl list cards | awk -v c="$card" '$0 ~ "Name: "c {f=1} f && /Active Profile:/{print $NF; exit}')
+            prof=$(LC_ALL=C pactl list cards | awk -v c="$card" '$0 ~ "Name: "c {f=1} f && /^[[:space:]]+[a-z0-9-]+:/ && $1 ~ /^(off|a2dp|headset|hsp|hfp|handsfree)/ {gsub(":","",$1); print $1}' | while read p; do [ "$p" = "$cur" ] && echo "$p (actual)" || echo "$p"; done | rofi -dmenu -p "Perfil de audio" -i | sed 's/ (actual)//')
+            [ -z "$prof" ] && return
+            pactl set-card-profile "$card" "$prof" && notify "Perfil de audio: $prof" ;;
+        "Desconectar"*)
+            bluetoothctl disconnect "$mac" && notify "Desconectado: $name" ;;
+    esac
+}
+
+menu_bt() {
+    local opts opt
+    if bt_powered; then
+        opts=""
+        while IFS= read -r line; do
+            dname=$(echo "$line" | sed 's/^Device\s*[0-9A-F:]*\s*//')
+            dmac=$(echo "$line" | awk '{print $2}')
+            opts="${opts}Dispositivo: $dname | $dmac\n"
+        done < <(bluetoothctl devices Connected)
+        opt=$(printf "${opts}Conectar dispositivo\nEscaneo rápido\nApagar Bluetooth\nCerrar" | rofi -dmenu -p "Bluetooth" -i)
+    else
+        opt=$(printf "Encender Bluetooth\nCerrar" | rofi -dmenu -p "Bluetooth" -i)
+    fi
+    case "$opt" in
+        "Dispositivo: "*)
+            menu_dev "$(echo "$opt" | awk -F' \| ' '{print $2}')" "$(echo "$opt" | sed 's/^Dispositivo: //; s/ |.*//')" ;;
+        "Apagar Bluetooth"*)
+            bluetoothctl power off && notify "Bluetooth apagado" ;;
+        "Encender Bluetooth"*)
+            bluetoothctl power on && notify "Bluetooth encendido" ;;
+        "Conectar dispositivo"*)
+            dev=$(bluetoothctl devices | sed 's/\t/ /' | rofi -dmenu -p "Dispositivos" -i | awk '{print $2}')
+            [ -z "$dev" ] && return
+            if bluetoothctl connect "$dev"; then notify "Dispositivo conectado"; else notify "No se pudo conectar"; fi ;;
+        "Escaneo rápido"*)
+            (bluetoothctl scan on & sleep 5; bluetoothctl scan off) >/dev/null 2>&1
+            notify "Escaneo terminado" ;;
+    esac
+}
+
+# ---------- Principal ----------
+sel=$(printf "Wi-Fi\nBluetooth\nCerrar" | rofi -dmenu -p "Red y Bluetooth" -i)
+case "$sel" in
+    "Wi-Fi"*) menu_wifi ;;
+    "Bluetooth"*) menu_bt ;;
+esac

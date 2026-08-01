@@ -1,0 +1,10 @@
+#!/bin/bash
+# Selector de fondo de pantalla: rofi + swaybg (carpeta ~/Imágenes/wallpapers)
+DIR="$HOME/Imágenes/wallpapers"
+
+chosen=$(find "$DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) 2>/dev/null | rofi -dmenu -p "Fondo de pantalla" -i)
+[ -z "$chosen" ] && exit 1
+
+pkill swaybg
+nohup swaybg -i "$chosen" -m fill >/dev/null 2>&1 &
+echo "$chosen" > ~/.config/hypr/wallpaper

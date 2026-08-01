@@ -64,6 +64,9 @@ ALL_PACKAGES=(
   ghostty
   wezterm
   rofi
+  hypr
+  waybar
+  dunst
 )
 
 # Programas requeridos por cada paquete (comando a verificar antes de stow)
@@ -74,6 +77,9 @@ REQUIREMENTS[ghostty]="ghostty"
 REQUIREMENTS[wezterm]="wezterm"
 REQUIREMENTS[nvim]="nvim"
 REQUIREMENTS[rofi]="rofi"
+REQUIREMENTS[hypr]="Hyprland"
+REQUIREMENTS[waybar]="waybar"
+REQUIREMENTS[dunst]="dunst"
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
   PACKAGES=("${ALL_PACKAGES[@]}")

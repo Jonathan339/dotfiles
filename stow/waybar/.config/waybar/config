@@ -1,0 +1,74 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 24,
+    "spacing": 2,
+    "margin-top": 0,
+    "margin-bottom": 0,
+    "margin-left": 0,
+    "margin-right": 0,
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["custom/fecha"],
+    "modules-right": ["network", "custom/bt", "pulseaudio", "cpu", "memory", "disk", "custom/power", "tray"],
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "on-click": "activate",
+        "sort-by-number": true,
+        "active-only": false
+    },
+    "custom/fecha": {
+        "exec": "date '+%H:%M %a %d/%m'",
+        "interval": 30,
+        "tooltip": false
+    },
+    "network": {
+        "format-wifi": "󰤨 {essid}",
+        "format-ethernet": "󰈀 {ifname}",
+        "format-disconnected": "󰤭",
+        "tooltip-format": "{ifname}: {ipaddr}",
+        "on-click": "hypr-network"
+    },
+    "custom/bt": {
+        "exec": "hypr-bt-status",
+        "interval": 5,
+        "tooltip": true,
+        "on-click": "hypr-network"
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟",
+        "format-icons": {
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "on-click": "pavucontrol"
+    },
+    "cpu": {
+        "format": "󰻠 {usage}%",
+        "interval": 3,
+        "states": {
+            "warning": 80,
+            "critical": 95
+        }
+    },
+    "memory": {
+        "format": "󰍛 {percentage}%",
+        "interval": 5,
+        "states": {
+            "warning": 85
+        }
+    },
+    "disk": {
+        "format": "󰋊 {percentage_used}%",
+        "interval": 30,
+        "on-click": "thunar"
+    },
+    "custom/power": {
+        "format": "⏻",
+        "tooltip": false,
+        "on-click": "hypr-power",
+        "on-click-right": "hyprlock"
+    },
+    "tray": {
+        "spacing": 8
+    }
+}
