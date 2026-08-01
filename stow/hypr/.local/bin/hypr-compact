@@ -1,0 +1,46 @@
+#!/bin/bash
+# hypr-compact: rellena automáticamente los workspaces vacíos.
+# Escucha eventos de Hyprland; cuando un workspace queda sin ventanas,
+# mueve las ventanas de los workspaces siguientes hacia abajo.
+
+compact() {
+    local occ_sorted
+    occ_sorted=$(hyprctl workspaces -j | python3 -c "
+import json, sys
+ws = [w['id'] for w in json.load(sys.stdin) if w['windows'] > 0]
+print(' '.join(map(str, sorted(ws))))" 2>/dev/null)
+    [ -z "$occ_sorted" ] && return
+
+    local slot=1
+    for id in $occ_sorted; do
+        if [ "$id" -ne "$slot" ]; then
+            local addrs
+            addrs=$(hyprctl clients -j | python3 -c "
+import json, sys
+target = int('$id')
+print('\n'.join(c['address'] for c in json.load(sys.stdin) if c['workspace']['id'] == target))" 2>/dev/null)
+            for addr in $addrs; do
+                hyprctl dispatch movetoworkspacesilent "$slot,address:$addr" >/dev/null 2>&1
+            done
+        fi
+        slot=$((slot + 1))
+    done
+}
+
+compact
+# Red de seguridad: revisa cada 5s aunque se pierdan eventos
+(
+    while true; do
+        sleep 5
+        compact
+    done
+) &
+
+# Reconoce si la suscripción se corta (reconexión automática)
+while true; do
+    compact
+    hyprctl subscribe workspacev2 | while read -r _line; do
+        compact
+    done
+    sleep 1
+done
