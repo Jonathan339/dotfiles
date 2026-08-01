@@ -114,3 +114,6 @@ fi
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Added by codebase-memory-mcp install
+export PATH="/home/jonathan/.local/bin:$PATH"

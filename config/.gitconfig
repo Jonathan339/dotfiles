@@ -1,11 +1,14 @@
 [user]
 	name = Jonathan D. Dominguez
 	email = dominguez.jonathan.david@gmail.com
+	signingkey = ~/.ssh/id_ed25519
 
 [core]
 	editor = nvim
 	autocrlf = input
 	ignorecase = false
+	excludesfile = ~/.gitignore_global
+
 [color]
 	ui = auto
 
@@ -25,15 +28,24 @@
 	changed = yellow
 	untracked = red
 
+[commit]
+	gpgsign = true
+
+[gpg]
+	format = ssh
+
 [push]
 	default = simple
 	autoSetupRemote = true
 
 [pull]
-	rebase = false
+	rebase = true
 
 [fetch]
 	prune = true
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
 
 [alias]
 	s = status --short
@@ -43,12 +55,19 @@
 	co = checkout
 	br = branch
 	ci = commit
+	cm = commit -m
+	p = push
+	pf = push --force-with-lease
 	amend = commit --amend --no-edit
 	undo = reset --soft HEAD~1
 	stash-all = stash --include-untracked
 	last = log -1 HEAD
 	who = shortlog -sn --no-merges
 	root = rev-parse --show-toplevel
+	wa = worktree add
+	wl = worktree list
+	wd = worktree remove
+	pretty = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
 
 [merge]
 	tool = nvimdiff
