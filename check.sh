@@ -127,6 +127,34 @@ check_symlink() {
   return 0
 }
 
+# Valida symlink de directorio completo (ej. ~/.config/rofi → stow/rofi/.config/rofi)
+check_dir_symlink() {
+  local dir_link="$1" stow_dir="$2" files="$3" label="$4"
+
+  if [[ ! -L "$dir_link" ]]; then
+    red "DIRECTORIO real donde debería haber symlink: $label"
+    red "  → $dir_link no es symlink"
+    return 1
+  fi
+
+  local resolved
+  resolved="$(readlink -f "$dir_link" 2>/dev/null || true)"
+  if [[ "$resolved" != "$(readlink -f "$stow_dir")" ]]; then
+    red "SYMLINK MAL APUNTADO: $label"
+    red "  → $dir_link apunta a $resolved, se esperaba $stow_dir"
+    return 1
+  fi
+
+  local all_ok=true
+  for f in $files; do
+    if [[ ! -e "$HOME/$f" ]]; then
+      red "FALTA ARCHIVO vía symlink: $label → $f"
+      all_ok=false
+    fi
+  done
+  $all_ok && green "OK: $label → $(basename "$resolved")"
+}
+
 # Verifica symlinks internos de stow (dentro de stow/)
 check_stow_internal_symlinks() {
   local pkg_dir="$1"
@@ -196,6 +224,11 @@ for term_name in kitty alacritty ghostty wezterm rofi; do
   eval 'dir="${'"$var_name"'[dir]}"'
   eval 'files="${'"$var_name"'[files]}"'
 
+  if [[ -L "$dir" ]]; then
+    check_dir_symlink "$dir" "$STOW_DIR/$term_name${dir#$HOME}" "$files" "$term_name" || true
+    continue
+  fi
+
   for f in $files; do
     src="$STOW_DIR/$term_name/$f"
     dest="$HOME/$f"
@@ -207,6 +240,19 @@ for term_name in kitty alacritty ghostty wezterm rofi; do
       check_symlink "$dest" "$label" || true
     fi
   done
+done
+
+# Opencode (archivos en ~/.config/opencode)
+echo ""
+echo "━━━ opencode ━━━"
+for f in ".config/opencode/AGENTS.md" ".config/opencode/opencode.json" ".config/opencode/opencode.jsonc" ".config/opencode/package.json" ".config/opencode/package-lock.json" ".config/opencode/plugins/session-exporter.js"; do
+  dest="$HOME/$f"
+  label="opencode → $dest"
+  if [[ ! -e "$dest" ]] && [[ ! -L "$dest" ]]; then
+    warn "No aplicado: $label"
+  else
+    check_symlink "$dest" "$label" || true
+  fi
 done
 
 # ==============================================================================
