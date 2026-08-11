@@ -1,124 +1,203 @@
+# =========================
+# Zsh config — ULTRA CLEAN
+# =========================
 
-# Cargar alias de bash si existe el archivo
-# rt WORKON_HOME=$HOME/.virtualenvs
-# export PROJECT_HOME=$HOME/Devel
-# source /usr/local/bin/virtualenvwrapper.sh
-#
-# alias venv='mkvirtualenv'
-# alias venv-list='lsvirtualenv'
-# alias venv-rm='rmvirtualenv'
-# alias venv-switch='workon'
-#
+# Salir si no es interactiva
+[[ $- != *i* ]] && return
+
+# -------------------------
+# Opciones rápidas
+# -------------------------
+setopt autocd correct \
+       hist_ignore_all_dups share_history inc_append_history \
+       extended_glob glob_dots no_beep notify nobanghist
+
+# -------------------------
+# PATH (sin duplicados)
+# -------------------------
+typeset -U path PATH
+
+export ANDROID_HOME="$HOME/Android/Sdk"
+export FNM_PATH="$HOME/.local/share/fnm"
+export PATH="$HOME/.opencode/bin:$PATH"
+path=(
+  "$HOME/.local/bin"
+  "$HOME/.local/share/pnpm"
+  "$HOME/.bun/bin"
+  "$FNM_PATH"
+  "$ANDROID_HOME/emulator"
+  "$ANDROID_HOME/platform-tools"
+  "$ANDROID_HOME/tools"
+  "$ANDROID_HOME/tools/bin"
+  $path
+)
+
+export PATH
+
+# -------------------------
+# Editor
+# -------------------------
 export EDITOR=nvim
-#
-# export ZSH_THEME="agnoster"
-#
-# plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
-#
-[ -f ~/.bash_aliases ] && . ~/.bash_aliases
 
-# Obtener el nombre de usuario actual
-_user="$(id -u -n)"
+# -------------------------
+# JAVA_HOME sin procesos extra
+# -------------------------
+if [[ -z "$JAVA_HOME" && -x /usr/bin/java ]]; then
+  export JAVA_HOME="${${$(command -v java):A}:h:h}"
+fi
 
-# Configuración de Virtualenvwrapper
-export VIRTUALENVWRAPPER_PYTHON=$(which python3)
-export WORKON_HOME=$HOME/.virtualenvs
-export VIRTUALENVWRAPPER_VIRTUALENV=$HOME/.local/bin/virtualenv
-source $HOME/.local/bin/virtualenvwrapper.sh
+# -------------------------
+# Cache
+# -------------------------
+ZSH_CACHE="$HOME/.cache/zsh"
+mkdir -p "$ZSH_CACHE"
 
-# Configuración del path de Java
-export JAVA_HOME=$(dirname $(dirname $(readlink -f /etc/alternatives/java)))
-
-# Configuración del path de Android
-export ANDROID_HOME=$HOME/Android/Sdk
-export PATH=$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/avd:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools
-
-# Path a la instalación de Oh-My-Zsh
+# -------------------------
+# Oh My Zsh mínimo
+# -------------------------
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="agnoster"
-CASE_SENSITIVE="false"  # Autocompletado insensible a mayúsculas
-export UPDATE_ZSH_DAYS=7
-DISABLE_FZF_AUTO_COMPLETION="false"
 
-# Plugins de Oh-My-Zsh
-plugins=(git virtualenvwrapper tmux zsh-interactive-cd sublime-merge themes fzf command-not-found autopep8)
+plugins=(git tmux)
 
-# Incluir Oh-My-Zsh y fzf si existen
-source $ZSH/oh-my-zsh.sh
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[[ -r "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
 
-# Habilitar autocompletado de fzf
-autoload -U compinit && compinit
+# -------------------------
+# compinit optimizado
+# -------------------------
+autoload -Uz compinit
+ZCOMPFILE="$ZSH_CACHE/zcompdump"
 
-# Función para listar y lanzar AVDs de Android
-function get_android_avd() {
-  emulator -list-avds
+if [[ -f "$ZCOMPFILE" ]]; then
+  compinit -C -d "$ZCOMPFILE"
+else
+  compinit -d "$ZCOMPFILE"
+fi
+
+# -------------------------
+# Lazy loads reales
+# -------------------------
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
+[[ -f "$HOME/.deno/env" ]] && source "$HOME/.deno/env"
+
+# -------------------------
+# Virtualenvwrapper lazy real
+# -------------------------
+export WORKON_HOME="$HOME/.virtualenvs"
+
+load_virtualenvwrapper() {
+  for f in \
+    "$HOME/.local/bin/virtualenvwrapper.sh" \
+    "/usr/share/virtualenvwrapper/virtualenvwrapper.sh"
+  do
+    [[ -r "$f" ]] && source "$f" && unfunction load_virtualenvwrapper && return
+  done
 }
 
-# Función para verificar si el emulador ya está en ejecución
-function is_emulator_running() {
-  pgrep -f "emulator -avd $1" > /dev/null
-}
+alias workon='load_virtualenvwrapper && workon'
+alias mkvirtualenv='load_virtualenvwrapper && mkvirtualenv'
 
-# Función para listar AVDs y lanzar el emulador
-function androidemulator() {
-  local emulator_avd
-  emulator_avd=$(emulator -list-avds | grep -v "INFO")  # Filtrar salida "INFO"
+# -------------------------
+# Update del sistema
+# -------------------------
+update() {
+  local start_time end_time duration
+  start_time=$SECONDS
 
-  if [ -n "$emulator_avd" ]; then
-    if is_emulator_running "$emulator_avd"; then
-      echo "El AVD '$emulator_avd' ya está en ejecución."
-    else
-      echo "Iniciando AVD: $emulator_avd..."
-      emulator -avd "$emulator_avd" -read-only  # Añadir el flag -read-only para evitar conflictos
-    fi
-  else
-    echo "No hay AVDs disponibles."
-  fi
-}
+  echo
+  echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
+  echo "${fg[cyan]}🚀 Iniciando actualización - $(date '+%H:%M:%S')${reset_color}"
+  echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
 
-# Función para instalar virtualenvwrapper si no está instalado
-function install_virtualenvwrapper() {
-  if ! command -v pip &> /dev/null; then
-    echo "pip no está instalado. Por favor, instala pip antes de continuar."
+  echo "${fg[yellow]}▶ Actualizando repositorios...${reset_color}"
+  if ! sudo apt update; then
+    echo "${fg[red]}✖ Error en apt update${reset_color}"
     return 1
   fi
 
-  if ! pip show virtualenvwrapper &> /dev/null; then
-    echo "Instalando virtualenvwrapper..."
-    pip install virtualenvwrapper
-    echo "virtualenvwrapper instalado."
-  else
-    echo "virtualenvwrapper ya está instalado."
+  echo "${fg[yellow]}▶ Actualizando sistema...${reset_color}"
+  if ! sudo apt full-upgrade -y; then
+    echo "${fg[red]}✖ Error en full-upgrade${reset_color}"
+    return 1
   fi
+
+  echo "${fg[yellow]}▶ Limpiando dependencias...${reset_color}"
+  if ! sudo apt autoremove -y; then
+    echo "${fg[red]}✖ Error en autoremove${reset_color}"
+    return 1
+  fi
+
+  echo "${fg[yellow]}▶ Limpiando cache...${reset_color}"
+  sudo apt clean
+
+  end_time=$SECONDS
+  duration=$(( end_time - start_time ))
+
+  echo "${fg[green]}✔ Sistema actualizado correctamente.${reset_color}"
+  echo "${fg[magenta]}⏱ Duración: ${duration}s${reset_color}"
+  echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
+  echo
 }
 
-# Alias
-alias em=androidemulator
-alias code='code .'  # Lanzar VSCode en el directorio actual
-alias expo="bunx create-expo-app@latest"
-alias android='yarn android && code .'
-alias update='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt clean'
-alias run-react='yarn react-native run-android && yarn react-native start'
+# -------------------------
+# Aliases limpios
+# -------------------------
 alias ls='ls --color=auto'
-alias ll='ls -al --color=auto'
-alias path='echo $PATH | tr ":" "\n" | nl'
-alias tree='tree -I "node_modules" -L 4'
+alias ll='ls -alF'
 alias grep='grep --color=auto'
-alias rm='rm -rf'
 alias cp='cp -i'
 alias mv='mv -i'
+alias rm='rm -rf'
+
 alias gs='git status'
 alias gp='git pull'
 alias gpp='git push'
 alias gc='git commit -am'
 
+alias exp='bunx create-expo-app@latest --template blank-typescript'
+alias android='yarn android && code .'
+alias run-react='yarn react-native run-android && yarn react-native start'
+alias em='androidemulator'
 
-export PATH="$HOME/.local/share/pnpm:$PATH"
+# -------------------------
+# Android emulator helper
+# -------------------------
+androidemulator() {
+  local avd
 
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH=$BUN_INSTALL/bin:$PATH
+  if command -v fzf >/dev/null 2>&1; then
+    avd="${1:-$(emulator -list-avds | fzf)}"
+  else
+    avd="${1:-$(emulator -list-avds | head -n1)}"
+  fi
 
-# Cargar entorno de Deno si existe
-[ -f "$HOME/.deno/env" ] && . "$HOME/.deno/env"
+  [[ -z "$avd" ]] && return
+
+  if pgrep -f "emulator -avd $avd" >/dev/null; then
+    echo "Ya está ejecutándose."
+  else
+    emulator -avd "$avd" -read-only &
+  fi
+}
+
+# -------------------------
+# Starship
+# -------------------------
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+
+# -------------------------
+# FNM Auto Use
+# -------------------------
+if [ -d "$FNM_PATH" ]; then
+  eval "$(fnm env --use-on-cd)"
+fi
+
+# -------------------------
+# Profiling opcional
+# -------------------------
+if [[ "$ZSH_PROFILING" == "1" ]]; then
+  zmodload zsh/zprof
+  zprof
+fi

@@ -1,23 +1,56 @@
+-- lua/plugins/lsp/defaults.lua
 local M = {}
 
+-- IDs de Mason. auto_ensure instala todo vía mason-registry.
 M.ensure_installed = {
-  "bashls", "cssls", "custom_elements_ls", "dockerls", "efm",
-  "eslint", "graphql", "html", "htmx", "jsonls", "lua_ls", "pyright", "rust_analyzer",
-  "spectral", "sqlls", "ts_ls", "tailwindcss", "typos_lsp", "vimls", "vtsls", "vuels",
-  "yamlls", "prettier", "stylelint", "shellcheck", "shfmt", "black", "isort", "stylua",
-  "rubocop", "pint", "markdown", "dprint", "fixjson", "prettierd", "autopep8", "goimports", "gofumpt"
+  -- C / C++
+  'clangd',
+  'clang-format',
+  -- JS / TS / React
+  'vtsls',
+  'eslint-lsp',
+  'eslint_d',
+  'prettier',
+  -- HTML / CSS / Emmet
+  'html-lsp',
+  'css-lsp',
+  'emmet-language-server',
+  -- Docker
+  'dockerfile-language-server',
+  -- SQL
+  'sqls',
+  -- Vim
+  'vim-language-server',
+  -- Lua (Neovim)
+  'lua-language-server',
+  'stylua',
+  -- Bash
+  'bash-language-server',
+  'shfmt',
+  'shellcheck',
+  -- Markdown
+  'marksman',
+  -- JSON / YAML / TOML
+  'json-lsp',
+  'yaml-language-server',
+  'taplo',
+  -- Python
+  'pyright',
+  'black',
+  'isort',
+  'ruff',
 }
 
-local cmp_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-if not cmp_ok then
-  vim.notify("Error cargando cmp_nvim_lsp", vim.log.levels.ERROR)
-  return M
-end
+-- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
+local ok_cmp, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
+local base_caps = vim.lsp.protocol.make_client_capabilities()
+M.capabilities = ok_cmp and cmp_nvim_lsp.default_capabilities(base_caps) or base_caps
 
-
-M.capabilities = cmp_nvim_lsp.default_capabilities()
-M.capabilities.textDocument.completion.completionItem = {
-  documentationFormat = { "markdown", "plaintext" },
+-- Ajustes finos de completionItem
+M.capabilities.textDocument = M.capabilities.textDocument or {}
+M.capabilities.textDocument.completion = M.capabilities.textDocument.completion or {}
+M.capabilities.textDocument.completion.completionItem = vim.tbl_deep_extend('force', M.capabilities.textDocument.completion.completionItem or {}, {
+  documentationFormat = { 'markdown', 'plaintext' },
   snippetSupport = true,
   preselectSupport = true,
   insertReplaceSupport = true,
@@ -26,31 +59,36 @@ M.capabilities.textDocument.completion.completionItem = {
   commitCharactersSupport = true,
   tagSupport = { valueSet = { 1 } },
   resolveSupport = {
-    properties = {
-      "documentation", "detail", "additionalTextEdits",
-    },
+    properties = { 'documentation', 'detail', 'additionalTextEdits' },
   },
-}
+})
 
+-- (Opcional) si usás plugins tipo ufo, añade foldingRange:
+-- M.capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }
 
+-- Desactivar semantic tokens global (evita choques visuales con Treesitter)
 M.on_init = function(client, _)
-  if client.supports_method("textDocument/semanticTokens") then
+  if client.supports_method('textDocument/semanticTokens') then
     client.server_capabilities.semanticTokensProvider = nil
   end
 end
 
+-- on_attach: formateo/keys/… lo delegamos a tu módulo
 M.on_attach = function(client, bufnr)
-  if not client or not bufnr then return end
-  vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
-  require("plugins.lsp.format").on_attach(client, bufnr)
+  if not client or not bufnr then
+    return
+  end
+  vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
+  -- Usa tu lógica de formateo (fallback LSP si no hay Conform)
+  pcall(function()
+    require('plugins.lsp.format').on_attach(client, bufnr)
+  end)
 end
 
+-- Root genérico (útil para la mayoría de servidores)
 M.root_dir = function(fname)
-  local util = require("lspconfig").util
-  return util.root_pattern(
-    ".git", "tsconfig.base.json", "tsconfig.json", "package.json",
-    ".eslintrc.js", ".eslintrc.json"
-  )(fname)
+  local util = require('lspconfig').util
+  return util.root_pattern('.git', 'tsconfig.base.json', 'tsconfig.json', 'package.json', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs', 'eslint.config.ts')(fname)
 end
 
 return M

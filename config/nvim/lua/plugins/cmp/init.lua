@@ -1,73 +1,138 @@
+-- lua/plugins/cmp/init.lua
 return {
   'hrsh7th/nvim-cmp',
-  dependencies = {
-    'hrsh7th/cmp-buffer',
-    'hrsh7th/cmp-cmdline',
-    'hrsh7th/cmp-nvim-lsp',
-    'hrsh7th/cmp-path',
-    'saadparwaiz1/cmp_luasnip',
-    -- has configs
-    { 'L3MON4D3/LuaSnip', dependencies = { 'rafamadriz/friendly-snippets', 'benfowler/telescope-luasnip.nvim' }, main = 'luasnip' },
-  },
   event = 'InsertEnter',
-  config = function()
-    -- eyJhbGciOiJSUzI1NiIsImtpZCI6ImYyOThjZDA3NTlkOGNmN2JjZTZhZWNhODExNmU4ZjYzMDlhNDQwMjAiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiSm9uYXRoYW4uRCAuRCIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQWNIVHRkRWo5NDVpS0x5eUx0ZHVDcFY4bWQwdGUyZXVwaDZSLWRMX3dFbz1zOTYtYyIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9leGEyLWZiMTcwIiwiYXVkIjoiZXhhMi1mYjE3MCIsImF1dGhfdGltZSI6MTcxMzA0NDMwMCwidXNlcl9pZCI6Ik1pTlVzMHExOTBWemJjOW50RldVc2RjaXJ6QjMiLCJzdWIiOiJNaU5VczBxMTkwVnpiYzludEZXVXNkY2lyekIzIiwiaWF0IjoxNzEzMDQ0MzA0LCJleHAiOjE3MTMwNDc5MDQsImVtYWlsIjoiZG9uYXRoYW4uZC5kb21pbmd1ZXpAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZ29vZ2xlLmNvbSI6WyIxMTY5NDYwODc2NDYzMDUxNzgzODkiXSwiZW1haWwiOlsiZG9uYXRoYW4uZC5kb21pbmd1ZXpAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoiZ29vZ2xlLmNvbSJ9fQ.ZJZgkryGaDQX3izEoTC5qsy4JitL_hQ-0I2zeyouUznL4zxEMN5tGRjkQCpUjufblVynlFDON6XI94LE_-Zh4evGJourRTcirg6dKG9LNRERq_aaDrZGb1yTWRW-TQwgtiuXEtN-Cm8Vt-AxB1BSk9-1g2yJd7JdxZBdmnYxwgmRP0iYtll1_AXJXb4t4VeFHdukkcvVftMfzJhzL658qJINI3c95Wf1YkKEfkn8YewZ2OD13w_-uqoCw-G2CMCkiDOAgagNkDvtW9KiYyXxADgsz8Nn_3QU3r64v9M2OToI9Pyjdbp--cjceqJfqzvoddvE-QpLqRV368wzcKDkrww
-    local function has_words_before()
-      local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-      return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match('%s') == nil
-    end
+  dependencies = {
+    -- fuentes básicas
+    'hrsh7th/cmp-nvim-lsp',
+    'hrsh7th/cmp-buffer',
+    'hrsh7th/cmp-path',
+    'hrsh7th/cmp-cmdline',
+    'hrsh7th/cmp-nvim-lua', -- ← la necesitabas: usabas { name = "nvim_lua" }
+
+    -- snippets
+    {
+      'L3MON4D3/LuaSnip',
+      dependencies = {
+        'rafamadriz/friendly-snippets',
+        'benfowler/telescope-luasnip.nvim',
+      },
+      build = (function()
+        -- build opcional para Windows (evita errores en no-Windows)
+        return (vim.fn.has('win32') == 1 or vim.fn.has('win64') == 1) and 'make install_jsregexp' or nil
+      end)(),
+    },
+    'saadparwaiz1/cmp_luasnip',
+
+    -- iconitos y colores bonitos (opcionales)
+    'onsails/lspkind.nvim',
+    'brenoprata10/nvim-highlight-colors',
+  },
+  opts = function()
     local cmp = require('cmp')
     local luasnip = require('luasnip')
 
-    local cmp_autopairs = require('nvim-autopairs.completion.cmp')
-    local icons = {
-      kind = require('utils.icons').get('kind'),
-      type = require('utils.icons').get('type'),
-      cmp = require('utils.icons').get('cmp'),
-    }
-    cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
-    cmp.setup({
+    -- carga lazy de snippets VSCode
+    pcall(function()
+      require('luasnip.loaders.from_vscode').lazy_load()
+    end)
+    luasnip.config.set_config({
+      history = true,
+      updateevents = 'TextChanged,TextChangedI',
+      enable_autosnippets = true,
+    })
+
+    -- deshabilitar cmp en comentarios (pero permitir en comandos/cmdline)
+    local ok_ctx, context = pcall(require, 'cmp.config.context')
+
+    local function enabled()
+      if vim.bo.buftype == 'prompt' then
+        return false
+      end
+      if ok_ctx then
+        if context.in_treesitter_capture('comment') == true or context.in_syntax_group('Comment') then
+          return false
+        end
+      end
+      return true
+    end
+
+    -- formateo: lspkind + nvim-highlight-colors (si están)
+    local lspkind_ok, lspkind = pcall(require, 'lspkind')
+    local nhc_ok, nhc = pcall(require, 'nvim-highlight-colors')
+
+    local function formatter(entry, vim_item)
+      -- primero colores en el abbr si es un color literal (#fff, rgb(), etc.)
+      if nhc_ok then
+        local colored = nhc.format(entry, { kind = vim_item.kind })
+        if colored and colored.abbr_hl_group then
+          vim_item.kind_hl_group = colored.abbr_hl_group
+          vim_item.kind = colored.abbr
+        end
+      end
+      -- luego iconos/simbolitos
+      if lspkind_ok then
+        vim_item = (lspkind.cmp_format({
+          mode = 'symbol_text',
+          maxwidth = 50,
+          ellipsis_char = '…',
+          menu = {
+            nvim_lsp = '[LSP]',
+            luasnip = '[SNIP]',
+            buffer = '[BUF]',
+            path = '[PATH]',
+            nvim_lua = '[LUA]',
+            codeium = '[AI]',
+          },
+        }))(entry, vim_item)
+      end
+      return vim_item
+    end
+
+    -- helper: hay palabra antes del cursor?
+    local function has_words_before()
+      local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+      if col == 0 then
+        return false
+      end
+      local text = vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]
+      return text:sub(col, col):match('%s') == nil
+    end
+
+    -- ventanas con borde
+    local function bordered(win)
+      return cmp.config.window.bordered({
+        border = 'rounded',
+        winhighlight = 'NormalFloat:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None',
+        scrolloff = 2,
+      })
+    end
+
+    return {
+      enabled = enabled,
+      preselect = cmp.PreselectMode.None,
+      completion = { completeopt = 'menu,menuone,noselect' },
+      performance = { throttle = 20 },
+
+      window = {
+        completion = bordered('completion'),
+        documentation = bordered('documentation'),
+      },
+
       snippet = {
         expand = function(args)
-          require('luasnip').lsp_expand(args.body)
-        end,
-      },
-      -- sorting = {
-      --   priority_weight = 2,
-      --   comparators = {
-      --     cmp.config.compare.offset,
-      --     cmp.config.compare.exact,
-      --     cmp.config.compare.score,
-      --     cmp.config.compare.recently_used,
-      --     cmp.config.compare.locality,
-      --     cmp.config.compare.kind,
-      --     cmp.config.compare.sort_text,
-      --     cmp.config.compare.length,
-      --     cmp.config.compare.order,
-      --   },
-      -- },
-
-      preselect = cmp.PreselectMode.Item,
-
-      formatting = {
-        format = function(entry, vim_item)
-          -- Aplicar nvim-highlight-colors primero
-          local color_item = require('nvim-highlight-colors').format(entry, { kind = vim_item.kind })
-
-          -- Aplicar lspkind si está disponible
-          vim_item = require('lspkind').cmp_format({})(entry, vim_item)
-
-          -- Integración de colores con lspkind
-          if color_item.abbr_hl_group then
-            vim_item.kind_hl_group = color_item.abbr_hl_group
-            vim_item.kind = color_item.abbr
-          end
-
-          return vim_item
+          luasnip.lsp_expand(args.body)
         end,
       },
 
-      mapping = {
+      mapping = cmp.mapping.preset.insert({
+        ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+        ['<C-f>'] = cmp.mapping.scroll_docs(4),
+        ['<C-e>'] = cmp.mapping.abort(),
+        ['<C-Space>'] = cmp.mapping.complete(),
+
+        ['<CR>'] = cmp.mapping.confirm({ select = true }),
+
         ['<Tab>'] = cmp.mapping(function(fallback)
           if cmp.visible() then
             cmp.select_next_item()
@@ -79,6 +144,7 @@ return {
             fallback()
           end
         end, { 'i', 's' }),
+
         ['<S-Tab>'] = cmp.mapping(function(fallback)
           if cmp.visible() then
             cmp.select_prev_item()
@@ -88,18 +154,57 @@ return {
             fallback()
           end
         end, { 'i', 's' }),
-        ['<CR>'] = cmp.mapping.confirm({ select = true }),
+      }),
+
+      formatting = {
+        fields = { 'kind', 'abbr', 'menu' },
+        format = formatter,
+      },
+
+      experimental = {
+        ghost_text = { hl_group = 'Comment' },
       },
 
       sources = cmp.config.sources({
-        { name = 'luasnip' },
         { name = 'nvim_lsp' },
-        { name = 'codeium' },
-        { name = 'buffer' },
+        { name = 'luasnip' },
         { name = 'nvim_lua' },
+        -- fuentes opcionales: se usarán sólo si el plugin existe
+        { name = 'codeium', max_item_count = 5, group_index = 2 },
+      }, {
         { name = 'path' },
-        { name = 'render-markdown' },
+        { name = 'buffer', keyword_length = 3 },
       }),
+    }
+  end,
+  config = function(_, opts)
+    local cmp = require('cmp')
+    cmp.setup(opts)
+
+    -- Nota: la integración con autopairs ya la enganchamos en el plugin de autopairs.
+    -- Si no la tuvieras allí, podrías descomentar:
+    -- local cmp_autopairs = require("nvim-autopairs.completion.cmp")
+    -- cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done({ map_char = { tex = "" } }))
+
+    ------------------------------------------------------------------
+    -- cmdline completion
+    ------------------------------------------------------------------
+    -- búsqueda con / y ?
+    cmp.setup.cmdline({ '/', '?' }, {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = { { name = 'buffer' } },
+    })
+
+    -- comandos con :
+    cmp.setup.cmdline(':', {
+      mapping = cmp.mapping.preset.cmdline(),
+      sources = cmp.config.sources({
+        { name = 'path' },
+      }, {
+        { name = 'cmdline' },
+      }),
+      -- evita completado en ejecuciones tipo :! o :Man
+      matching = { disallow_symbol_nonprefix_matching = false },
     })
   end,
 }

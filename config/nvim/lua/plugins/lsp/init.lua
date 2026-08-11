@@ -1,78 +1,83 @@
-local M = {
+return {
   'williamboman/mason.nvim',
   event = 'VeryLazy',
   cmd = { 'Mason', 'MasonInstall', 'MasonUpdate' },
   dependencies = {
-    { 'neovim/nvim-lspconfig', event = 'BufReadPre' },
+    'neovim/nvim-lspconfig',
     'WhoIsSethDaniel/mason-tool-installer.nvim',
-    'williamboman/mason-lspconfig.nvim',
-    'j-hui/fidget.nvim',
-    {
-      'folke/neodev.nvim',
-      config = function()
-        require('neodev').setup({
-          library = {
-            plugins = { 'nvim-dap-ui' },
-            types = true,
-          },
-        })
-      end,
-    },
+    { 'j-hui/fidget.nvim', tag = 'legacy', opts = { text = { done = '✓' }, window = { relative = 'win' } } },
+
   },
-}
+  config = function()
+    vim.diagnostic.config({
+      virtual_text = { prefix = '●', spacing = 2, source = 'always' },
+      signs = true,
+      underline = true,
+      update_in_insert = true,
+      severity_sort = true,
+      float = { border = 'rounded', source = 'always' },
+    })
+    for type, icon in pairs({ Error = ' ', Warn = ' ', Hint = ' ', Info = ' ' }) do
+      vim.fn.sign_define('DiagnosticSign' .. type, { text = icon, texthl = 'DiagnosticSign' .. type })
+    end
 
-M.config = function()
-  local ensure_installed = require('plugins.lsp.defaults').ensure_installed
-  M.mason()
-  M.mason_installer(ensure_installed)
-  M.mason_lspconfig()
-  M.fidget()
-end
-
-M.mason = function()
-  require('mason').setup({
-    ui = {
-      icons = {
-        package_installed = '✓',
-        package_pending = '➜',
-        package_uninstalled = '✗',
+    require('mason').setup({
+      ui = {
+        border = 'rounded',
+        icons = { package_installed = '✓', package_pending = '➜', package_uninstalled = '✗' },
       },
-    },
-  })
-end
+    })
 
-M.mason_installer = function(ensure_installed)
-  require('mason-tool-installer').setup({
-    ensure_installed = ensure_installed,
-    -- auto_update = true,
-    -- run_on_start = true,
-  })
+    require('mason-tool-installer').setup({
+      ensure_installed = {
+        'bash-language-server',
+        'clangd',
+        'clang-format',
+        'css-lsp',
+        'dockerfile-language-server',
+        'dprint',
+        'emmet-language-server',
+        'eslint-lsp',
+        'eslint_d',
+        'html-lsp',
+        'json-lsp',
+        'lua-language-server',
+        'marksman',
+        'prettier',
+        'pyright',
+        'ruff',
+        'shfmt',
+        'shellcheck',
+        'sqls',
+        'stylua',
+        'taplo',
+        'vim-language-server',
+        'vtsls',
+        'yaml-language-server',
+      },
+    })
 
-  vim.api.nvim_create_autocmd('User', {
-    pattern = 'MasonToolsUpdateCompleted',
-    callback = function()
-      vim.schedule(function()
-        vim.notify(' Mason-tool-installer has finished updating packages', 'info', { title = 'Mason Tool Installer' })
-      end)
-    end,
-  })
-end
+    local defaults = require('plugins.lsp.defaults')
 
-M.mason_lspconfig = function()
-  require('mason-lspconfig').setup({
-    handlers = require('plugins.lsp.handlers'),
-  })
-end
+    local servers = {}
 
-M.fidget = function()
-  require('fidget').setup({
-    text = {
-      done = '✓',
-    },
-    window = {
-      relative = 'win',
-    },
-  })
-end
+    for _, name in ipairs({ 'bashls', 'pyright', 'html', 'cssls', 'clangd' }) do
+      vim.lsp.config(name, {
+        capabilities = defaults.capabilities,
+        on_attach = defaults.on_attach,
+        on_init = defaults.on_init,
+      })
+      table.insert(servers, name)
+    end
 
-return M
+    local handlers = require('plugins.lsp.handlers')
+    for _, name in ipairs({ 'vtsls', 'eslint', 'lua_ls', 'dprint', 'efm', 'typos_lsp', 'jsonls' }) do
+      if handlers[name] then
+        handlers[name]()
+        table.insert(servers, name)
+      end
+    end
+
+    vim.lsp.enable(servers)
+  end,
+}

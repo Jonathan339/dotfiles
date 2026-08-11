@@ -1,7 +1,6 @@
 local M = {
   'CRAG666/code_runner.nvim',
-  -- event = "VeryLazy",
-  -- lazy = true,
+  cmd = 'RunCode',
   config = true,
 }
 
@@ -21,7 +20,7 @@ function M.config()
         '$dir/$fileNameWithoutExt',
       },
       c = function(...)
-        c_base = {
+        local c_base = {
           'cd $dir &&',
           'gcc $fileName -o',
           '/tmp/$fileNameWithoutExt',

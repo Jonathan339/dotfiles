@@ -1,15 +1,12 @@
-local M = {
+return {
   'stevearc/oil.nvim',
-  dependencies = { 'nvim-tree/nvim-web-devicons' },
-}
-
-function M.config()
-  require('oil').setup({
+  cmd = 'Oil',
+  opts = {
+    default_file_explorer = false,
     float = {
-      max_height = 20,
-      max_width = 60,
+      padding = 8,
+      max_width = 80,
+      max_height = 50,
     },
-  })
-end
-
-return M
+  },
+}

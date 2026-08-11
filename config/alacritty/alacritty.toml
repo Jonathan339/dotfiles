@@ -1,0 +1,79 @@
+[env]
+TERM = "xterm-256color"
+
+[window]
+opacity = 1.0
+decorations = "full"
+dynamic_padding = true
+dimensions = { columns = 141, lines = 42 }
+
+[window.padding]
+x = 0
+y = 0
+
+[font]
+size = 12
+
+[font.normal]
+family = "DroidSansM Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "DroidSansM Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "DroidSansM Nerd Font"
+style = "Italic"
+
+[font.bold_italic]
+family = "DroidSansM Nerd Font"
+style = "Bold Italic"
+
+[terminal]
+osc52 = "CopyPaste"
+
+[keyboard]
+bindings = [
+{ key = "Insert", mods = "Shift", action = "Paste" },
+{ key = "Insert", mods = "Control", action = "Copy" },
+{ key = "Return", mods = "Shift", chars = "\u001B\r" }
+]
+
+[cursor]
+style = { shape = "Beam", blinking = "Off" }
+
+[selection]
+save_to_clipboard = true
+
+[colors.primary]
+background = "#252525"
+foreground = "#ffffff"
+
+[colors.cursor]
+text = "#252525"
+cursor = "#ffffff"
+
+[colors.selection]
+text = "#ffffff"
+background = "#170830"
+
+[colors.normal]
+black = "#130728"
+red = "#8f45e3"
+green = "#8f59aa"
+yellow = "#c47be8"
+blue = "#8f45e3"
+magenta = "#f485ed"
+cyan = "#8f45e3"
+white = "#fab1ed"
+
+[colors.bright]
+black = "#583e53"
+red = "#ac53ff"
+green = "#ac6bcc"
+yellow = "#e18dff"
+blue = "#b356ff"
+magenta = "#ffa6ff"
+cyan = "#ac53ff"
+white = "#ffbaf9"

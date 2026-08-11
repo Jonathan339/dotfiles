@@ -1,39 +1,87 @@
-local user_config = require("config.user")
-local u = require("utils")
-
+-- lua/plugins/luasnip/init.lua
 return {
-  "L3MON4D3/LuaSnip",
+  'L3MON4D3/LuaSnip',
+  event = 'InsertEnter',
   dependencies = {
-    "rafamadriz/friendly-snippets",
+    'rafamadriz/friendly-snippets',
   },
   config = function()
-    local ls = require("luasnip")
-    ls.config.set_config(u.merge({
+    local ls = require('luasnip')
+
+    ls.config.set_config({
       history = true,
-      updateevents = "TextChanged,TextChangedI",
+      updateevents = 'TextChanged,TextChangedI',
       enable_autosnippets = true,
-    }, user_config.plugins and user_config.plugins.luasnip or {}))
+      region_check_events = 'CursorMoved,CursorHold,InsertEnter',
+      delete_check_events = 'TextChanged,InsertLeave',
+      store_selection_keys = '<Tab>',
+    })
 
-    -- Extender snippets de HTML a archivos de React
-    ls.filetype_extend("javascriptreact", { "html" })
-    ls.filetype_extend("typescriptreact", { "html" })
+    -- Extender snippets de HTML a React
+    ls.filetype_extend('javascriptreact', { 'html' })
+    ls.filetype_extend('typescriptreact', { 'html' })
 
-    -- Cargar snippets de friendly-snippets
-    require("luasnip.loaders.from_vscode").lazy_load()
+    -- Cargar VSCode snippets
+    pcall(function()
+      require('luasnip.loaders.from_vscode').lazy_load()
+    end)
 
-    -- Función para cargar snippets personalizados
-    local function cargar_snippets()
-      for _, ft_path in ipairs(vim.api.nvim_get_runtime_file("lua/plugins/luasnip/snippets/*.lua", true)) do
-        local status, err = pcall(dofile, ft_path)
-        if not status then
-          vim.notify("Error al cargar el snippet: " .. err, vim.log.levels.ERROR)
-        end
+    -- Cargar snippets Lua propios (recarga en caliente al guardar)
+    local custom_dir = vim.fn.stdpath('config') .. '/lua/plugins/luasnip/snippets'
+    local lua_loader = require('luasnip.loaders.from_lua')
+    pcall(lua_loader.lazy_load, { paths = custom_dir })
+
+    -- fallback por si tus archivos no devuelven tablas (usan ls.add_snippets adentro)
+    local function cargar_snippets_fallback()
+      local files = vim.api.nvim_get_runtime_file('lua/plugins/luasnip/snippets/*.lua', true)
+      for _, f in ipairs(files) do
+        pcall(dofile, f)
       end
     end
+    -- Si el loader no encontró nada, intentá fallback
+    if vim.tbl_isempty(vim.api.nvim_get_runtime_file('lua/plugins/luasnip/snippets/*.lua', true)) == false then
+      pcall(cargar_snippets_fallback)
+    end
 
-    -- Ejecutar la carga de snippets personalizados
-    cargar_snippets()
+    -- Autoreload de snippets propios al guardar
+    vim.api.nvim_create_autocmd('BufWritePost', {
+      pattern = custom_dir .. '/**/*.lua',
+      callback = function()
+        pcall(lua_loader.load, { paths = custom_dir })
+        pcall(vim.notify, 'Snippets recargados', vim.log.levels.INFO)
+      end,
+    })
+
+    --------------------------------------------------------------------
+    -- Keymaps cómodos
+    --------------------------------------------------------------------
+    local map = vim.keymap.set
+    local opts = { silent = true, noremap = true }
+
+    -- Expandir o saltar a siguiente posición
+    map({ 'i', 's' }, '<C-k>', function()
+      if ls.expand_or_jumpable() then
+        ls.expand_or_jump()
+      end
+    end, vim.tbl_extend('force', opts, { desc = 'LuaSnip expand/jump' }))
+
+    -- Saltar hacia atrás
+    map({ 'i', 's' }, '<C-j>', function()
+      if ls.jumpable(-1) then
+        ls.jump(-1)
+      end
+    end, vim.tbl_extend('force', opts, { desc = 'LuaSnip jump back' }))
+
+    -- Cambiar elección (choice nodes)
+    map({ 'i', 's' }, '<C-l>', function()
+      if ls.choice_active() then
+        ls.change_choice(1)
+      end
+    end, vim.tbl_extend('force', opts, { desc = 'LuaSnip change choice' }))
+
+    -- Desvincular snippet actual (por si queda “enganchado”)
+    map({ 'i', 'n', 's' }, '<C-u>', function()
+      pcall(ls.unlink_current)
+    end, vim.tbl_extend('force', opts, { desc = 'LuaSnip unlink current' }))
   end,
-
-  enabled = not vim.tbl_contains(user_config.disable_builtin_plugins, "luasnip"),
 }
