@@ -26,16 +26,20 @@ return {
     ls.filetype_extend('typescriptreact', { 'html' })
     ls.filetype_extend('typescript', { 'javascript' })
     ls.filetype_extend('typescriptreact', { 'javascriptreact' })
+    ls.filetype_extend('cpp', { 'c' })
 
     -- Cargar VSCode snippets
     pcall(function()
       require('luasnip.loaders.from_vscode').lazy_load()
     end)
 
-    -- Cargar snippets Lua propios (recarga en caliente al guardar)
+    -- Cargar snippets Lua propios (carga directa para no depender de eventos)
     local custom_dir = vim.fn.stdpath('config') .. '/lua/plugins/luasnip/snippets'
     local lua_loader = require('luasnip.loaders.from_lua')
-    pcall(lua_loader.lazy_load, { paths = custom_dir })
+    local ok, err = pcall(lua_loader.load, { paths = custom_dir })
+    if not ok then
+      vim.notify('Error cargando snippets Lua: ' .. tostring(err), vim.log.levels.ERROR)
+    end
 
     -- Autoreload de snippets propios al guardar
     vim.api.nvim_create_autocmd('BufWritePost', {
