@@ -48,6 +48,10 @@ ZSH_THEME="agnoster"
 
 plugins=(git tmux)
 
+# Autostart de tmux: cada terminal abre con una sesión tmux (Ctrl+a para pestañas)
+ZSH_TMUX_AUTOSTART=true
+ZSH_TMUX_AUTOSTART_ONCE=true
+
 [[ -r "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
 
 # -------------------------
