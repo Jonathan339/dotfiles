@@ -15,6 +15,10 @@ function one(sql) {
   const r = execSync(`sqlite3 "${DB}" "${sql.replace(/"/g, '""')}"`).toString();
   return r === "" ? "" : r.slice(0, -1);
 }
+function formatDate(ms) {
+  const d = new Date(parseInt(ms));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 const TAG_MAP = [
   [/dotfiles|stow|rofi|sxhkd|keybinding|zsh|hyprland|xfce/, "linux-dotfiles"],
@@ -26,6 +30,7 @@ const TAG_MAP = [
   [/animeflv|anime|hentaila/, "anime"],
 ];
 const NSFW_RE = /hentai|hentaila|porn|jxporn|nsfw|myfans|fantia|rule34|r34|xvideos/;
+const NSFW_TOOLS = ["websearch", "webfetch", "browse"];
 function isNsfw(text) {
   return NSFW_RE.test(text.toLowerCase());
 }
@@ -55,8 +60,8 @@ function relLinks(file, tags) {
 
 function renderSession(id, title, directory, tCreated, tUpdated, agent, parentMd) {
   const isSub = agent === "explore";
-  const date = new Date(parseInt(tCreated)).toISOString().slice(0, 10);
-  const dateEnd = new Date(parseInt(tUpdated)).toISOString().slice(0, 10);
+  const date = formatDate(tCreated);
+  const dateEnd = formatDate(tUpdated);
   const clean = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
   const filename = `${date}_${clean}.md`;
@@ -82,7 +87,7 @@ function renderSession(id, title, directory, tCreated, tUpdated, agent, parentMd
         const input = JSON.stringify(pr.state?.input || {});
         const s = pr.state?.status === "completed" ? "" : (pr.state?.status || "");
         tools.push(`\`${pr.tool}\` ${s} ${input.length > 90 ? input.slice(0, 90) + "…" : input}`);
-        allText += input + "\n";
+        if (NSFW_TOOLS.includes(pr.tool)) allText += input + "\n";
       }
     }
     if (texts.length) blocks.push(`## ${role === "user" ? "Usuario" : role === "assistant" ? "Asistente" : role}\n\n${texts.join("\n\n")}`);
@@ -122,6 +127,18 @@ function existsWithDate(file, tUpdated) {
   return mtime >= Math.floor(parseInt(tUpdated) / 1000) - 5;
 }
 
+function findFileWithSessionId(id) {
+  if (!fs.existsSync(SESS_DIR)) return null;
+  for (const f of fs.readdirSync(SESS_DIR)) {
+    if (!f.endsWith(".md") || f === "Índice.md") continue;
+    try {
+      const content = fs.readFileSync(path.join(SESS_DIR, f), "utf8");
+      if (content.includes(`\`${id}\``)) return f;
+    } catch { /* ignore */ }
+  }
+  return null;
+}
+
 function syncSessions() {
   if (!fs.existsSync(SESS_DIR)) fs.mkdirSync(SESS_DIR, { recursive: true });
   const out = [];
@@ -129,7 +146,14 @@ function syncSessions() {
   for (const s of sessions) {
     const [id, title, directory, tCreated, tUpdated, agent] = s.split("§");
     const { filename, md, date } = renderSession(id, title, directory, tCreated, tUpdated, agent);
-    if (existsWithDate(filename, tUpdated)) continue;
+    let renamed = false;
+    const existing = findFileWithSessionId(id);
+    if (existing && existing !== filename) {
+      fs.renameSync(path.join(SESS_DIR, existing), path.join(SESS_DIR, filename));
+      out.push(`renombrada ${existing} → ${filename}`);
+      renamed = true;
+    }
+    if (!renamed && existsWithDate(filename, tUpdated)) continue;
     fs.writeFileSync(path.join(SESS_DIR, filename), md);
     out.push(`${date} | ${title.slice(0, 50)}`);
   }
