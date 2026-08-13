@@ -33,3 +33,8 @@ alias android='yarn android && code .'
 alias run-react='yarn react-native run-android && yarn react-native start'
 alias exp='bunx create-expo-app@latest --template blank-typescript'
 alias em='androidemulator'
+
+# -------------------------
+# Proyectos C/C++
+# -------------------------
+alias mkc='~/.dotfiles/scripts/mkc.sh'
