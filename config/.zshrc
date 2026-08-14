@@ -51,6 +51,8 @@ plugins=(git tmux)
 # Autostart de tmux: cada terminal abre con una sesión tmux (Ctrl+a para pestañas)
 ZSH_TMUX_AUTOSTART=true
 ZSH_TMUX_AUTOSTART_ONCE=true
+# No cerrar la terminal al despegarse (Ctrl+a d)
+ZSH_TMUX_AUTOQUIT=false
 
 [[ -r "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
 
