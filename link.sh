@@ -67,6 +67,7 @@ ALL_PACKAGES=(
   hypr
   waybar
   dunst
+  opencode
 )
 
 # Programas requeridos por cada paquete (comando a verificar antes de stow)
@@ -80,6 +81,7 @@ REQUIREMENTS[rofi]="rofi"
 REQUIREMENTS[hypr]="Hyprland"
 REQUIREMENTS[waybar]="waybar"
 REQUIREMENTS[dunst]="dunst"
+REQUIREMENTS[opencode]="opencode"
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
   PACKAGES=("${ALL_PACKAGES[@]}")
