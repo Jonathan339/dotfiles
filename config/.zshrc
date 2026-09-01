@@ -48,6 +48,12 @@ ZSH_THEME="agnoster"
 
 plugins=(git tmux)
 
+# Autostart de tmux: cada terminal abre con una sesión tmux (Ctrl+a para pestañas)
+ZSH_TMUX_AUTOSTART=true
+ZSH_TMUX_AUTOSTART_ONCE=true
+# No cerrar la terminal al despegarse (Ctrl+a d)
+ZSH_TMUX_AUTOQUIT=false
+
 [[ -r "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
 
 # -------------------------
@@ -84,6 +90,21 @@ load_virtualenvwrapper() {
 
 alias workon='load_virtualenvwrapper && workon'
 alias mkvirtualenv='load_virtualenvwrapper && mkvirtualenv'
+
+# -------------------------
+# Python venv por proyecto (.venv)
+# -------------------------
+mkvenv() {
+  command -v python3 >/dev/null || { echo "x python3 no encontrado"; return 1 }
+  python3 -m venv .venv && source .venv/bin/activate
+}
+
+venv_auto() {
+  [[ -f .venv/bin/activate ]] && source .venv/bin/activate
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd venv_auto
+venv_auto
 
 # -------------------------
 # Update del sistema
@@ -168,3 +189,7 @@ if [[ "$ZSH_PROFILING" == "1" ]]; then
   zmodload zsh/zprof
   zprof
 fi
+fpath+=${ZDOTDIR:-~}/.zsh_functions
+
+# bun completions
+[ -s "/home/jonathan/.bun/_bun" ] && source "/home/jonathan/.bun/_bun"

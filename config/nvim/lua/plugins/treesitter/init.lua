@@ -1,4 +1,4 @@
-local NVIM_DIR = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h")
+local NVIM_DIR = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":h:h:h:h")
 
 local PARSERS = {
   "vim", "regex", "rust", "markdown", "json",
@@ -20,7 +20,24 @@ local function tree_sitter_path()
 end
 
 local function ensure_parsers()
+  -- Asegura que treesitter encuentre el cli local (node_modules/.bin) en el PATH,
+  -- que de otra forma no está disponible cuando lazy corre el build.
+  local local_dir = NVIM_DIR .. "/node_modules/.bin"
+  if vim.fn.isdirectory(local_dir) == 1 then
+    vim.env.PATH = local_dir .. ":" .. vim.env.PATH
+  end
   require("nvim-treesitter.install").update({ ensure_installed = PARSERS })
+end
+
+local function bun_path()
+  if vim.fn.executable("bun") == 1 then
+    return "bun"
+  end
+  local local_bun = vim.env.HOME .. "/.bun/bin/bun"
+  if vim.fn.executable(local_bun) == 1 then
+    return local_bun
+  end
+  return nil
 end
 
 return {
@@ -46,7 +63,8 @@ return {
       return
     end
 
-    if vim.fn.executable("bun") == 0 then
+    local bun = bun_path()
+    if not bun then
       vim.notify("tree-sitter no encontrado y bun no está instalado", vim.log.levels.WARN)
       return
     end
@@ -54,7 +72,7 @@ return {
     vim.notify("Instalando tree-sitter-cli local con bun...", vim.log.levels.INFO)
 
     vim.system(
-      { "bun", "install" },
+      { bun, "install" },
       { text = true, cwd = NVIM_DIR },
       function(obj)
         if obj.code ~= 0 then
