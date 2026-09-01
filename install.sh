@@ -34,6 +34,25 @@ command -v sudo >/dev/null || die "Necesitás sudo."
 command -v curl >/dev/null || die "Necesitás curl."
 command -v git >/dev/null || die "Necesitás git."
 
+# ==============================================================================
+# Detección del gestor de paquetes (apt en Debian/Ubuntu, pacman en Arch)
+# ==============================================================================
+detect_pm() {
+  if command -v apt-get &>/dev/null; then
+    echo "apt"
+  elif command -v pacman &>/dev/null; then
+    echo "pacman"
+  else
+    echo "unknown"
+  fi
+}
+PM="$(detect_pm)"
+OS_ID=""
+[[ -r /etc/os-release ]] && . /etc/os-release
+OS_ID="${ID:-unknown}"
+
+warn_pm() { warn "Función pensada para apt; no soportada con $PM en $OS_ID. Saltando."; }
+
 APT_PACKAGES=(
   libstdc++6 curl wget vlc gnupg2 seahorse git python3-pip cargo
   libssl-dev openjdk-21-jre fzf tmux fonts-powerline kitty
@@ -42,22 +61,49 @@ APT_PACKAGES=(
   cliphist brightnessctl stow
 )
 
+PACMAN_PACKAGES=(
+  curl wget vlc gnupg seahorse git python-pip cargo
+  openssl jre-openjdk fzf tmux ttf-powerline kitty
+  xclip zsh ca-certificates ripgrep loupe rofi
+  hyprland waybar dunst swaybg hypridle grim slurp wl-clipboard
+  cliphist brightnessctl stow
+)
+
 package_is_installed() {
-  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "^$1 .* install ok installed"
+  case "$PM" in
+    apt)
+      dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "^$1 .* install ok installed"
+      ;;
+    pacman)
+      pacman -Q "$1" &>/dev/null
+      ;;
+    *) return 1 ;;
+  esac
 }
 
 snap_is_installed() { snap list "$1" &>/dev/null; }
 
 install_packages() {
   log "Instalando paquetes necesarios..."
-  sudo apt update
-  sudo apt install -y "${APT_PACKAGES[@]}"
+  case "$PM" in
+    apt)
+      sudo apt update
+      sudo apt install -y "${APT_PACKAGES[@]}"
+      ;;
+    pacman)
+      sudo pacman -Sy --noconfirm --needed "${PACMAN_PACKAGES[@]}"
+      ;;
+    *) die "Gestor de paquetes no soportado: $PM" ;;
+  esac
   ok "Paquetes instalados."
 }
 
 install_package_if_missing() {
   package_is_installed "$1" && return
-  sudo apt install -y "$1"
+  case "$PM" in
+    apt) sudo apt install -y "$1" ;;
+    pacman) sudo pacman -S --noconfirm --needed "$1" ;;
+  esac
 }
 
 # --- Config via stow ---
@@ -140,10 +186,12 @@ install_nerd_fonts() {
 }
 
 ensure_snapd() {
+  [[ "$PM" == "apt" ]] || { warn_pm; return 1; }
   command -v snap >/dev/null || sudo apt install -y snapd
 }
 
 install_snap_app() {
+  [[ "$PM" == "apt" ]] || { warn_pm; return; }
   local name="$1"
   shift
   local flags=("$@")
@@ -155,6 +203,7 @@ install_snap_app() {
 }
 
 install_neovim() {
+  [[ "$PM" == "apt" ]] || { warn "Neovim: instalalo manualmente (snap solo en apt)."; return; }
   install_snap_app nvim --beta --classic
   ok "Neovim instalado."
 }
@@ -220,6 +269,7 @@ install_spotify_snap() {
 }
 
 install_yarn() {
+  [[ "$PM" == "apt" ]] || { warn_pm; return; }
   command -v yarn >/dev/null && return
 
   curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg |
@@ -316,8 +366,15 @@ install_lazygit() {
 }
 
 clean() {
-  sudo apt autoremove -y
-  sudo apt clean
+  case "$PM" in
+    apt)
+      sudo apt autoremove -y
+      sudo apt clean
+      ;;
+    pacman)
+      sudo pacman -Sc --noconfirm
+      ;;
+  esac
   ok "Sistema limpiado."
 }
 

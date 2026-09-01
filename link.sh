@@ -3,8 +3,15 @@ set -euo pipefail
 
 # ==============================================================================
 # link.sh — Aplica dotfiles con GNU Stow + valida con check.sh
+#
+# Modelo de capas (ordre de precedencia, la última gana):
+#   stow/shared           → común a cualquier equipo
+#   stow/os/<so>          → específico del sistema operativo (detección automática)
+#   stow/wm/<wm>          → específico del escritorio (detección automática)
+#   stow/host/<hostname>  → específico del equipo (detección automática)
+#
 # Uso:
-#   ./link.sh              # Aplica todos los paquetes stow
+#   ./link.sh              # Aplica todos los paquetes de todas las capas
 #   ./link.sh shell nvim   # Aplica solo paquetes específicos
 #   ./link.sh --check      # Solo valida, no aplica
 #   ./link.sh --fix        # Aplica + repara problemas conocidos
@@ -38,10 +45,16 @@ while [[ $# -gt 0 ]]; do
     --help|-h)
       echo "Uso: ./link.sh [--check] [--fix] [paquete...]"
       echo ""
-      echo "  Sin args:      aplica todos los paquetes stow"
-      echo "  paquete...:    aplica solo los paquetes indicados"
+      echo "  Sin args:      aplica todos los paquetes stow de todas las capas"
+      echo "  paquete...:    aplica solo los paquetes indicados (busca en todas las capas)"
       echo "  --check:       solo valida symlinks, no aplica"
       echo "  --fix:         aplica + repara directorios conflictivos"
+      echo ""
+      echo "Capas detectadas automáticamente:"
+      echo "  stow/shared           (común)"
+      echo "  stow/os/<so>          (según /etc/os-release)"
+      echo "  stow/wm/<wm>          (según XDG_CURRENT_DESKTOP / pgrep)"
+      echo "  stow/host/<hostname>  (según hostname)"
       exit 0
       ;;
     *)      PACKAGES+=("$1"); shift ;;
@@ -54,21 +67,78 @@ done
 command -v stow &>/dev/null || die "GNU Stow no está instalado. Instalalo: sudo apt install stow"
 
 # ==============================================================================
-# Paquetes disponibles
+# Detección automática de capas
 # ==============================================================================
-ALL_PACKAGES=(
-  shell
-  nvim
-  kitty
-  alacritty
-  ghostty
-  wezterm
-  rofi
-  hypr
-  waybar
-  dunst
-  opencode
-)
+
+# Fing SD del sistema operativo: debian, arch, fedora, ... (bajo /etc/os-release)
+detect_os() {
+  local id id_like candidate
+  id=""; id_like=""
+  [[ -r /etc/os-release ]] && . /etc/os-release 2>/dev/null || return 1
+
+  for candidate in "$id" $id_like; do
+    [[ -z "$candidate" ]] && continue
+    candidate="${candidate,,}"
+    if [[ -d "$STOW_DIR/os/$candidate" ]]; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Fing WM/DE activo, en minúsculas y normalizado (hyprland, xfce, gnome, ...)
+detect_wm() {
+  local wm candidate
+
+  wm="${XDG_CURRENT_DESKTOP:-}"
+  wm="${wm%%:*}"        # ej. "ubuntu:GNOME" → "ubuntu"
+  [[ -n "$wm" ]] && wm="${wm,,}"
+
+  # Fallbacks por proceso cuando no hay XDG_CURRENT_DESKTOP
+  if [[ -z "$wm" ]] && pgrep -x Hyprland &>/dev/null; then
+    wm="hyprland"
+  fi
+  if [[ $wm != hyprland ]] && pgrep -x xfce4-session &>/dev/null; then
+    wm="xfce"
+  fi
+
+  if [[ -n "$wm" ]] && [[ -d "$STOW_DIR/wm/$wm" ]]; then
+    echo "$wm"
+    return 0
+  fi
+  return 1
+}
+
+# Fing strings del equipo (solo si hay capa definida)
+detect_host() {
+  local h
+  h="$(hostname 2>/dev/null || true)"
+  [[ -z "$h" ]] && return 1
+  [[ -d "$STOW_DIR/host/$h" ]] || return 1
+  echo "$h"
+  return 0
+}
+
+# ==============================================================================
+# Paquetes disponibles por capa
+# ==============================================================================
+LAYERS=()
+layer_names="shared"
+[[ -d "$STOW_DIR/shared" ]] && LAYERS+=("stow/shared")
+
+if so="$(detect_os)"; then
+  LAYERS+=("stow/os/$so")
+  layer_names="$layer_names, os/$so"
+fi
+if wm="$(detect_wm)"; then
+  LAYERS+=("stow/wm/$wm")
+  layer_names="$layer_names, wm/$wm"
+fi
+if host="$(detect_host)"; then
+  LAYERS+=("stow/host/$host")
+  layer_names="$layer_names, host/$host"
+fi
 
 # Programas requeridos por cada paquete (comando a verificar antes de stow)
 declare -A REQUIREMENTS
@@ -83,14 +153,19 @@ REQUIREMENTS[waybar]="waybar"
 REQUIREMENTS[dunst]="dunst"
 REQUIREMENTS[opencode]="opencode"
 
-if [[ ${#PACKAGES[@]} -eq 0 ]]; then
-  PACKAGES=("${ALL_PACKAGES[@]}")
-fi
-
-# Validar que todos los paquetes existan
-for pkg in "${PACKAGES[@]}"; do
-  [[ -d "$STOW_DIR/$pkg" ]] || die "Paquete no encontrado: stow/$pkg"
-done
+# Resuelve un paquete a su capa. Devuelve la ruta del paquete en la última capa
+# donde exista (precedencia: shared < os < wm < host).
+resolve_pkg_dir() {
+  local pkg="$1" layer dir last=""
+  for layer in "${LAYERS[@]}"; do
+    dir="$STOW_DIR/$layer/$pkg"
+    if [[ -d "$dir" ]]; then
+      last="$dir"
+    fi
+  done
+  [[ -n "$last" ]] && echo "$last" && return 0
+  return 1
+}
 
 # ==============================================================================
 # Solo check
@@ -119,17 +194,18 @@ check_requirements() {
 # Resolver conflictos antes de stow
 # ==============================================================================
 resolve_conflicts() {
-  local pkg="$1"
-  local stow_pkg="$STOW_DIR/$pkg"
+  local pkg_dir="$1"
+  local layer_pkg_dir
+  layer_pkg_dir="$STOW_DIR/$pkg_dir"
 
-  log "Verificando conflictos para: $pkg"
+  log "Verificando conflictos para: $1"
 
   # Nunca tocar directorios críticos del sistema
   local protected_dirs=("$HOME/.config" "$HOME/.local" "$HOME/.cache")
 
   # Encontrar solo archivos que stow crearía como symlinks
   while IFS= read -r -d '' entry; do
-    local relative="${entry#"$stow_pkg/"}"
+    local relative="${entry#"$layer_pkg_dir/"}"
     local target="$HOME/$relative"
 
     # Proteger directorios padre nunca moverlos
@@ -175,28 +251,28 @@ resolve_conflicts() {
         ok "Eliminado symlink roto"
       fi
     fi
-  done < <(find "$stow_pkg" -type f -print0 2>/dev/null)
+  done < <(find "$layer_pkg_dir" -type f -print0 2>/dev/null)
 }
 
 # ==============================================================================
 # Aplicar stow
 # ==============================================================================
 apply_stow() {
-  local pkg="$1"
-  local stow_pkg="$STOW_DIR/$pkg"
+  local pkg_dir="$1" pkg_layer
+  pkg_layer="$(dirname "$pkg_dir")"
 
-  log "Aplicando: stow $pkg"
+  log "Aplicando: stow -d $pkg_layer -t \$HOME ${pkg_layer##*/}/$(basename "$pkg_dir")"
 
   # Asegurar que los directorios padre existan
   mkdir -p "$HOME/.config" 2>/dev/null || true
 
   # Aplicar stow con --restow (elimina y recrea symlinks)
   stow --restow \
-    --dir "$STOW_DIR" \
+    --dir "$pkg_layer" \
     --target "$HOME" \
-    "$pkg" 2>/dev/null
+    "$(basename "$pkg_dir")" 2>/dev/null
 
-  ok "stow/$pkg → $HOME"
+  ok "$(basename "$pkg_dir") → $HOME"
 }
 
 # ==============================================================================
@@ -205,25 +281,50 @@ apply_stow() {
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Dotfiles Linker (GNU Stow)"
+echo "  Capas: $layer_names"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 applied=0
 skipped=0
 
-for pkg in "${PACKAGES[@]}"; do
-  check_requirements "$pkg" || { ((skipped++)) || true; continue; }
+if [[ ${#PACKAGES[@]} -eq 0 ]]; then
+  # Aplicar todos los paquetes de cada capa, en orden de precedencia
+  for layer in "${LAYERS[@]}"; do
+    for pkg_dir in "$layer"/*/; do
+      [[ -d "$pkg_dir" ]] || continue
+      pkg="$(basename "$pkg_dir")"
+      check_requirements "$pkg" || { ((skipped++)) || true; continue; }
 
-  if $FIX_MODE; then
-    resolve_conflicts "$pkg"
-  fi
+      if $FIX_MODE; then
+        resolve_conflicts "$pkg_dir"
+      fi
 
-  if apply_stow "$pkg"; then
-    ((applied++)) || true
-  else
-    ((skipped++)) || true
-  fi
-done
+      if apply_stow "$pkg_dir"; then
+        ((applied++)) || true
+      else
+        ((skipped++)) || true
+      fi
+    done
+  done
+else
+  # Aplicar solo paquetes indicados (resueltos en la última capa donde existan)
+  for pkg in "${PACKAGES[@]}"; do
+    pkg_dir="$(resolve_pkg_dir "$pkg")" || { warn "Paquete no encontrado en ninguna capa: $pkg"; ((skipped++)) || true; continue; }
+
+    check_requirements "$pkg" || { ((skipped++)) || true; continue; }
+
+    if $FIX_MODE; then
+      resolve_conflicts "$pkg_dir"
+    fi
+
+    if apply_stow "$pkg_dir"; then
+      ((applied++)) || true
+    else
+      ((skipped++)) || true
+    fi
+  done
+fi
 
 # ==============================================================================
 # Validación

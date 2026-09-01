@@ -19,6 +19,41 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STOW_DIR="$SCRIPT_DIR/stow"
 CONFIG_DIR="$SCRIPT_DIR/config"
 
+# ==============================================================================
+# Capas stow (mismo ordre de precedencia que link.sh: shared < os < wm < host)
+# ==============================================================================
+LAYERS=()
+# Capas detectadas automáticamente (mirror de link.sh)
+detect_os() {
+  local id id_like candidate
+  id=""; id_like=""
+  [[ -r /etc/os-release ]] && . /etc/os-release 2>/dev/null || return 1
+  for candidate in "$id" $id_like; do
+    [[ -z "$candidate" ]] && continue
+    candidate="${candidate,,}"
+    [[ -d "$STOW_DIR/os/$candidate" ]] && { echo "$candidate"; return 0; }
+  done
+  return 1
+}
+detect_wm() {
+  local wm
+  wm="${XDG_CURRENT_DESKTOP:-}"; wm="${wm%%:*}"; [[ -n "$wm" ]] && wm="${wm,,}"
+  [[ -z "$wm" ]] && pgrep -x Hyprland &>/dev/null && wm="hyprland"
+  [[ $wm != hyprland ]] && pgrep -x xfce4-session &>/dev/null && wm="xfce"
+  [[ -n "$wm" ]] && [[ -d "$STOW_DIR/wm/$wm" ]] && { echo "$wm"; return 0; }
+  return 1
+}
+detect_host() {
+  local h; h="$(hostname 2>/dev/null || true)"
+  [[ -z "$h" ]] && return 1
+  [[ -d "$STOW_DIR/host/$h" ]] || return 1
+  echo "$h"; return 0
+}
+[[ -d "$STOW_DIR/shared" ]] && LAYERS+=(shared)
+so="$(detect_os)"   && LAYERS+=("os/$so")
+wm="$(detect_wm)"   && LAYERS+=("wm/$wm")
+host="$(detect_host)" && LAYERS+=("host/$host")
+
 errors=0
 warnings=0
 fixed=0
@@ -41,7 +76,7 @@ declare -A SHELL_LINKS=(
 
 # Nvim (directorio)
 NVIM_LINK="$HOME/.config/nvim"
-NVIM_STOW_TARGET="$STOW_DIR/nvim/.config/nvim"
+NVIM_STOW_TARGET="$STOW_DIR/shared/nvim/.config/nvim"
 
 # Terminales: stow_package → (directorio destino, archivos internos)
 declare -A TERMINAL_KITTY=(
@@ -190,16 +225,21 @@ fi
 echo ""
 echo "━━━ Symlinks internos de stow ━━━"
 stow_ok=true
-for pkg_dir in "$STOW_DIR"/*/; do
-  [[ -d "$pkg_dir" ]] || continue
-  pkg_name="$(basename "$pkg_dir")"
+for layer in "${LAYERS[@]}"; do
+  [[ "$layer" == "stow" ]] && continue  # "stow" es solo la raíz base, no una capa
+  layer_path="$STOW_DIR/$layer"
+  [[ -d "$layer_path" ]] || continue
+  for pkg_dir in "$layer_path"/*/; do
+    [[ -d "$pkg_dir" ]] || continue
+    pkg_name="$(basename "$pkg_dir")"
 
-  if check_stow_internal_symlinks "$pkg_dir"; then
-    green "stow/$pkg_name: ok"
-  else
-    red "stow/$pkg_name: symlinks internos rotos"
-    stow_ok=false
-  fi
+    if check_stow_internal_symlinks "$pkg_dir"; then
+      green "$layer/$pkg_name: ok"
+    else
+      red "$layer/$pkg_name: symlinks internos rotos"
+      stow_ok=false
+    fi
+  done
 done
 
 # ==============================================================================
@@ -223,14 +263,16 @@ for term_name in kitty alacritty ghostty wezterm rofi; do
   var_name="TERMINAL_${term_name^^}"
   eval 'dir="${'"$var_name"'[dir]}"'
   eval 'files="${'"$var_name"'[files]}"'
+  term_stow="$STOW_DIR/shared/$term_name"
+  [[ -d "$term_stow" ]] || term_stow="$STOW_DIR/$term_name"
 
   if [[ -L "$dir" ]]; then
-    check_dir_symlink "$dir" "$STOW_DIR/$term_name${dir#$HOME}" "$files" "$term_name" || true
+    check_dir_symlink "$dir" "$term_stow${dir#$HOME}" "$files" "$term_name" || true
     continue
   fi
 
   for f in $files; do
-    src="$STOW_DIR/$term_name/$f"
+    src="$term_stow/$f"
     dest="$HOME/$f"
     label="$term_name → $dest"
 
