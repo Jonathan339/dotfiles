@@ -25,6 +25,7 @@ alias gc='git commit -am'
 # Editor
 # -------------------------
 alias n='nvim'
+alias oc='opencode'
 
 # -------------------------
 # Desarrollo (React Native / Expo / Mobile)

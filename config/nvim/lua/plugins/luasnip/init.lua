@@ -22,10 +22,9 @@ return {
     })
 
     -- Compartir snippets entre filetypes
-    ls.filetype_extend('javascriptreact', { 'html' })
-    ls.filetype_extend('typescriptreact', { 'html' })
+    ls.filetype_extend('javascriptreact', { 'html', 'javascript' })
+    ls.filetype_extend('typescriptreact', { 'html', 'typescript', 'javascriptreact', 'javascript' })
     ls.filetype_extend('typescript', { 'javascript' })
-    ls.filetype_extend('typescriptreact', { 'javascriptreact' })
     ls.filetype_extend('cpp', { 'c' })
 
     -- Cargar VSCode snippets

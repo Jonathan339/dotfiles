@@ -20,6 +20,12 @@ local function tree_sitter_path()
 end
 
 local function ensure_parsers()
+  -- Asegura que treesitter encuentre el cli local (node_modules/.bin) en el PATH,
+  -- que de otra forma no está disponible cuando lazy corre el build.
+  local local_dir = NVIM_DIR .. "/node_modules/.bin"
+  if vim.fn.isdirectory(local_dir) == 1 then
+    vim.env.PATH = local_dir .. ":" .. vim.env.PATH
+  end
   require("nvim-treesitter.install").update({ ensure_installed = PARSERS })
 end
 

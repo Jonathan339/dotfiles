@@ -40,6 +40,40 @@ function inferTags(title) {
   for (const [re, tag] of TAG_MAP) if (re.test(t) && !tags.includes(tag)) tags.push(tag);
   return tags;
 }
+function isJunk(id, title) {
+  const t = (title || "").toLowerCase();
+  if (/^title request|^new session|^sin título/.test(t)) return true;
+  // Saludos/holas sin sustancia: primero usamos el primer msg del usuario en syncSessions
+  return false;
+}
+
+function firstUserMessage(id) {
+  const msgs = rows(`SELECT id FROM message WHERE session_id='${id}' ORDER BY time_created;`);
+  for (const mid of msgs) {
+    let role = "";
+    const d = one(`SELECT data FROM message WHERE id='${mid}';`);
+    try { role = JSON.parse(d).role; } catch { continue; }
+    if (role !== "user") continue;
+    const parts = rows(`SELECT data FROM part WHERE message_id='${mid}' ORDER BY time_created;`);
+    for (const p of parts) {
+      try {
+        const pr = JSON.parse(p);
+        if (pr.type === "text" && pr.text && pr.text.trim()) return pr.text.trim();
+      } catch { /* ignore */ }
+    }
+  }
+  return "";
+}
+
+function deriveTitle(id, title) {
+  let t = (title || "").trim();
+  if (/^new session/i.test(t) || t.length < 4) {
+    const fu = firstUserMessage(id);
+    t = fu ? fu.replace(/[\n\r]+/g, " ").slice(0, 80) : "Sesión sin título";
+  }
+  return t;
+}
+
 function sessionTags(file) {
   try {
     const head = fs.readFileSync(path.join(SESS_DIR, file), "utf8").split("---")[1] || "";
@@ -60,13 +94,14 @@ function relLinks(file, tags) {
 
 function renderSession(id, title, directory, tCreated, tUpdated, agent, parentMd) {
   const isSub = agent === "explore";
+  const cleanTitle = deriveTitle(id, title);
   const date = formatDate(tCreated);
   const dateEnd = formatDate(tUpdated);
-  const clean = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  const clean = cleanTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
   const filename = `${date}_${clean}.md`;
-  const tags = inferTags(title);
-  const nsfwFlag = isNsfw(title);
+  const tags = inferTags(cleanTitle);
+  const nsfwFlag = isNsfw(cleanTitle);
   let allText = "";
   const blocks = [];
   const msgs = rows(`SELECT id FROM message WHERE session_id='${id}' ORDER BY time_created;`);
@@ -103,7 +138,7 @@ tipo: sesion
 nsfw: ${tags.includes("nsfw")}
 ---
 
-# Sesión ${date} — ${title.charAt(0).toUpperCase() + title.slice(1)}
+# Sesión ${date} — ${cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)}
 
 - **Fecha:** ${date}${dateEnd !== date ? ` al ${dateEnd}` : ""}
 - **Sesión ID:** \`${id}\`
@@ -139,21 +174,48 @@ function findFileWithSessionId(id) {
   return null;
 }
 
+function countSubstantialMessages(id) {
+  const msgs = rows(`SELECT id FROM message WHERE session_id='${id}' ORDER BY time_created;`);
+  let textBlocks = 0;
+  for (const mid of msgs) {
+    const parts = rows(`SELECT data FROM part WHERE message_id='${mid}' ORDER BY time_created;`);
+    let hasText = false;
+    for (const p of parts) {
+      try {
+        if (JSON.parse(p).type === "text") { hasText = true; break; }
+      } catch { /* ignore */ }
+    }
+    if (hasText) textBlocks++;
+  }
+  return textBlocks;
+}
+
+function isJunkSession(id, title, directory) {
+  const t = (title || "").toLowerCase().trim();
+  const generic = /^new session|^title request|^sin título/.test(t);
+  const nText = countSubstantialMessages(id);
+  // Sesiones genéricas con contenido real: no son basura (ej. "New session" con 40 msgs)
+  if (generic && nText >= 4) return false;
+  if (generic) return true;
+  const fu = firstUserMessage(id).toLowerCase().trim();
+  const pureGreeting = /^(hola|saludo|hola\s|saludo\s|que necesitas|nnm|h\s*$)/.test(fu) || fu === "";
+  // Saludo de ida y vuelta (2 bloques) sin tema = basura; exige 3+ para considerarla real
+  if (pureGreeting && nText < 3) return true;
+  return false;
+}
+
 function syncSessions() {
   if (!fs.existsSync(SESS_DIR)) fs.mkdirSync(SESS_DIR, { recursive: true });
   const out = [];
   const sessions = rows(`SELECT id || '§' || replace(title,'|','/') || '§' || directory || '§' || time_created || '§' || time_updated || '§' || agent FROM session ORDER BY time_created;`);
   for (const s of sessions) {
     const [id, title, directory, tCreated, tUpdated, agent] = s.split("§");
-    const { filename, md, date } = renderSession(id, title, directory, tCreated, tUpdated, agent);
-    let renamed = false;
+    if (isJunkSession(id, title, directory)) continue;
+    // Ya exportada: respetar el archivo existente (no renombrar ni regenerar)
     const existing = findFileWithSessionId(id);
-    if (existing && existing !== filename) {
-      fs.renameSync(path.join(SESS_DIR, existing), path.join(SESS_DIR, filename));
-      out.push(`renombrada ${existing} → ${filename}`);
-      renamed = true;
-    }
-    if (!renamed && existsWithDate(filename, tUpdated)) continue;
+    if (existing) continue;
+    const { filename, md, date } = renderSession(id, title, directory, tCreated, tUpdated, agent);
+    if (existsWithDate(filename, tUpdated)) continue;
     fs.writeFileSync(path.join(SESS_DIR, filename), md);
     out.push(`${date} | ${title.slice(0, 50)}`);
   }

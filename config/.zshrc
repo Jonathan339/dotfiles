@@ -92,6 +92,21 @@ alias workon='load_virtualenvwrapper && workon'
 alias mkvirtualenv='load_virtualenvwrapper && mkvirtualenv'
 
 # -------------------------
+# Python venv por proyecto (.venv)
+# -------------------------
+mkvenv() {
+  command -v python3 >/dev/null || { echo "x python3 no encontrado"; return 1 }
+  python3 -m venv .venv && source .venv/bin/activate
+}
+
+venv_auto() {
+  [[ -f .venv/bin/activate ]] && source .venv/bin/activate
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd venv_auto
+venv_auto
+
+# -------------------------
 # Update del sistema
 # -------------------------
 update() {
@@ -174,3 +189,7 @@ if [[ "$ZSH_PROFILING" == "1" ]]; then
   zmodload zsh/zprof
   zprof
 fi
+fpath+=${ZDOTDIR:-~}/.zsh_functions
+
+# bun completions
+[ -s "/home/jonathan/.bun/_bun" ] && source "/home/jonathan/.bun/_bun"
