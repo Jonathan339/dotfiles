@@ -33,9 +33,39 @@
         },
         "ollama": {
             "npm": "@ai-sdk/ollama",
-            "name": "Ollama",
+            "name": "Ollama (local)",
             "options": {
                 "baseURL": "http://localhost:11434/api"
+            },
+            "models": {
+                "deepseek-r1:1.5b": {
+                    "name": "DeepSeek R1 1.5B (ollama)",
+                    "limit": {
+                        "context": 4096,
+                        "output": 4096
+                    }
+                },
+                "deepseek-r1:latest": {
+                    "name": "DeepSeek R1 7B (ollama)",
+                    "limit": {
+                        "context": 4096,
+                        "output": 4096
+                    }
+                },
+                "llama2-uncensored:latest": {
+                    "name": "Llama2 Uncensored (ollama)",
+                    "limit": {
+                        "context": 4096,
+                        "output": 4096
+                    }
+                },
+                "UncensoredAi/diddy:latest": {
+                    "name": "Diddy (ollama)",
+                    "limit": {
+                        "context": 4096,
+                        "output": 4096
+                    }
+                }
             }
         }
     },
