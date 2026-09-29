@@ -15,6 +15,13 @@
                         "output": 4096
                     }
                 },
+                "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M": {
+                    "name": "DeepSeek R1 0528 8B (local, oficial)",
+                    "limit": {
+                        "context": 8192,
+                        "output": 4096
+                    }
+                },
                 "DeepSeek-R1-Distill-Qwen-7B-Q4_K_M": {
                     "name": "DeepSeek R1 7B (local)",
                     "limit": {
@@ -38,20 +45,6 @@
                 "baseURL": "http://localhost:11434/api"
             },
             "models": {
-                "deepseek-r1:1.5b": {
-                    "name": "DeepSeek R1 1.5B (ollama)",
-                    "limit": {
-                        "context": 4096,
-                        "output": 4096
-                    }
-                },
-                "deepseek-r1:latest": {
-                    "name": "DeepSeek R1 7B (ollama)",
-                    "limit": {
-                        "context": 4096,
-                        "output": 4096
-                    }
-                },
                 "llama2-uncensored:latest": {
                     "name": "Llama2 Uncensored (ollama)",
                     "limit": {
