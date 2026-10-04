@@ -161,10 +161,12 @@ autocmd('BufReadPre', {
     local max_size = 500 * 1024 -- 500 KB (podés bajarlo si querés)
     if ok and stat and stat.size and stat.size > max_size then
       vim.b.large_file = true
-      vim.cmd('syntax off')
-      vim.opt_local.swapfile = false
-      vim.opt_local.undofile = false
-      vim.opt_local.foldenable = false
+      -- solo este buffer: 'syntax off' global mataba el highlight del resto
+      vim.bo[ev.buf].syntax = 'OFF'
+      vim.bo[ev.buf].swapfile = false
+      vim.bo[ev.buf].undofile = false
+      -- foldenable es window-local (no existe vim.bo[buf].foldenable)
+      vim.wo.foldenable = false
     end
   end,
 })
