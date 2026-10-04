@@ -4,6 +4,10 @@ return {
   cmd = { 'Mason', 'MasonInstall', 'MasonUpdate' },
   dependencies = {
     'neovim/nvim-lspconfig',
+    -- cmp-nvim-lsp se carga en InsertEnter, pero acá lo requerimos al calcular
+    -- capabilities (VeryLazy). Sin esta dependencia el require falla y el LSP
+    -- anuncia capabilities sin snippetSupport/labelDetails.
+    'hrsh7th/cmp-nvim-lsp',
     'WhoIsSethDaniel/mason-tool-installer.nvim',
     { 'j-hui/fidget.nvim', tag = 'legacy', opts = { text = { done = '✓' }, window = { relative = 'win' } } },
 
