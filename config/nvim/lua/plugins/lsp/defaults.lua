@@ -2,6 +2,8 @@
 local M = {}
 
 -- Capabilities: usar cmp_nvim_lsp si está; fallback a capabilities base
+-- (cmp-nvim-lsp está declarado como dependency del spec de lsp, así que el
+-- require funciona aunque cmp todavía no haya cargado en InsertEnter)
 local ok_cmp, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
 local base_caps = vim.lsp.protocol.make_client_capabilities()
 M.capabilities = ok_cmp and cmp_nvim_lsp.default_capabilities(base_caps) or base_caps
@@ -39,7 +41,7 @@ M.on_attach = function(client, bufnr)
     return
   end
   vim.bo[bufnr].omnifunc = 'v:lua.vim.lsp.omnifunc'
-  -- Usa tu lógica de formateo (fallback LSP si no hay Conform)
+  -- plugins.lsp.format deja el formateo solo en manos de Conform
   pcall(function()
     require('plugins.lsp.format').on_attach(client, bufnr)
   end)

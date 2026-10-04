@@ -1,17 +1,14 @@
 -- lua/plugins/lsp/handlers.lua
 local M = {}
-local defaults = require('plugins.lsp.defaults')
 local setup = require('utils').setup_lsp
 local util = require('lspconfig.util')
 local root_pattern = util.root_pattern
 
 local function simple(name)
+  -- setup_lsp ya inyecta capabilities/on_init/on_attach de defaults:
+  -- pasarlos de nuevo hacía que on_attach corriera dos veces por attach.
   M[name] = function()
-    setup(name, {
-      capabilities = defaults.capabilities,
-      on_attach = defaults.on_attach,
-      on_init = defaults.on_init,
-    })
+    setup(name, {})
   end
 end
 
@@ -27,9 +24,6 @@ M['clangd'] = function()
       '--clang-tidy-checks=-*,clang-*,bugprone-*,performance-*,readability-*,portability-*',
       '--header-insertion=iwyu',
     },
-    capabilities = defaults.capabilities,
-    on_attach = defaults.on_attach,
-    on_init = defaults.on_init,
   })
 end
 
@@ -53,17 +47,15 @@ M['typos_lsp'] = function()
   })
 end
 
--- JSON LS (con schemastore si está)
+-- JSON LS
+-- No hace falta require('schemastore'): nvim-lspconfig ya inyecta los schemas
+-- de schemastore al configurar el servidor (antes devolvía nil siempre).
 M['jsonls'] = function()
-  local has_schemastore, schemastore = pcall(require, 'schemastore')
-  local schemas = has_schemastore and schemastore.json.schemas() or nil
-
   setup('jsonls', {
     cmd = { 'vscode-json-language-server', '--stdio' },
     filetypes = { 'json', 'jsonc' },
     settings = {
       json = {
-        schemas = schemas,
         validate = { enable = true },
       },
     },
