@@ -8,7 +8,8 @@ return {
       sh = { "shellcheck" },
       bash = { "shellcheck" },
       zsh = { "shellcheck" },
-      markdown = { "markdownlint" },
+      -- markdownlint-cli2 es el que instala mason (no existe `markdownlint`)
+      markdown = { "markdownlint-cli2" },
       yaml = { "yamllint" },
       python = { "ruff" },
       go = { "staticcheck" },
