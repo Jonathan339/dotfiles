@@ -65,8 +65,9 @@ map("n", "<A-Left>", ":bprevious<CR>", {
 })
 
 map("n", "<Leader>c", function()
-  if vim.api.nvim_buf_is_valid(vim.api.nvim_get_current_buf()) then
-    vim.api.nvim_buf_delete(vim.api.nvim_get_current_buf(), { force = false })
+  local buf = vim.api.nvim_get_current_buf()
+  if vim.api.nvim_buf_is_valid(buf) then
+    vim.api.nvim_buf_delete(buf, { force = false })
   end
 end, {
   desc = "Cerrar buffer",
@@ -189,7 +190,7 @@ end, {
 -- MOVIMIENTO DE LÍNEAS
 -- ======================================================
 
-map("n", "<C-Up>", ":move -2<CR>==", {
+map("n", "<C-Up>", ":move -1<CR>==", {
   desc = "Mover línea arriba",
 })
 
@@ -197,7 +198,7 @@ map("n", "<C-Down>", ":move +1<CR>==", {
   desc = "Mover línea abajo",
 })
 
-map("i", "<C-Up>", "<Esc>:move -2<CR>gi", {
+map("i", "<C-Up>", "<Esc>:move -1<CR>gi", {
   desc = "Mover línea arriba",
 })
 
