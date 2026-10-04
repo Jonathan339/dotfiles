@@ -23,7 +23,9 @@ return {
     require('conform').setup({
       format_on_save = function(bufnr)
         if vim.g.autoformat_enabled == false then return end
-        return { timeout_ms = 1000, lsp_fallback = true }
+        -- lsp_fallback = false porque plugins/lsp/format.lua desactiva las
+        -- capacidades de formato del LSP: el fallback nunca iba a disparar.
+        return { timeout_ms = 1000, lsp_fallback = false }
       end,
       max_file_size = 200 * 1024,
       formatters_by_ft = {
@@ -82,7 +84,7 @@ return {
 
     local format_enabled = true
     vim.api.nvim_create_user_command('Format', function()
-      require('conform').format({ lsp_fallback = true })
+      require('conform').format({ lsp_fallback = false, async = true })
     end, {})
     vim.api.nvim_create_user_command('FormatToggle', function()
       format_enabled = not format_enabled
