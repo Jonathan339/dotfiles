@@ -56,6 +56,7 @@ return {
         'stylua',
         'luacheck',
         'taplo',
+        'yamllint',
         'gofumpt',
         'goimports-reviser',
         'staticcheck',
