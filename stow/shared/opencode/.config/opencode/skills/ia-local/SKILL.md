@@ -10,8 +10,10 @@ Para lo general de OpenCode está el skill `opencode-local`; acá va la IA local
 ## Verificación en un comando
 
 ```sh
-~/.dotfiles/scripts/ollama-check.sh            # inventario, config, GPU y opencode
-~/.dotfiles/scripts/ollama-check.sh --bench    # además mide tok/s del modelo cargado
+make ia          # desde ~/.dotfiles: inventario, config, GPU y opencode (solo lectura)
+make ia-bench    # ídem + mide tok/s del modelo cargado (~15-40 s, carga el modelo)
+
+~/.dotfiles/scripts/ollama-check.sh --bench gemma3:12b   # medir un modelo puntual
 ```
 
 Esperado: `0 error(es)`. Un `[WARN]` de "ningún modelo cargado" es normal (se carga al usar).

@@ -1,4 +1,4 @@
-.PHONY: install install-all link link-fix check palette lint shellcheck backup
+.PHONY: install install-all link link-fix check palette lint shellcheck ia ia-bench backup
 
 install:
 	./install.sh
@@ -23,6 +23,12 @@ lint:
 
 shellcheck:
 	@shellcheck scripts/generate-palette.sh install.sh link.sh check.sh config/shell/path.sh config/colors/palette.sh
+
+ia:
+	./scripts/ollama-check.sh
+
+ia-bench:
+	./scripts/ollama-check.sh --bench
 
 backup:
 	@backup_dir="/tmp/dotfiles-backup-$$(date +%s)" && \
