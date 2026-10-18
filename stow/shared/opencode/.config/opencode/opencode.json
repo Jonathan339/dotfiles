@@ -3,12 +3,9 @@
   "providers": {
     "ollama": {
       "name": "Ollama (local, Intel Arc B570)",
-      "settings": {
-        "baseURL": "http://127.0.0.1:11434/v1"
-      },
       "models": {
-        "gemma3:12b": {
-          "name": "Gemma 3 12B (local, texto+imagen)",
+        "qwen3.5:9b": {
+          "name": "Qwen3.5 9B (local, texto+imagen)",
           "capabilities": {
             "tools": true,
             "input": ["text", "image"],
@@ -19,11 +16,23 @@
             "output": 4096
           }
         },
-        "qwen3:8b": {
-          "name": "Qwen3 8B (local, rápido)",
+        "qwen3.5:4b": {
+          "name": "Qwen3.5 4B (local, rápido)",
           "capabilities": {
             "tools": true,
-            "input": ["text"],
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 8192,
+            "output": 4096
+          }
+        },
+        "gemma4:12b": {
+          "name": "Gemma 4 12B (local, calidad máxima)",
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
             "output": ["text"]
           },
           "limit": {
