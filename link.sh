@@ -246,7 +246,8 @@ resolve_conflicts() {
 
     # Si el target es un archivo regular donde stow espera un symlink
     if [[ -f "$target" ]] && [[ ! -L "$target" ]]; then
-      local backup="${target}.bak.$(date +%s)"
+      local backup
+      backup="${target}.bak.$(date +%s)"
       warn "Conflicto: $target (no es symlink)"
       mv "$target" "$backup"
       ok "Backup → $backup"

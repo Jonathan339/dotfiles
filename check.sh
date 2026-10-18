@@ -10,14 +10,12 @@ set -euo pipefail
 FIX_MODE=false
 [[ "${1:-}" == "--fix" ]] && FIX_MODE=true
 
-INFO="\e[34m[INFO]\e[0m"
 OK="\e[32m[OK]\e[0m"
 WARN="\e[33m[WARN]\e[0m"
 ERR="\e[31m[ERR]\e[0m"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STOW_DIR="$SCRIPT_DIR/stow"
-CONFIG_DIR="$SCRIPT_DIR/config"
 
 # ==============================================================================
 # Capas stow (mismo ordre de precedencia que link.sh: shared < os < wm < host)
@@ -76,25 +74,30 @@ declare -A SHELL_LINKS=(
 
 # Nvim (directorio)
 NVIM_LINK="$HOME/.config/nvim"
-NVIM_STOW_TARGET="$STOW_DIR/shared/nvim/.config/nvim"
 
 # Terminales: stow_package → (directorio destino, archivos internos)
+# Las tablas se consultan de forma indirecta (eval sobre "TERMINAL_${term_name^^}"): shellcheck no lo ve.
+# shellcheck disable=SC2034
 declare -A TERMINAL_KITTY=(
   ["dir"]="$HOME/.config/kitty"
   ["files"]=".config/kitty/kitty.conf .config/kitty/colors/kitty-colors.conf"
 )
+# shellcheck disable=SC2034
 declare -A TERMINAL_ALACRITTY=(
   ["dir"]="$HOME/.config/alacritty"
   ["files"]=".config/alacritty/alacritty.toml .config/alacritty/colors/alacritty-colors.toml"
 )
+# shellcheck disable=SC2034
 declare -A TERMINAL_GHOSTTY=(
   ["dir"]="$HOME/.config/ghostty"
   ["files"]=".config/ghostty/config .config/ghostty/colors/ghostty-colors"
 )
+# shellcheck disable=SC2034
 declare -A TERMINAL_WEZTERM=(
   ["dir"]="$HOME/.config/wezterm"
   ["files"]=".config/wezterm/wezterm.lua"
 )
+# shellcheck disable=SC2034
 declare -A TERMINAL_ROFI=(
   ["dir"]="$HOME/.config/rofi"
   ["files"]=".config/rofi/config.rasi"
@@ -123,7 +126,8 @@ check_symlink() {
       red "  → $expected_target es un directorio, no un symlink"
       if $FIX_MODE; then
         yellow "  Intentando backup + re-stow..."
-        local backup="${expected_target}.bak.$(date +%s)"
+        local backup
+        backup="${expected_target}.bak.$(date +%s)"
         mv "$expected_target" "$backup"
         green "  Backup: $backup"
         ((fixed++)) || true
@@ -133,7 +137,8 @@ check_symlink() {
       red "ARCHIVO real donde debería haber symlink: $label"
       red "  → $expected_target es un archivo regular"
       if $FIX_MODE; then
-        local backup="${expected_target}.bak.$(date +%s)"
+        local backup
+        backup="${expected_target}.bak.$(date +%s)"
         mv "$expected_target" "$backup"
         green "  Backup: $backup"
         ((fixed++)) || true
@@ -232,7 +237,6 @@ fi
 # ==============================================================================
 echo ""
 echo "━━━ Symlinks internos de stow ━━━"
-stow_ok=true
 for layer in "${LAYERS[@]}"; do
   [[ "$layer" == "stow" ]] && continue  # "stow" es solo la raíz base, no una capa
   layer_path="$STOW_DIR/$layer"
@@ -245,7 +249,6 @@ for layer in "${LAYERS[@]}"; do
       green "$layer/$pkg_name: ok"
     else
       red "$layer/$pkg_name: symlinks internos rotos"
-      stow_ok=false
     fi
   done
 done
@@ -275,12 +278,11 @@ for term_name in kitty alacritty ghostty wezterm rofi; do
   [[ -d "$term_stow" ]] || term_stow="$STOW_DIR/$term_name"
 
   if [[ -L "$dir" ]]; then
-    check_dir_symlink "$dir" "$term_stow${dir#$HOME}" "$files" "$term_name" || true
+    check_dir_symlink "$dir" "$term_stow${dir#"$HOME"}" "$files" "$term_name" || true
     continue
   fi
 
   for f in $files; do
-    src="$term_stow/$f"
     dest="$HOME/$f"
     label="$term_name → $dest"
 
