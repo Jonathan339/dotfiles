@@ -110,6 +110,14 @@ check_symlink() {
   local label="$2"
 
   if [[ ! -L "$expected_target" ]]; then
+    # Puede ser un archivo alcanzable vía un directorio plegado (folded) por stow
+    local real_path
+    real_path="$(readlink -f "$expected_target" 2>/dev/null || true)"
+    if [[ -e "$expected_target" ]] && [[ -n "$real_path" ]] && [[ "$real_path" == "$STOW_DIR"* ]]; then
+      green "OK: $label (vía directorio plegado)"
+      return 0
+    fi
+
     if [[ -d "$expected_target" ]]; then
       red "DIRECTORIO real donde debería haber symlink: $label"
       red "  → $expected_target es un directorio, no un symlink"
@@ -310,12 +318,23 @@ conflict_paths=(
   "$HOME/.config/wezterm"
   "$HOME/.config/nvim"
   "$HOME/.config/rofi"
-  "$HOME/.config/i3"
 )
 
+# ¿El directorio contiene al menos un archivo gestionado por stow?
+# (un directorio real con symlinks correctos adentro es normal: stow pliega
+#  solo cuando puede, y el resto lo resuelve archivo por archivo)
+dir_has_stow_content() {
+  local dir="$1" f rf
+  while IFS= read -r -d '' f; do
+    rf="$(readlink -f "$f" 2>/dev/null || true)"
+    [[ -n "$rf" && "$rf" == "$STOW_DIR"* ]] && return 0
+  done < <(find "$dir" -maxdepth 3 ! -type d -print0 2>/dev/null)
+  return 1
+}
+
 for p in "${conflict_paths[@]}"; do
-  if [[ -d "$p" ]] && [[ ! -L "$p" ]]; then
-    warn "Directorio real (no symlink): $p"
+  if [[ -d "$p" ]] && [[ ! -L "$p" ]] && ! dir_has_stow_content "$p"; then
+    warn "Directorio real sin gestión de stow: $p"
     if $FIX_MODE; then
       backup="${p}.bak.$(date +%s)"
       mv "$p" "$backup"
