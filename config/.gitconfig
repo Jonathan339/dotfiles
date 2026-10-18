@@ -29,7 +29,7 @@
 	untracked = red
 
 [commit]
-	gpgsign = true
+	gpgsign = false
 
 [gpg]
 	format = ssh
