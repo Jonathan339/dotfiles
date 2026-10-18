@@ -1,18 +1,34 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
+  "providers": {
     "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama (local)",
-      "options": {
-        "baseURL": "http://localhost:11434/v1"
+      "name": "Ollama (local, Intel Arc B570)",
+      "settings": {
+        "baseURL": "http://127.0.0.1:11434/v1"
       },
       "models": {
-        "phi3.5:latest": {
-          "name": "Phi 3.5 (fast)",
+        "gemma3:12b": {
+          "name": "Gemma 3 12B (local, texto+imagen)",
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
           "limit": {
-            "context": 4096,
-            "output": 2048
+            "context": 8192,
+            "output": 4096
+          }
+        },
+        "qwen3:8b": {
+          "name": "Qwen3 8B (local, rápido)",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 8192,
+            "output": 4096
           }
         }
       }
