@@ -155,10 +155,12 @@ REQUIREMENTS[opencode]="opencode"
 
 # Resuelve un paquete a su capa. Devuelve la ruta del paquete en la última capa
 # donde exista (precedencia: shared < os < wm < host).
+# $layer ya incluye el prefijo "stow/" (ej. "stow/shared"), por eso se resuelve
+# contra $REPO_ROOT y no contra $STOW_DIR.
 resolve_pkg_dir() {
   local pkg="$1" layer dir last=""
   for layer in "${LAYERS[@]}"; do
-    dir="$STOW_DIR/$layer/$pkg"
+    dir="$REPO_ROOT/$layer/$pkg"
     if [[ -d "$dir" ]]; then
       last="$dir"
     fi
@@ -195,10 +197,10 @@ check_requirements() {
 # ==============================================================================
 resolve_conflicts() {
   local pkg_dir="$1"
-  local layer_pkg_dir
-  layer_pkg_dir="$STOW_DIR/$pkg_dir"
+  # pkg_dir llega como ruta absoluta (ej. /repo/stow/shared/kitty/)
+  local layer_pkg_dir="$pkg_dir"
 
-  log "Verificando conflictos para: $1"
+  log "Verificando conflictos para: $(basename "$pkg_dir")"
 
   # Nunca tocar directorios críticos del sistema
   local protected_dirs=("$HOME/.config" "$HOME/.local" "$HOME/.cache")
@@ -261,18 +263,21 @@ apply_stow() {
   local pkg_dir="$1" pkg_layer
   pkg_layer="$(dirname "$pkg_dir")"
 
-  log "Aplicando: stow -d $pkg_layer -t \$HOME ${pkg_layer##*/}/$(basename "$pkg_dir")"
+  log "Aplicando: stow -d $pkg_layer -t \$HOME $(basename "$pkg_dir")"
 
   # Asegurar que los directorios padre existan
   mkdir -p "$HOME/.config" 2>/dev/null || true
 
   # Aplicar stow con --restow (elimina y recrea symlinks)
-  stow --restow \
+  if stow --restow \
     --dir "$pkg_layer" \
     --target "$HOME" \
-    "$(basename "$pkg_dir")" 2>/dev/null
-
-  ok "$(basename "$pkg_dir") → $HOME"
+    "$(basename "$pkg_dir")"; then
+    ok "$(basename "$pkg_dir") → $HOME"
+  else
+    warn "stow falló para '$(basename "$pkg_dir")' (¿conflictos?). Probá: ./link.sh --fix"
+    return 1
+  fi
 }
 
 # ==============================================================================
@@ -290,8 +295,9 @@ skipped=0
 
 if [[ ${#PACKAGES[@]} -eq 0 ]]; then
   # Aplicar todos los paquetes de cada capa, en orden de precedencia
+  # (rutas absolutas: no depende del CWD desde donde se ejecute)
   for layer in "${LAYERS[@]}"; do
-    for pkg_dir in "$layer"/*/; do
+    for pkg_dir in "$REPO_ROOT/$layer"/*/; do
       [[ -d "$pkg_dir" ]] || continue
       pkg="$(basename "$pkg_dir")"
       check_requirements "$pkg" || { ((skipped++)) || true; continue; }
