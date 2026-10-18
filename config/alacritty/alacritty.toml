@@ -17,19 +17,19 @@ y = 2
 size = 12
 
 [font.normal]
-family = "DroidSansM Nerd Font"
+family = "MesloLGL Nerd Font"
 style = "Regular"
 
 [font.bold]
-family = "DroidSansM Nerd Font"
+family = "MesloLGL Nerd Font"
 style = "Bold"
 
 [font.italic]
-family = "DroidSansM Nerd Font"
+family = "MesloLGL Nerd Font"
 style = "Italic"
 
 [font.bold_italic]
-family = "DroidSansM Nerd Font"
+family = "MesloLGL Nerd Font"
 style = "Bold Italic"
 
 [terminal]

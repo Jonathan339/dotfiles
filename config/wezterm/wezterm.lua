@@ -1,7 +1,7 @@
 local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
-config.font = wezterm.font("DroidSansM Nerd Font")
+config.font = wezterm.font("MesloLGL Nerd Font")
 config.font_size = 12.0
 
 config.window_background_opacity = 0.9
