@@ -34,6 +34,7 @@ style = "Bold Italic"
 
 [terminal]
 osc52 = "CopyPaste"
+shell = { program = "/usr/bin/zsh", args = ["-l"] }
 
 [keyboard]
 bindings = [

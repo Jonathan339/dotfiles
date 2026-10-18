@@ -4,6 +4,8 @@ local config = wezterm.config_builder()
 config.font = wezterm.font("MesloLGL Nerd Font")
 config.font_size = 12.0
 
+config.default_prog = { "/usr/bin/zsh", "-l" }
+
 config.window_background_opacity = 0.9
 config.window_padding = { left = 2, right = 2, top = 2, bottom = 2 }
 
