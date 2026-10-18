@@ -40,6 +40,18 @@
             "output": 4096
           }
         },
+        "fredrezones55/Gemma-4-Uncensored-HauhauCS-Aggressive:latest": {
+          "name": "Gemma 4 8B Uncensored (local, sin filtros)",
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 8192,
+            "output": 4096
+          }
+        },
         "deepseek-r1:latest": {
           "name": "DeepSeek R1 8B (local, razonamiento SIN tools)",
           "capabilities": {
