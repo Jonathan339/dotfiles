@@ -196,8 +196,8 @@ check_requirements() {
 # Resolver conflictos antes de stow
 # ==============================================================================
 resolve_conflicts() {
-  local pkg_dir="$1"
-  # pkg_dir llega como ruta absoluta (ej. /repo/stow/shared/kitty/)
+  # Normalizar: el glob de paquetes pasa la ruta con barra final
+  local pkg_dir="${1%/}"
   local layer_pkg_dir="$pkg_dir"
 
   log "Verificando conflictos para: $(basename "$pkg_dir")"
