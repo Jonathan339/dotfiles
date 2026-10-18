@@ -39,6 +39,18 @@
             "context": 8192,
             "output": 4096
           }
+        },
+        "deepseek-r1:latest": {
+          "name": "DeepSeek R1 8B (local, razonamiento SIN tools)",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": {
+            "context": 8192,
+            "output": 4096
+          }
         }
       }
     }
