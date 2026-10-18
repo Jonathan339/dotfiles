@@ -253,7 +253,9 @@ resolve_conflicts() {
         ok "Eliminado symlink roto"
       fi
     fi
-  done < <(find "$layer_pkg_dir" -type f -print0 2>/dev/null)
+  # Ojo: usar ! -type d, no -type f. En clones reales (ext4) los archivos
+  # de los paquetes son symlinks hacia config/, y find -type f los ignora.
+  done < <(find "$layer_pkg_dir" ! -type d -print0 2>/dev/null)
 }
 
 # ==============================================================================
