@@ -25,7 +25,7 @@ Si la config del servicio falla: `sudo ~/.dotfiles/scripts/setup-ollama-arc.sh` 
 | Ollama | `ollama` + `ollama-vulkan` (cachyos-extra-v3) | `ollama-vulkan` aporta `libggml-vulkan.so`; sin él no se usa la Arc |
 | Servicio | `ollama.service` del sistema (usuario `ollama`) + drop-in | El unit tiene `ProtectHome=yes`, por eso los modelos van a `/var/lib/ollama` |
 | Modelos | `qwen3:8b` (rápido) y `gemma3:12b` (mejor calidad + visión) | Ver tabla de rendimiento |
-| No instalado | `llama.cpp`/`ggml-vulkan`, `whisper-cpp`, `shellcheck` | Decisión explícita: solo Ollama por ahora |
+| No instalado | `llama.cpp`/`ggml-vulkan`, `whisper-cpp` | Decisión explícita: solo Ollama por ahora |
 
 ## Configuración esperada del servicio
 
@@ -57,7 +57,7 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 - Los nodos `/dev/dri/renderD*` están en 0666: no hace falta el grupo `render`.
 - Alias de shell en `config/.zsh_aliases`: `ai` (gemma3:12b), `ai-fast` (qwen3:8b), `ai-models`, `ai-gpu`, `ai-svc`.
 - En OpenCode el provider usa formato V2 (`providers.ollama` con `settings.baseURL`, `capabilities.tools` y `limit`); después de editarlo hace falta `opencode service restart` para recargar la config (y limpiar modelos fantasma).
-- `make lint` del repo necesita `shellcheck`; si no está instalado se puede bajar el binario estático a /tmp y correrlo sin tocar el sistema.
+- `make lint` corre shellcheck sobre `scripts/*.sh`, `install.sh`, `link.sh`, `check.sh`, `config/shell/path.sh` y `config/colors/palette.sh`: hoy pasa limpio, mantenerlo así al tocar shell.
 
 ## Recetas
 
