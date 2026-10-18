@@ -166,7 +166,7 @@ titulo "Modelos instalados"
 if ollama list 2>/dev/null | tail -n +2 | grep -q .; then
   ollama list | sed 's/^/  /'
 else
-  warn "no hay modelos (ollama pull qwen3:8b)"
+  warn "no hay modelos (ollama pull qwen3.5:9b)"
 fi
 
 # ==============================================================================
@@ -230,9 +230,9 @@ titulo "Bench"
 if $BENCH; then
   if [[ -z "$MODELO_BENCH" ]]; then
     MODELO_BENCH="$(ollama ps 2>/dev/null | tail -n +2 | awk 'NR==1 {print $1}')"
-    [[ -z "$MODELO_BENCH" ]] && MODELO_BENCH="qwen3:8b"
+    [[ -z "$MODELO_BENCH" ]] && MODELO_BENCH="qwen3.5:9b"
   fi
-  echo "  midiendo $MODELO_BENCH (referencia: qwen3:8b ≈ 50 tok/s · gemma3:12b ≈ 17 tok/s)"
+  echo "  midiendo $MODELO_BENCH (referencia: qwen3.5:9b ≈ 45 tok/s · qwen3.5:4b ≈ 70 tok/s · gemma4:12b ≈ 32 tok/s)"
   bench "$MODELO_BENCH"
 else
   echo "  (usá --bench [modelo] para medir tok/s)"
