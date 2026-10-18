@@ -11,7 +11,7 @@ esac
 
 # 1) Auto-switch a zsh si existe
 if [ -t 1 ] && [ -z "${ZSH_VERSION:-}" ] && command -v zsh >/dev/null 2>&1; then
-  exec /bin/zsh -l
+  exec zsh -l
 fi
 
 # -------------------------
@@ -42,9 +42,9 @@ case "$TERM" in
 esac
 
 if [ "$color_prompt" = yes ] && [ -x /usr/bin/tput ] && tput setaf 1 >/dev/null 2>&1; then
-  PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+  PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
-  PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+  PS1='\u@\h:\w\$ '
 fi
 
 unset color_prompt
@@ -115,5 +115,6 @@ fi
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-. "$HOME/.cargo/env"
+# cargo env (solo si existe: en Arch cargo viene del paquete rust, sin env propio)
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 export PATH="$HOME/.local/bin:$PATH"

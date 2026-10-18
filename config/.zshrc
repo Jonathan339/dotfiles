@@ -118,14 +118,41 @@ update() {
   echo "${fg[cyan]}Actualizando sistema - $(date '+%H:%M:%S')${reset_color}"
   echo "${fg[blue]}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset_color}"
 
-  echo "${fg[yellow]}> apt update${reset_color}"
-  sudo apt update || { echo "${fg[red]}x Error en apt update${reset_color}"; return 1; }
+  if command -v pacman >/dev/null 2>&1; then
+    echo "${fg[yellow]}> pacman -Syu${reset_color}"
+    sudo pacman -Syu --noconfirm || { echo "${fg[red]}x Error en pacman -Syu${reset_color}"; return 1; }
 
-  echo "${fg[yellow]}> apt full-upgrade${reset_color}"
-  sudo apt full-upgrade -y || { echo "${fg[red]}x Error en full-upgrade${reset_color}"; return 1; }
+    echo "${fg[yellow]}> AUR (paru/yay)${reset_color}"
+    if command -v paru >/dev/null 2>&1; then
+      paru -Sua --noconfirm || true
+    elif command -v yay >/dev/null 2>&1; then
+      yay -Sua --noconfirm || true
+    else
+      echo "  (sin helper AUR instalado, saltando)"
+    fi
 
-  echo "${fg[yellow]}> snap refresh${reset_color}"
-  command -v snap >/dev/null && timeout 60 sudo snap refresh 2>/dev/null || echo "  snap: timeout o error"
+    if command -v paccache >/dev/null 2>&1; then
+      echo "${fg[yellow]}> paccache -rk1${reset_color}"
+      sudo paccache -rk1 || true
+    fi
+  elif command -v apt-get >/dev/null 2>&1; then
+    echo "${fg[yellow]}> apt update${reset_color}"
+    sudo apt update || { echo "${fg[red]}x Error en apt update${reset_color}"; return 1; }
+
+    echo "${fg[yellow]}> apt full-upgrade${reset_color}"
+    sudo apt full-upgrade -y || { echo "${fg[red]}x Error en full-upgrade${reset_color}"; return 1; }
+
+    echo "${fg[yellow]}> snap refresh${reset_color}"
+    command -v snap >/dev/null && timeout 60 sudo snap refresh 2>/dev/null || echo "  snap: timeout o error"
+
+    echo "${fg[yellow]}> apt autoremove${reset_color}"
+    sudo apt autoremove -y || { echo "${fg[red]}x Error en autoremove${reset_color}"; return 1; }
+
+    echo "${fg[yellow]}> apt clean${reset_color}"
+    sudo apt clean
+  else
+    echo "${fg[red]}x Gestor de paquetes no reconocido (ni pacman ni apt)${reset_color}"
+  fi
 
   echo "${fg[yellow]}> pip${reset_color}"
   command -v pip3 >/dev/null && pip3 install --upgrade pip setuptools wheel --break-system-packages 2>/dev/null || true
@@ -133,12 +160,6 @@ update() {
 
   echo "${fg[yellow]}> bun upgrade${reset_color}"
   command -v bun >/dev/null && bun upgrade || true
-
-  echo "${fg[yellow]}> apt autoremove${reset_color}"
-  sudo apt autoremove -y || { echo "${fg[red]}x Error en autoremove${reset_color}"; return 1; }
-
-  echo "${fg[yellow]}> apt clean${reset_color}"
-  sudo apt clean
 
   end_time=$SECONDS
   duration=$(( end_time - start_time ))
@@ -192,4 +213,7 @@ fi
 fpath+=${ZDOTDIR:-~}/.zsh_functions
 
 # bun completions
-[ -s "/home/jonathan/.bun/_bun" ] && source "/home/jonathan/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# Hermes Agent command
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac

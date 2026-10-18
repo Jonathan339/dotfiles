@@ -58,15 +58,16 @@ APT_PACKAGES=(
   libssl-dev openjdk-21-jre fzf tmux fonts-powerline kitty
   xclip zsh ca-certificates ripgrep loupe rofi
   hyprland waybar dunst swaybg hypridle grim slurp wl-clipboard
-  cliphist brightnessctl stow
+  cliphist brightnessctl stow shellcheck
 )
 
 PACMAN_PACKAGES=(
-  curl wget vlc gnupg seahorse git python-pip cargo
-  openssl jre-openjdk fzf tmux ttf-powerline kitty
+  curl wget vlc gnupg seahorse git python-pip rust
+  openssl jre-openjdk fzf tmux powerline-fonts kitty
   xclip zsh ca-certificates ripgrep loupe rofi
   hyprland waybar dunst swaybg hypridle grim slurp wl-clipboard
   cliphist brightnessctl stow
+  neovim ttf-hack-nerd tree-sitter-cli shellcheck
 )
 
 package_is_installed() {
@@ -83,6 +84,17 @@ package_is_installed() {
 
 snap_is_installed() { snap list "$1" &>/dev/null; }
 
+# Instala desde AUR usando paru/yay si están disponibles. Devuelve 1 si no hay helper.
+install_aur_app() {
+  local helper=""
+  command -v paru &>/dev/null && helper="paru"
+  [[ -z "$helper" ]] && command -v yay &>/dev/null && helper="yay"
+  [[ -z "$helper" ]] && return 1
+
+  log "Instalando $1 desde AUR con $helper..."
+  "$helper" -S --needed --noconfirm "$1"
+}
+
 install_packages() {
   log "Instalando paquetes necesarios..."
   case "$PM" in
@@ -91,7 +103,8 @@ install_packages() {
       sudo apt install -y "${APT_PACKAGES[@]}"
       ;;
     pacman)
-      sudo pacman -Sy --noconfirm --needed "${PACMAN_PACKAGES[@]}"
+      # -Syu para evitar partial upgrades (regla de oro de Arch)
+      sudo pacman -Syu --needed --noconfirm "${PACMAN_PACKAGES[@]}"
       ;;
     *) die "Gestor de paquetes no soportado: $PM" ;;
   esac
@@ -191,10 +204,23 @@ ensure_snapd() {
 }
 
 install_snap_app() {
-  [[ "$PM" == "apt" ]] || { warn_pm; return; }
   local name="$1"
   shift
   local flags=("$@")
+
+  # En Arch: VS Code está en repos oficiales; el resto solo por AUR con helper
+  if [[ "$PM" == "pacman" ]]; then
+    if [[ "$name" == "code" ]]; then
+      install_package_if_missing code
+    elif install_aur_app "$name"; then
+      ok "$name instalado desde AUR."
+    else
+      warn "'$name': no instalado (sin helper AUR o falló). En Arch: paru/yay -S $name"
+    fi
+    return
+  fi
+
+  [[ "$PM" == "apt" ]] || { warn_pm; return; }
 
   ensure_snapd
   snap_is_installed "$name" && return
@@ -203,8 +229,18 @@ install_snap_app() {
 }
 
 install_neovim() {
-  [[ "$PM" == "apt" ]] || { warn "Neovim: instalalo manualmente (snap solo en apt)."; return; }
-  install_snap_app nvim --beta --classic
+  case "$PM" in
+    apt)
+      install_snap_app nvim --beta --classic
+      ;;
+    pacman)
+      install_package_if_missing neovim
+      ;;
+    *)
+      warn "Neovim: instalalo manualmente."
+      return
+      ;;
+  esac
   ok "Neovim instalado."
 }
 
@@ -226,16 +262,27 @@ install_alacritty() {
 }
 
 install_ghostty() {
-  ok "Config de Ghostty aplicada (instalalo manualmente)."
+  if install_package_if_missing ghostty 2>/dev/null; then
+    ok "Ghostty instalado."
+  else
+    warn "Ghostty no está en repos de esta distro; instalalo manualmente y luego aplicá la config."
+  fi
 }
 
 install_wezterm() {
-  ok "Config de WezTerm aplicada (instalalo manualmente)."
+  if install_package_if_missing wezterm 2>/dev/null; then
+    ok "WezTerm instalado."
+  else
+    warn "WezTerm no está en repos de esta distro; instalalo manualmente y luego aplicá la config."
+  fi
 }
 
 install_zsh() {
   install_package_if_missing zsh
   install_oh_my_zsh
+  if [[ "$SHELL" != *zsh ]]; then
+    warn "Shell actual: $SHELL. Para usar zsh por defecto: chsh -s \"$(command -v zsh)\""
+  fi
   ok "Zsh instalado."
 }
 
@@ -269,6 +316,12 @@ install_spotify_snap() {
 }
 
 install_yarn() {
+  if [[ "$PM" == "pacman" ]]; then
+    install_package_if_missing yarn
+    ok "Yarn instalado."
+    return
+  fi
+
   [[ "$PM" == "apt" ]] || { warn_pm; return; }
   command -v yarn >/dev/null && return
 
@@ -340,6 +393,12 @@ install_nodejs() {
 
 install_lazygit() {
   command -v lazygit >/dev/null && return
+
+  if [[ "$PM" == "pacman" ]]; then
+    install_package_if_missing lazygit
+    ok "Lazygit instalado."
+    return
+  fi
 
   local arch
   case "$(uname -m)" in
@@ -424,15 +483,17 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━"
 select option in \
   "Instalar TODO completo" \
   "Instalar paquetes base" \
-  "Instalar aplicaciones Snap (android-studio, spotify, vscode)" \
+  "Instalar apps extra (vscode, spotify, android-studio)" \
   "Limpiar sistema" \
   "Aplicar/validar symlinks" \
   "" \
   "━━━ HERRAMIENTAS ━━━" \
-  "Instalar Neovim (snap)" \
+  "Instalar Neovim" \
   "Instalar OpenCode" \
   "Instalar Kitty" \
   "Instalar Alacritty" \
+  "Instalar Ghostty" \
+  "Instalar WezTerm" \
   "Instalar Zsh + Oh My Zsh" \
   "Instalar Tmux" \
   "Instalar Rofi" \
@@ -460,8 +521,8 @@ select option in \
   "Instalar Lazygit" \
   "Instalar Nerd Fonts" \
   "" \
-  "━━━ SNAP ━━━" \
-  "Instalar Spotify (snap)" \
+  "━━━ APPS EXTRA ━━━" \
+  "Instalar Spotify" \
   "" \
   "━━━ SALIR ━━━" \
   "Salir"
@@ -471,19 +532,21 @@ do
   case $option in
     "Instalar TODO completo") install_all ;;
     "Instalar paquetes base") install_packages ;;
-    "Instalar aplicaciones Snap (android-studio, spotify, vscode)")
+    "Instalar apps extra (vscode, spotify, android-studio)")
       install_snap_app android-studio --classic
       install_snap_app spotify
       install_snap_app code --classic
-      ok "Apps Snap instaladas."
+      ok "Apps extra instaladas."
       ;;
     "Limpiar sistema") clean ;;
     "Aplicar/validar symlinks") "$REPO_ROOT/link.sh" --fix ;;
 
-    "Instalar Neovim (snap)") install_neovim ;;
+    "Instalar Neovim") install_neovim ;;
     "Instalar OpenCode") install_opencode ;;
     "Instalar Kitty") install_kitty ;;
     "Instalar Alacritty") install_alacritty ;;
+    "Instalar Ghostty") install_ghostty ;;
+    "Instalar WezTerm") install_wezterm ;;
     "Instalar Zsh + Oh My Zsh") install_zsh ;;
     "Instalar Tmux") install_tmux ;;
     "Instalar Rofi") install_rofi ;;
@@ -509,7 +572,7 @@ do
     "Instalar Lazygit") install_lazygit ;;
     "Instalar Nerd Fonts") install_nerd_fonts ;;
 
-    "Instalar Spotify (snap)") install_spotify_snap ;;
+    "Instalar Spotify") install_spotify_snap ;;
 
     "Salir") exit 0 ;;
     *) warn "Opción inválida." ;;
