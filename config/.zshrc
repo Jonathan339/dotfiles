@@ -217,3 +217,6 @@ fpath+=${ZDOTDIR:-~}/.zsh_functions
 
 # Hermes Agent command
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
+
+# Added by codebase-memory-mcp install
+export PATH="/home/jonathan/.local/bin:$PATH"
