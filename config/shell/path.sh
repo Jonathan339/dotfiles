@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 export ANDROID_HOME="$HOME/Android/Sdk"
 export BUN_INSTALL="$HOME/.bun"
 export PNPM_HOME="$HOME/.local/share/pnpm"

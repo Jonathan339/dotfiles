@@ -16,7 +16,7 @@ usage() {
 
 preguntar_nombre() {
 	local resp default="${1:-demo}"
-	printf "${C}? ${R}Nombre del proyecto (${default}) ${C}› ${R}" >&2
+	printf '%s? %sNombre del proyecto (%s) %s› %s' "$C" "$R" "$default" "$C" "$R" >&2
 	read -r resp
 	[ -z "$resp" ] && resp="$default"
 	echo "$resp"
@@ -25,7 +25,7 @@ preguntar_nombre() {
 seleccionar() {
 	local titulo="$1" default="$2"
 	shift 2
-	local opciones=("$@") total=$# sel=0 i k n
+	local opciones=("$@") total=$# sel=0 i k
 	for i in "${!opciones[@]}"; do
 		[ "${opciones[$i]}" = "$default" ] && sel=$i
 	done
@@ -42,7 +42,7 @@ seleccionar() {
 				printf " ${R}%s${R}" "${opciones[$i]}" >&2
 			fi
 		done
-		printf "/${R}" >&2
+		printf '%s' "/${R}" >&2
 		IFS= read -r -s -n1 k
 		case "$k" in
 			$'\x1b')

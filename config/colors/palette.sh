@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # ==============================================================================
 # Solo Leveling Palette — Single Source of Truth
 # ==============================================================================
@@ -9,6 +10,8 @@
 #   config/colors/ghostty-colors
 # ==============================================================================
 
+# Las variables de abajo las consume scripts/generate-palette.sh (source): no son dead code.
+# shellcheck disable=SC2034
 PALETTE_BG='#252525'
 PALETTE_FG='#ffffff'
 PALETTE_CURSOR='#ffffff'
