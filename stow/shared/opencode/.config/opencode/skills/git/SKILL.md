@@ -39,4 +39,3 @@ Nunca commitear secretos: claves SSH, tokens, `service.json`, cookies, `.env`.
 
 - Dotfiles: `~/.dotfiles` — remoto SSH `github.com:Jonathan339/dotfiles.git`; rama de trabajo actual `dotfiles-layers`.
 - Los archivos reales de config viven en `config/` (stow los linkea); tras tocar configs, correr `make check`.
-- Copia en `Disco exter/.dotfiles` (exFAT): los `D` de symlinks son estado normal ahí; no commitear ni pushear desde esa copia sin revisar.
