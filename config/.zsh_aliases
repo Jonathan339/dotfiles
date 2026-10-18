@@ -39,3 +39,12 @@ alias em='androidemulator'
 # Proyectos C/C++
 # -------------------------
 alias mkc='~/.dotfiles/scripts/mkc.sh'
+
+# -------------------------
+# IA local (Ollama sobre Intel Arc B570)
+# -------------------------
+alias ai='ollama run gemma3:12b'
+alias ai-fast='ollama run qwen3:8b'
+alias ai-models='ollama list'
+alias ai-gpu='ollama ps'
+alias ai-svc='systemctl status ollama --no-pager'
