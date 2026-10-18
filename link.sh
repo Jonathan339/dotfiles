@@ -210,6 +210,15 @@ resolve_conflicts() {
     local relative="${entry#"$layer_pkg_dir/"}"
     local target="$HOME/$relative"
 
+    # Si el destino cae físicamente dentro del repo (stow plegó un directorio,
+    # p.ej. ~/.config/rofi → stow/shared/rofi/...), son los archivos fuente:
+    # no son un conflicto y no hay que moverlos ni borrarlos.
+    local real_parent
+    real_parent="$(readlink -f "$(dirname "$target")" 2>/dev/null || true)"
+    if [[ -n "$real_parent" ]] && [[ "$real_parent" == "$REPO_ROOT"/* ]]; then
+      continue
+    fi
+
     # Proteger directorios padre nunca moverlos
     local skip=false
     for protected in "${protected_dirs[@]}"; do
