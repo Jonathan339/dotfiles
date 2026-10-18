@@ -22,7 +22,11 @@ Editar la config = editar el archivo real en `stow/…` (el paquete `opencode` g
 
 ## Config actual
 
-- `opencode.json`: provider `ollama` local (`http://localhost:11434/v1`, modelo `phi3.5:latest`), `mcp.codebase-memory-mcp` (local, binario `~/.local/bin/codebase-memory-mcp`), `mcp.servers.context7` (remoto), `permission: "allow"`.
+- `opencode.json`: provider `ollama` con **solo overrides** (`capabilities` + `limit` 8192/4096) para `qwen3.5:9b`, `qwen3.5:4b` y `gemma4:12b`; `mcp.codebase-memory-mcp` (local, binario `~/.local/bin/codebase-memory-mcp`), `mcp.servers.context7` (remoto), `permission: "allow"`.
+- **Ollama se autodescubre en V2**: OpenCode sondea `127.0.0.1:11434` y agrega los modelos con capability `completion` sin declarar `settings.baseURL`. Por eso el `providers` solo lleva los overrides.
+- **Por qué se declaran los límites**: el modelo descubierto hereda el ctx máximo del modelo (p.ej. `deepseek-r1:latest` → 131072), no el cap real del servicio (`OLLAMA_CONTEXT_LENGTH=8192`). Sin el override OpenCode presupuesta 128k y rompe en sesiones largas.
+- Verificar la config sin reiniciar el servicio: `opencode api --standalone get /api/model` (server privado, no corta la sesión) y filtrar por `providerID=="ollama"`.
+- Tras editar `opencode.json` sí hace falta `opencode service restart` para que el servicio compartido recargue.
 - `opencode.jsonc`: `shell: /bin/zsh` + la **misma** declaración de `codebase-memory-mcp`.
 - Rareza conocida: el MCP está declarado **dos veces** (en ambos archivos). Consolidación pendiente: dejar una sola declaración, preferentemente bajo `mcp.servers`.
 - Plugins: `session-exporter.js` (propio) y `cbm-augment.ts` (instalador CBM, `hook-augment`).
