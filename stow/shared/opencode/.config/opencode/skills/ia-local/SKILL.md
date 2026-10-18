@@ -26,7 +26,7 @@ Si la config del servicio falla: `sudo ~/.dotfiles/scripts/setup-ollama-arc.sh` 
 | GPU | Intel Arc B570 (BMG G21), 10 GB, driver `xe`, Vulkan 1.4 | Es el motor; la iGPU Radeon Vega (512 MB, `gfx90c`) se descarta a propósito |
 | Ollama | `ollama` + `ollama-vulkan` (cachyos-extra-v3) | `ollama-vulkan` aporta `libggml-vulkan.so`; sin él no se usa la Arc |
 | Servicio | `ollama.service` del sistema (usuario `ollama`) + drop-in | El unit tiene `ProtectHome=yes`, por eso los modelos van a `/var/lib/ollama` |
-| Modelos | `qwen3.5:9b` (daily driver), `qwen3.5:4b` (rápido) y `gemma4:12b` (máxima calidad, con MTP) | Los tres con visión + tools |
+| Modelos | `qwen3.5:9b` (daily driver), `qwen3.5:4b` (rápido), `gemma4:12b` (máxima calidad, con MTP) y `deepseek-r1:latest` (razonamiento, **sin tools**) | Los tres primeros con visión + tools; el R1 solo chat (ver gotchas) |
 | No instalado | `llama.cpp`/`ggml-vulkan`, `whisper-cpp` | Decisión explícita: solo Ollama por ahora |
 
 ## Configuración esperada del servicio
@@ -46,9 +46,11 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 | `qwen3.5:4b` | 3,2 GB | 100 % GPU | ~70 (prefill 138) |
 | `qwen3.5:9b` | 5,6 GB | 100 % GPU | ~45 (prefill 108) |
 | `gemma4:12b` | 7,3 GB | 48/49 capas en GPU | ~32 (prefill 192) |
+| `deepseek-r1:latest` | 5,7 GB | 100 % GPU | ~51 (prefill 96) |
 
 - Hasta 9B Q4 entra entero en la Arc. El 12B deja 1 capa + KV en CPU, pero **igual anda más rápido que los 12B viejos** gracias al MTP.
 - `gemma4:12b` trae decodificación especulativa nativa (`gemma4-assistant`, `draft-mtp`): `ollama ps` muestra el tamaño del draft (~905 MB), **no** del modelo completo. No confundirlo con una carga rota: el offload real está en el log (`load_tensors: offloaded 48/49 layers to GPU`).
+- `deepseek-r1:latest` (8.2B, Q4_K_M, sin visión) es el más rápido de los cuatro, pero **no sirve para tools**: Ollama no le inyecta las herramientas al prompt (ver gotchas).
 - Comparación histórica: `gemma3:12b` (Q4_K_M) daba 17 tok/s con 12 % en CPU; `qwen3:8b` ~50. Los sucesores mejoran ambos.
 - Si un modelo rinde la mitad de esto: sospechar otro proceso comiendo VRAM (juego, compositor), caída a CPU, o servicio sin el drop-in aplicado.
 - Bajar el contexto a 4096 no mejora el reparto (18,3 vs 17,1 tok/s): no vale la pena.
@@ -58,6 +60,7 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 - Cualquier cambio en `/etc/systemd` o paquetes necesita sudo: pedirlo al usuario, no intentar rodearlo.
 - El servicio corre como usuario `ollama`, no `jonathan`; `ollama pull` funciona igual (va por HTTP al daemon).
 - Un solo modelo cargado a la vez (`MAX_LOADED_MODELS=1`): cambiar de modelo recarga (10-35 s).
+- **Un `tools` en `ollama show` no garantiza tool-calling**: verificarlo con `journalctl -u ollama -b --no-pager | grep "template selection"`; si el modelo sale `selected=gguf_chat_template renderer=""` (y no `selected=renderer_parser`), las herramientas no se inyectan ni se parsean. Señal rápida contra `/v1/chat/completions`: al agregar la tool el `prompt_tokens` **no sube** (~21-34 en vez de ~295) y el modelo **confabula** la respuesta en vez de llamarla. Por esto `deepseek-r1:latest` está declarado con `capabilities.tools: false`.
 - Los nodos `/dev/dri/renderD*` están en 0666: no hace falta el grupo `render`.
 - Alias de shell en `config/.zsh_aliases`: `ai` (qwen3.5:9b), `ai-fast` (qwen3.5:4b), `ai-big` (gemma4:12b), `ai-models`, `ai-gpu`, `ai-svc`.
 - En OpenCode V2 el provider `ollama` se **autodescubre** en `127.0.0.1:11434`; en `opencode.json` solo van los overrides (`capabilities` + `limit` 8192/4096) porque el modelo descubierto hereda el ctx máximo del modelo (131072) y no el cap del servicio. Después de editarlo hace falta `opencode service restart`; para verificar sin cortar la sesión: `opencode api --standalone get /api/model`.
@@ -65,7 +68,7 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 
 ## Recetas
 
-**Agregar un modelo**: `ollama pull <modelo>` → `make ia` (verifica que Ollama y OpenCode lo vean) → declarar el **override** en `~/.config/opencode/opencode.json` (`providers.ollama.models` con `limit` 8192/4096; el `capabilities` lo infiere Ollama) → alias si hace falta → `opencode service restart` → commit.
+**Agregar un modelo**: `ollama pull <modelo>` → `make ia` (verifica que Ollama y OpenCode lo vean) → **verificar el soporte real de tools** (gotchas: la metadata puede mentir) → declarar el **override** en `~/.config/opencode/opencode.json` (`providers.ollama.models` con `limit` 8192/4096 y, si no hace tool-calling, `capabilities.tools: false`) → alias si hace falta → `opencode service restart` → commit.
 
 **Diagnóstico de lentitud**: `ollama ps` (reparto), `journalctl -u ollama -b --no-pager | grep "inference compute"` (GPU y VRAM), `scripts/ollama-check.sh --bench <modelo>` (tok/s).
 
