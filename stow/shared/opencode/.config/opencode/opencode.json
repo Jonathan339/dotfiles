@@ -1,82 +1,37 @@
 {
   "$schema": "https://opencode.ai/config.json",
-    "provider": {
-        "llamacpp": {
-            "npm": "@ai-sdk/openai-compatible",
-            "name": "llama.cpp (local)",
-            "options": {
-                "baseURL": "http://127.0.0.1:8080/v1"
-            },
-            "models": {
-                "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M": {
-                    "name": "DeepSeek R1 1.5B (local)",
-                    "limit": {
-                        "context": 16384,
-                        "output": 4096
-                    }
-                },
-                "DeepSeek-R1-0528-Qwen3-8B-Q4_K_M": {
-                    "name": "DeepSeek R1 0528 8B (local, oficial)",
-                    "limit": {
-                        "context": 8192,
-                        "output": 4096
-                    }
-                },
-                "DeepSeek-R1-Distill-Qwen-7B-Q4_K_M": {
-                    "name": "DeepSeek R1 7B (local)",
-                    "limit": {
-                        "context": 8192,
-                        "output": 4096
-                    }
-                },
-                "Qwen3-4B-Instruct-2507-Q4_K_M": {
-                    "name": "Qwen3 4B Instruct (local, default)",
-                    "limit": {
-                        "context": 16384,
-                        "output": 4096
-                    }
-                },
-                "Qwen3-4B-Thinking-2507-Q4_K_M": {
-                    "name": "Qwen3 4B Thinking (local)",
-                    "limit": {
-                        "context": 16384,
-                        "output": 4096
-                    }
-                }
-            }
-        },
-        "ollama": {
-            "npm": "@ai-sdk/ollama",
-            "name": "Ollama (local)",
-            "options": {
-                "baseURL": "http://localhost:11434/api"
-            },
-            "models": {
-                "llama2-uncensored:latest": {
-                    "name": "Llama2 Uncensored (ollama)",
-                    "limit": {
-                        "context": 4096,
-                        "output": 4096
-                    }
-                },
-                "UncensoredAi/diddy:latest": {
-                    "name": "Diddy (ollama)",
-                    "limit": {
-                        "context": 4096,
-                        "output": 4096
-                    }
-                }
-            }
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "phi3.5:latest": {
+          "name": "Phi 3.5 (fast)",
+          "limit": {
+            "context": 4096,
+            "output": 2048
+          }
         }
+      }
+    }
+  },
+  "mcp": {
+    "codebase-memory-mcp": {
+      "enabled": true,
+      "type": "local",
+      "command": [
+        "/home/jonathan/.local/bin/codebase-memory-mcp"
+      ]
     },
-    "mcp": {
-        "codebase-memory-mcp": {
-            "enabled": true,
-            "type": "local",
-            "command": [
-                "/home/jonathan/.local/bin/codebase-memory-mcp"
-            ]
-        }
-    },
-    "permission": "allow"
+    "servers": {
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
+      }
+    }
+  },
+  "permission": "allow"
 }

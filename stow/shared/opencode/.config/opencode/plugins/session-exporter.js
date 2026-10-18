@@ -4,7 +4,7 @@ import path from "node:path";
 
 const HOME = process.env.HOME;
 const DB = HOME + "/.local/share/opencode/opencode.db";
-const SESS_DIR = HOME + "/MEGA/Obsidian/Sesiones";
+const SESS_DIR = HOME + "/MEGA/Sesiones";
 const TAG = "sesion";
 
 function rows(sql) {
@@ -20,23 +20,43 @@ function formatDate(ms) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// Los tags se infieren del título de la sesión. Los patrones se evalúan contra
+// el título normalizado (minúsculas, sin acentos) para que "Estándar de C"
+// coincida igual que "estandar-de-c".
 const TAG_MAP = [
-  [/dotfiles|stow|rofi|sxhkd|keybinding|zsh|hyprland|xfce/, "linux-dotfiles"],
-  [/scraping|bun|cheerio|playwright/, "scraping"],
+  // Entorno de escritorio, shell y configuración
+  [/dotfiles|stow|rofi|sxhkd|keybinding|atajos?|\bzsh\b|bash|\balias\b|hyprland|hyperland|nvim|neovim|\btmux\b|wayland|xfce|escritorios|numix|icon.?theme|arch linux|configuraci|edici|simbolos|teclado|atajos/, "linux-dotfiles"],
+  // Arranque y kernel
+  [/grub|dual.?boot|arranque|kernel|out of memory|iniciar pc|\bswap\b/, "linux-boot"],
+  // Discos, archivos y descargas
+  [/usb|sandisk|disco|\biso\b|unrar|\brar\b|dorking|descargas|\bpdfs?\b|montaje|superblock|\/dev\/sd|partici|\bsdcard\b/, "archivos"],
+  // Web y React
+  [/react|expo|typescript|javascript|next\.?js|node_modules|\bnpm\b|webpack|vite|rollup|esbuild|metro|router|productions? \d/, "web-dev"],
+  // C
+  [/estandar de c|\bc (memory|estandar)\b|estructura.*\bc\b|en \bc\b|\bc\b (practica|estandar)|sdl3|tree-?sitter|makefile|proyecto c|conversion.*\bc\b|pulgadas/, "c-dev"],
+  // Scraping
+  [/scrap|playwright|cheerio|puppeteer|bun\b/, "scraping"],
+  // IA local
+  [/ollama|qwen|modelos? locales?|modelos? de ollama|\bllm\b|ia local|uncensored/, "ia-local"],
+  // IA generativa / imagen
+  [/deepnude|deepnude|deep.?learning|pix2pix|cyclegan|dcgan|stylegan|\bgans?\b|tensorflow|pytorch|stable.?diffusion|\bvae\b|style transfer|imagen a imagen|modelos? generativos?/, "ia-generativa"],
+  // Aplicaciones de escritorio
+  [/firefox|alacritty|kitty|wezterm|zenity|steam|dependencia|sld3|reproductor/, "apps"],
+  // Vault
   [/obsidian|vault|memoria|sesiones|recuerdas/, "obsidian-vault"],
-  [/steam|zenity|dependencia/, "apps"],
-  [/c (memory|estándar)|estandar-de-c|tree-sitter|estructura.*c|makefile|proyecto c/, "c-dev"],
-  [/usb|sandisk|disco|iso|unrar|rar|dorking/, "archivos"],
+  // Contenido
   [/animeflv|anime|hentaila/, "anime"],
 ];
-const NSFW_RE = /hentai|hentaila|porn|jxporn|nsfw|myfans|fantia|rule34|r34|xvideos/;
-const NSFW_TOOLS = ["websearch", "webfetch", "browse"];
+const NSFW_RE = /\b(hentai|hentaila|porn|jxporn|nsfw|myfans|fantia|rule34|r34|xvideos|xhamster|deepnude|deepnude|deepnude|onlyfans)\b/;
 function isNsfw(text) {
   return NSFW_RE.test(text.toLowerCase());
 }
+function normalize(text) {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 function inferTags(title) {
   const tags = [TAG];
-  const t = title.toLowerCase();
+  const t = normalize(title);
   for (const [re, tag] of TAG_MAP) if (re.test(t) && !tags.includes(tag)) tags.push(tag);
   return tags;
 }
@@ -65,10 +85,34 @@ function firstUserMessage(id) {
   return "";
 }
 
+// Saludos y mensajes vacíos no describen una sesión. Si el primer mensaje del
+// usuario es un saludo, se busca el primer mensaje con contenido real para que
+// el título y el nombre del archivo describan el tema y no "hola".
+const TRIVIAL = /^(hola|holis|hey|buenas|buenos d[ií]as|buenas tardes|que tal|que necesitas|saludo|nnm|test|prueba|ok|oka|gracias|xd|jeje|hi|hello|hey there|good morning|adios|chao|listo|dale|si|claro|vamos|probando|prob[aá]ndolo)[\s!?.¡¿]*$/i;
+function firstSubstantiveMessage(id) {
+  const msgs = rows(`SELECT id FROM message WHERE session_id='${id}' ORDER BY time_created;`);
+  for (const mid of msgs) {
+    let role = "";
+    const d = one(`SELECT data FROM message WHERE id='${mid}';`);
+    try { role = JSON.parse(d).role; } catch { continue; }
+    if (role !== "user") continue;
+    const parts = rows(`SELECT data FROM part WHERE message_id='${mid}' ORDER BY time_created;`);
+    for (const p of parts) {
+      let pr;
+      try { pr = JSON.parse(p); } catch { continue; }
+      if (pr.type !== "text" || !pr.text || !pr.text.trim()) continue;
+      const raw = pr.text.trim();
+      // Un saludo suelto no cuenta; sí cuenta si viene seguido de algo más.
+      if (TRIVIAL.test(raw)) continue;
+      return raw;
+    }
+  }
+  return "";
+}
 function deriveTitle(id, title) {
   let t = (title || "").trim();
-  if (/^new session/i.test(t) || t.length < 4) {
-    const fu = firstUserMessage(id);
+  if (/^new session/i.test(t) || t.length < 4 || TRIVIAL.test(t)) {
+    const fu = firstSubstantiveMessage(id) || firstUserMessage(id);
     t = fu ? fu.replace(/[\n\r]+/g, " ").slice(0, 80) : "Sesión sin título";
   }
   return t;
@@ -102,7 +146,10 @@ function renderSession(id, title, directory, tCreated, tUpdated, agent, parentMd
   const filename = `${date}_${clean}.md`;
   const tags = inferTags(cleanTitle);
   const nsfwFlag = isNsfw(cleanTitle);
-  let allText = "";
+  // Solo el texto del Usuario indica el tema de la sesión. Incluir la respuesta
+  // del Asistente producía falsos positivos: cualquier sesión que escribiera la
+  // palabra "nsfw" (p. ej. al editar este mismo exportador) quedaba etiquetada.
+  let userText = "";
   const blocks = [];
   const msgs = rows(`SELECT id FROM message WHERE session_id='${id}' ORDER BY time_created;`);
   for (const mid of msgs) {
@@ -116,19 +163,18 @@ function renderSession(id, title, directory, tCreated, tUpdated, agent, parentMd
       try { pr = JSON.parse(p); } catch { continue; }
       if (pr.type === "text" && pr.text) {
         texts.push(pr.text.trim());
-        allText += pr.text + "\n";
+        if (role === "user") userText += pr.text + "\n";
       }
       else if (pr.type === "tool" && pr.tool) {
         const input = JSON.stringify(pr.state?.input || {});
         const s = pr.state?.status === "completed" ? "" : (pr.state?.status || "");
         tools.push(`\`${pr.tool}\` ${s} ${input.length > 90 ? input.slice(0, 90) + "…" : input}`);
-        if (NSFW_TOOLS.includes(pr.tool)) allText += input + "\n";
       }
     }
     if (texts.length) blocks.push(`## ${role === "user" ? "Usuario" : role === "assistant" ? "Asistente" : role}\n\n${texts.join("\n\n")}`);
     if (tools.length) blocks.push(`<details><summary>Herramientas (${tools.length})</summary>\n\n${tools.map((t) => "- " + t).join("\n")}\n\n</details>`);
   }
-  if (isNsfw(allText) || nsfwFlag) tags.push("nsfw");
+  if (nsfwFlag || isNsfw(userText)) tags.push("nsfw");
   const rels = relLinks(filename, tags);
   let md = `---
 tags:
