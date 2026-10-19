@@ -7,14 +7,15 @@ TERM = "alacritty"
 opacity = 1.0
 decorations = "full"
 dynamic_padding = false
-dimensions = { columns = 141, lines = 42 }
+# 150x30 @ 11pt entra completo en 1366x768 (celda ~9x23 px + título)
+dimensions = { columns = 150, lines = 30 }
 
 [window.padding]
 x = 2
 y = 2
 
 [font]
-size = 12
+size = 11
 
 [font.normal]
 family = "MesloLGL Nerd Font"
