@@ -1,3 +1,4 @@
+export PATH="$HOME/.local/bin:$PATH"
 # shellcheck shell=bash
 # =========================
 #  .bashrc optimizado
@@ -117,4 +118,3 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 # cargo env (solo si existe: en Arch cargo viene del paquete rust, sin env propio)
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-export PATH="$HOME/.local/bin:$PATH"
