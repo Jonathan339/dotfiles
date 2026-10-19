@@ -26,7 +26,7 @@ Si la config del servicio falla: `sudo ~/.dotfiles/scripts/setup-ollama-arc.sh` 
 | GPU | Intel Arc B570 (BMG G21), 10 GB, driver `xe`, Vulkan 1.4 | Es el motor; la iGPU Radeon Vega (512 MB, `gfx90c`) se descarta a propósito |
 | Ollama | `ollama` + `ollama-vulkan` (cachyos-extra-v3) | `ollama-vulkan` aporta `libggml-vulkan.so`; sin él no se usa la Arc |
 | Servicio | `ollama.service` del sistema (usuario `ollama`) + drop-in | El unit tiene `ProtectHome=yes`, por eso los modelos van a `/var/lib/ollama` |
-| Modelos | `qwen3.5:9b` (daily driver), `qwen3.5:4b` (rápido), `gemma4:12b` (máxima calidad, con MTP) y `deepseek-r1:latest` (razonamiento, **sin tools**) | Los tres primeros con visión + tools; el R1 solo chat (ver gotchas) |
+| Modelos | `qwen3.5:9b` (daily driver), `qwen3.5:4b` (rápido), `gemma4:12b` (máxima calidad, con MTP), `deepseek-r1:latest` (razonamiento, **sin tools**) y `fredrezones55/Gemma-4-Uncensored-HauhauCS-Aggressive:latest` (sin censura) | Con visión + tools salvo el R1, que es solo chat (ver gotchas). El sin censura de referencia es el Gemma-4-Uncensored (8B): los demás se probaron y se descartaron |
 | No instalado | `llama.cpp`/`ggml-vulkan`, `whisper-cpp` | Decisión explícita: solo Ollama por ahora |
 
 ## Configuración esperada del servicio
@@ -47,10 +47,12 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 | `qwen3.5:9b` | 5,6 GB | 100 % GPU | ~45 (prefill 108) |
 | `gemma4:12b` | 7,3 GB | 48/49 capas en GPU | ~32 (prefill 192) |
 | `deepseek-r1:latest` | 5,7 GB | 100 % GPU | ~51 (prefill 96) |
+| `Gemma-4-Uncensored` (8B) | 3,3 GB | 100 % GPU | ~61 (prefill 116) |
 
 - Hasta 9B Q4 entra entero en la Arc. El 12B deja 1 capa + KV en CPU, pero **igual anda más rápido que los 12B viejos** gracias al MTP.
 - `gemma4:12b` trae decodificación especulativa nativa (`gemma4-assistant`, `draft-mtp`): `ollama ps` muestra el tamaño del draft (~905 MB), **no** del modelo completo. No confundirlo con una carga rota: el offload real está en el log (`load_tensors: offloaded 48/49 layers to GPU`).
-- `deepseek-r1:latest` (8.2B, Q4_K_M, sin visión) es el más rápido de los cuatro, pero **no sirve para tools**: Ollama no le inyecta las herramientas al prompt (ver gotchas).
+- `deepseek-r1:latest` (8.2B, Q4_K_M, sin visión) es el más rápido de los cuatro originales, pero **no sirve para tools**: Ollama no le inyecta las herramientas al prompt (ver gotchas).
+- `Gemma-4-Uncensored` (8B, gemma4, `renderer_parser`) es hoy **el más rápido de los modelos con tools** (60,7 tok/s) y entra entero en la Arc: es el sin censura de referencia.
 - Comparación histórica: `gemma3:12b` (Q4_K_M) daba 17 tok/s con 12 % en CPU; `qwen3:8b` ~50. Los sucesores mejoran ambos.
 - Si un modelo rinde la mitad de esto: sospechar otro proceso comiendo VRAM (juego, compositor), caída a CPU, o servicio sin el drop-in aplicado.
 - Bajar el contexto a 4096 no mejora el reparto (18,3 vs 17,1 tok/s): no vale la pena.
@@ -65,6 +67,15 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 - Alias de shell en `config/.zsh_aliases`: `ai` (qwen3.5:9b), `ai-fast` (qwen3.5:4b), `ai-big` (gemma4:12b), `ai-models`, `ai-gpu`, `ai-svc`.
 - En OpenCode V2 el provider `ollama` se **autodescubre** en `127.0.0.1:11434`; en `opencode.json` solo van los overrides (`capabilities` + `limit` 8192/4096) porque el modelo descubierto hereda el ctx máximo del modelo (131072) y no el cap del servicio. Después de editarlo hace falta `opencode service restart`; para verificar sin cortar la sesión: `opencode api --standalone get /api/model`.
 - `make lint` corre shellcheck sobre `scripts/*.sh`, `install.sh`, `link.sh`, `check.sh`, `config/shell/path.sh` y `config/colors/palette.sh`: hoy pasa limpio, mantenerlo así al tocar shell.
+
+## Probados y descartados (18/10/2026)
+
+Se probaron modelos "sin censura" y se borraron; no volver a bajarlos sin motivo:
+
+- `UncensoredAi/diddy:latest` (llama 1.5B, 955 MB): declara `tools` pero cae en `selected=go_template renderer=""` → **no inyecta ni parsea herramientas**.
+- `wizard-vicuna-uncensored:latest` (7B Q4_0, Llama 2 de 2023): renderer viejo, sin tools ni visión, contexto nativo 4096; peor que el Gemma-4-Uncensored en todo. Se bajó y se borró el mismo día.
+
+Lección: para modelos cuyo contexto nativo es menor que el cap del servicio (ej. Llama 2 = 4096 vs `OLLAMA_CONTEXT_LENGTH=8192`), declarar `limit.context` en el tamaño nativo en `opencode.json` en vez de 8192.
 
 ## Recetas
 
