@@ -221,3 +221,6 @@ case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$P
 
 # Added by codebase-memory-mcp install
 export PATH="/home/jonathan/.local/bin:$PATH"
+
+# OpenClaw Completion
+[ -f '/home/jonathan/.openclaw/completions/openclaw.zsh' ] && source '/home/jonathan/.openclaw/completions/openclaw.zsh'
