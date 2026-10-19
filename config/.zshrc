@@ -216,11 +216,5 @@ fpath+=${ZDOTDIR:-~}/.zsh_functions
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
-# Hermes Agent command
-case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac
-
-# Added by codebase-memory-mcp install
-export PATH="/home/jonathan/.local/bin:$PATH"
-
 # OpenClaw Completion
 [ -f '/home/jonathan/.openclaw/completions/openclaw.zsh' ] && source '/home/jonathan/.openclaw/completions/openclaw.zsh'
