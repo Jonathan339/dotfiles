@@ -29,7 +29,7 @@ Editar la config = editar el archivo real en `stow/…` (el paquete `opencode` g
 - Tras editar `opencode.json` sí hace falta `opencode service restart` para que el servicio compartido recargue.
 - `opencode.jsonc`: `shell: /bin/zsh` + la **misma** declaración de `codebase-memory-mcp`.
 - Rareza conocida: el MCP está declarado **dos veces** (en ambos archivos). Consolidación pendiente: dejar una sola declaración, preferentemente bajo `mcp.servers`.
-- Plugins: `session-exporter.js` (propio) y `cbm-augment.ts` (instalador CBM, `hook-augment`).
+- Plugins: `cbm-augment.ts` (instalador CBM, `hook-augment`).
 
 ## Receta: MCP en `failed` con "client exact-build admission failed"
 
