@@ -38,6 +38,7 @@ detect_wm() {
   wm="${XDG_CURRENT_DESKTOP:-}"; wm="${wm%%:*}"; [[ -n "$wm" ]] && wm="${wm,,}"
   [[ -z "$wm" ]] && pgrep -x Hyprland &>/dev/null && wm="hyprland"
   [[ $wm != hyprland ]] && pgrep -x xfce4-session &>/dev/null && wm="xfce"
+  [[ -z "$wm" ]] && pgrep -x plasmashell &>/dev/null && wm="kde"
   [[ -n "$wm" ]] && [[ -d "$STOW_DIR/wm/$wm" ]] && { echo "$wm"; return 0; }
   return 1
 }
@@ -306,6 +307,21 @@ for f in ".config/opencode/AGENTS.md" ".config/opencode/opencode.json" ".config/
     check_symlink "$dest" "$label" || true
   fi
 done
+
+# KDE (capa wm/kde, paquete plasma)
+if [[ " ${LAYERS[*]} " == *" wm/kde "* ]]; then
+  echo ""
+  echo "━━━ KDE ━━━"
+  for f in ".config/kxkbrc" ".config/kcminputrc"; do
+    dest="$HOME/$f"
+    label="plasma → $dest"
+    if [[ ! -e "$dest" ]] && [[ ! -L "$dest" ]]; then
+      warn "No aplicado: $label"
+    else
+      check_symlink "$dest" "$label" || true
+    fi
+  done
+fi
 
 # ==============================================================================
 # Verificar que no haya archivos reales donde deberían ser symlinks

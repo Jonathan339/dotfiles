@@ -13,7 +13,7 @@ El repo tiene su propio `AGENTS.md` con más detalle: leerlo si la tarea es gran
 
 Precedencia (la última gana): `stow/shared` < `stow/os/<id>` < `stow/wm/<de>` < `stow/host/<hostname>`.
 `link.sh`/`check.sh` detectan solas la capa: OS por `/etc/os-release` (`ID`/`ID_LIKE`), WM por `XDG_CURRENT_DESKTOP` (fallback `pgrep Hyprland` / `pgrep xfce4-session`), host por `hostname`. **No hardcodees capas.**
-Hoy existen `shared` (alacritty, ghostty, kitty, nvim, opencode, rofi, shell, wezterm) y `wm` (hyprland). Repo multi-distro: `install.sh` soporta apt y pacman.
+Hoy existen `shared` (alacritty, ghostty, kitty, nvim, opencode, rofi, shell, wezterm) y `wm` (hyprland, kde). Repo multi-distro: `install.sh` soporta apt y pacman.
 
 ## Regla de oro: no edites un symlink intermedio
 

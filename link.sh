@@ -102,6 +102,9 @@ detect_wm() {
   if [[ $wm != hyprland ]] && pgrep -x xfce4-session &>/dev/null; then
     wm="xfce"
   fi
+  if [[ -z "$wm" ]] && pgrep -x plasmashell &>/dev/null; then
+    wm="kde"
+  fi
 
   if [[ -n "$wm" ]] && [[ -d "$STOW_DIR/wm/$wm" ]]; then
     echo "$wm"
@@ -152,6 +155,7 @@ REQUIREMENTS[hypr]="Hyprland"
 REQUIREMENTS[waybar]="waybar"
 REQUIREMENTS[dunst]="dunst"
 REQUIREMENTS[opencode]="opencode"
+REQUIREMENTS[plasma]="plasmashell"
 
 # Resuelve un paquete a su capa. Devuelve la ruta del paquete en la última capa
 # donde exista (precedencia: shared < os < wm < host).

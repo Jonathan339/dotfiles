@@ -14,6 +14,11 @@ alias rm='rm -rf'
 alias rmf='rm -rf'
 
 # -------------------------
+# Arch Linux (pacman)
+# -------------------------
+alias pi='sudo pacman -S --needed'
+
+# -------------------------
 # Git Shortcuts
 # -------------------------
 alias gs='git status'

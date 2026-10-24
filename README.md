@@ -22,12 +22,12 @@ Precedencia (la última gana): `shared` < `os/<so>` < `wm/<wm>` < `host/<hostnam
 `link.sh` y `check.sh` detectan las capas solas:
 
 - SO: `/etc/os-release` (`ID` / `ID_LIKE`).
-- Escritorio: `XDG_CURRENT_DESKTOP` (con fallback a `pgrep Hyprland` / `pgrep xfce4-session`).
+- Escritorio: `XDG_CURRENT_DESKTOP` (con fallback a `pgrep Hyprland` / `pgrep xfce4-session` / `pgrep plasmashell`).
 - Host: `hostname`.
 
 Los archivos reales viven en `config/`; dentro de `stow/` hay symlinks hacia `config/`
 (los mantiene el repo). Los paquetes que no tienen contraparte en `config/`
-(`rofi`, `opencode`, `hypr`, `waybar`, `dunst`) viven íntegros dentro de `stow/`.
+(`rofi`, `opencode`, `hypr`, `waybar`, `dunst`, `kde`) viven íntegros dentro de `stow/`.
 
 > ⚠️ El repo necesita un filesystem con soporte de symlinks (ext4, btrfs, xfs…).
 > En exFAT/NTFS/FAT los symlinks internos no se pueden materializar y el checkout queda incompleto.

@@ -1,0 +1,14 @@
+[Layout]
+DisplayNames=
+LayoutList=latam
+LayoutLoopCount=-1
+Model=pc105
+Options=
+ResetOldOptions=false
+ShowFlag=false
+ShowLabel=true
+ShowLayoutIndicator=true
+ShowSingle=false
+SwitchMode=Global
+Use=true
+VariantList=

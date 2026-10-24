@@ -2,69 +2,7 @@
   "$schema": "https://opencode.ai/config.json",
   "providers": {
     "ollama": {
-      "name": "Ollama (local, Intel Arc B570)",
-      "models": {
-        "qwen3.5:9b": {
-          "name": "Qwen3.5 9B (local, texto+imagen)",
-          "capabilities": {
-            "tools": true,
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 8192,
-            "output": 4096
-          }
-        },
-        "qwen3.5:4b": {
-          "name": "Qwen3.5 4B (local, rápido)",
-          "capabilities": {
-            "tools": true,
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 8192,
-            "output": 4096
-          }
-        },
-        "gemma4:12b": {
-          "name": "Gemma 4 12B (local, calidad máxima)",
-          "capabilities": {
-            "tools": true,
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 8192,
-            "output": 4096
-          }
-        },
-        "fredrezones55/Gemma-4-Uncensored-HauhauCS-Aggressive:latest": {
-          "name": "Gemma 4 8B Uncensored (local, sin filtros)",
-          "capabilities": {
-            "tools": true,
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 8192,
-            "output": 4096
-          }
-        },
-        "deepseek-r1:latest": {
-          "name": "DeepSeek R1 8B (local, razonamiento SIN tools)",
-          "capabilities": {
-            "tools": false,
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 8192,
-            "output": 4096
-          }
-        }
-      }
+      "name": "Ollama (local, Intel Arc B570)"
     }
   },
   "mcp": {
