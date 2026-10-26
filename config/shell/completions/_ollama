@@ -1,0 +1,66 @@
+#compdef ollama
+# Autocompletado de zsh para Ollama: subcomandos, modelos instalados y flags.
+# La lista de modelos se cachea 1 minuto en ~/.cache/zsh/ollama-models
+# para que TAB sea instantáneo incluso con el daemon lento.
+
+_ollama_modelos() {
+  emulate -L zsh
+  setopt local_options null_glob
+  local cache="$HOME/.cache/zsh/ollama-models"
+
+  if [[ ! -f $cache || -z ${cache}(mm-1) ]]; then
+    mkdir -p "${cache:h}"
+    ollama list 2>/dev/null | awk 'NR > 1 && NF { print $1 }' >| "$cache" 2>/dev/null
+  fi
+
+  local -a modelos
+  modelos=("${(@f)$(<"$cache" 2>/dev/null)}")
+  modelos=(${modelos:#})
+  (( ${#modelos} )) && compadd -a modelos
+}
+
+_ollama() {
+  local -a comandos
+  comandos=(
+    'serve:Inicia el servidor'
+    'run:Ejecuta un modelo'
+    'stop:Descarga un modelo de la memoria'
+    'show:Muestra la información de un modelo'
+    'list:Lista los modelos instalados'
+    'ps:Modelos cargados en memoria'
+    'pull:Descarga un modelo del registro'
+    'push:Sube un modelo al registro'
+    'rm:Elimina un modelo'
+    'cp:Copia un modelo'
+    'create:Crea un modelo desde un Modelfile'
+    'signin:Inicia sesión en ollama.com'
+    'signout:Cierra la sesión'
+    'launch:Abre el menú de Ollama'
+    'help:Muestra la ayuda'
+  )
+
+  if (( CURRENT == 2 )); then
+    _describe -t comandos 'comando ollama' comandos
+    return
+  fi
+
+  case ${words[2]} in
+    run|stop|show|rm|cp|push)
+      _ollama_modelos
+      ;;
+    create)
+      _arguments '-f[Modelfile a usar]:archivo:_files'
+      ;;
+    pull)
+      _message 'nombre del modelo remoto (ej. gemma4:e4b)'
+      ;;
+    list|ps|serve|signin|signout|launch|help)
+      _message 'sin argumentos'
+      ;;
+    *)
+      _ollama_modelos
+      ;;
+  esac
+}
+
+_ollama "$@"

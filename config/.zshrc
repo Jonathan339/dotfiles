@@ -219,3 +219,9 @@ fpath+=${ZDOTDIR:-~}/.zsh_functions
 
 # OpenClaw Completion
 [ -f '/home/jonathan/.openclaw/completions/openclaw.zsh' ] && source '/home/jonathan/.openclaw/completions/openclaw.zsh'
+
+# Ollama: completado de subcomandos y modelos instalados (config/shell/completions/_ollama)
+if [[ -d "$HOME/.config/shell/completions" ]]; then
+  (( ${fpath[(I)$HOME/.config/shell/completions]} )) || fpath=("$HOME/.config/shell/completions" $fpath)
+  (( $+functions[compdef] )) && compdef _ollama ollama
+fi

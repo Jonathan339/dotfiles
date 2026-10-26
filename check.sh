@@ -71,6 +71,7 @@ declare -A SHELL_LINKS=(
   [".tmux.conf"]="$HOME/.tmux.conf"
   [".gitconfig"]="$HOME/.gitconfig"
   [".config/shell/path.sh"]="$HOME/.config/shell/path.sh"
+  [".config/shell/completions/_ollama"]="$HOME/.config/shell/completions/_ollama"
 )
 
 # Nvim (directorio)
