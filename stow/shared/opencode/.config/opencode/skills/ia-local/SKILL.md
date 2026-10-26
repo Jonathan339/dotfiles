@@ -13,7 +13,7 @@ Para lo general de OpenCode está el skill `opencode-local`; acá va la IA local
 make ia          # desde ~/.dotfiles: inventario, config, GPU y opencode (solo lectura)
 make ia-bench    # ídem + mide tok/s del modelo cargado (~15-40 s, carga el modelo)
 
-~/.dotfiles/scripts/ollama-check.sh --bench gemma4:12b   # medir un modelo puntual
+~/.dotfiles/scripts/ollama-check.sh --bench s1gnature/gemma4-uncensored-mtp:e2b-q4_k_m   # medir un modelo puntual
 ```
 
 Esperado: `0 error(es)`. Un `[WARN]` de "ningún modelo cargado" es normal (se carga al usar).
@@ -26,7 +26,7 @@ Si la config del servicio falla: `sudo ~/.dotfiles/scripts/setup-ollama-arc.sh` 
 | GPU | Intel Arc B570 (BMG G21), 10 GB, driver `xe`, Vulkan 1.4 | Es el motor; la iGPU Radeon Vega (512 MB, `gfx90c`) se descarta a propósito |
 | Ollama | `ollama` + `ollama-vulkan` (cachyos-extra-v3) | `ollama-vulkan` aporta `libggml-vulkan.so`; sin él no se usa la Arc |
 | Servicio | `ollama.service` del sistema (usuario `ollama`) + drop-in | El unit tiene `ProtectHome=yes`, por eso los modelos van a `/var/lib/ollama` |
-| Modelos | `qwen3.5:9b` (daily driver), `qwen3.5:4b` (rápido), `gemma4:12b` (máxima calidad, con MTP), `deepseek-r1:latest` (razonamiento, **sin tools**) y `fredrezones55/Gemma-4-Uncensored-HauhauCS-Aggressive:latest` (sin censura) | Con visión + tools salvo el R1, que es solo chat (ver gotchas). El sin censura de referencia es el Gemma-4-Uncensored (8B): los demás se probaron y se descartaron |
+| Modelos | `qwen3.5:0.8b` (rápido/liviano), `s1gnature/gemma4-uncensored-mtp:e2b-q4_k_m` (daily driver, sin censura) y `…:e2b-q8_0` (misma familia, más precisión) | Los tres con tools reales verificados (`renderer_parser`) y 100 % en GPU. Se borraron los modelos sin visión/calidad que no entraban en el presupuesto de VRAM (ver "Probados y descartados") |
 | No instalado | `llama.cpp`/`ggml-vulkan`, `whisper-cpp` | Decisión explícita: solo Ollama por ahora |
 
 ## Configuración esperada del servicio
@@ -35,25 +35,22 @@ Drop-in `/etc/systemd/system/ollama.service.d/override.conf`, generado por `scri
 
 ```
 OLLAMA_FLASH_ATTENTION=1     OLLAMA_KV_CACHE_TYPE=q8_0
-OLLAMA_CONTEXT_LENGTH=8192   OLLAMA_MAX_LOADED_MODELS=1
+OLLAMA_CONTEXT_LENGTH=32768  OLLAMA_MAX_LOADED_MODELS=1
 OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 ```
 
-## Rendimiento de referencia (medido el 18/10/2026)
+## Rendimiento de referencia (medido el 25/10/2026)
 
-| Modelo | VRAM | Reparto | tok/s |
-|---|---|---|---|
-| `qwen3.5:4b` | 3,2 GB | 100 % GPU | ~70 (prefill 138) |
-| `qwen3.5:9b` | 5,6 GB | 100 % GPU | ~45 (prefill 108) |
-| `gemma4:12b` | 7,3 GB | 48/49 capas en GPU | ~32 (prefill 192) |
-| `deepseek-r1:latest` | 5,7 GB | 100 % GPU | ~51 (prefill 96) |
-| `Gemma-4-Uncensored` (8B) | 3,3 GB | 100 % GPU | ~61 (prefill 116) |
+| Modelo | Disco | tok/s (decode) | Prefill (3,4k) | Reparto |
+|---|---|---|---|---|
+| `qwen3.5:0.8b` (752M, Q8_0) | 1,3 GB | 124–137 | 3.885 | 100 % GPU |
+| `…e2b-q4_k_m` (4,65B, Q4_K_M) | 3,6 GB | 104–112 | 654 | 100 % GPU |
+| `…e2b-q8_0` (4,65B, Q8_0) | 5,1 GB | 80–88 | 652 | 100 % GPU |
 
-- Hasta 9B Q4 entra entero en la Arc. El 12B deja 1 capa + KV en CPU, pero **igual anda más rápido que los 12B viejos** gracias al MTP.
-- `gemma4:12b` trae decodificación especulativa nativa (`gemma4-assistant`, `draft-mtp`): `ollama ps` muestra el tamaño del draft (~905 MB), **no** del modelo completo. No confundirlo con una carga rota: el offload real está en el log (`load_tensors: offloaded 48/49 layers to GPU`).
-- `deepseek-r1:latest` (8.2B, Q4_K_M, sin visión) es el más rápido de los cuatro originales, pero **no sirve para tools**: Ollama no le inyecta las herramientas al prompt (ver gotchas).
-- `Gemma-4-Uncensored` (8B, gemma4, `renderer_parser`) es hoy **el más rápido de los modelos con tools** (60,7 tok/s) y entra entero en la Arc: es el sin censura de referencia.
-- Comparación histórica: `gemma3:12b` (Q4_K_M) daba 17 tok/s con 12 % en CPU; `qwen3:8b` ~50. Los sucesores mejoran ambos.
+- **Techo de VRAM**: 9,9 GiB totales, ~8,4–8,5 GiB disponibles (el compositor come ~1,4 GiB). Un archivo de hasta **~7 GB entra 100 % en GPU**; 7–8 GB deja 1–3 capas en CPU (~25–35 tok/s, usable); >9 GB ya no es fluido.
+- Las bandas de ±10 % son reales entre corridas (clocks/temperatura): no perseguir diferencias menores a eso.
+- **Prefill importa con contexto largo**: la familia Qwen lee prompts ~2,4× más rápido que Gemma (1.393 vs ~570 tok/s con 3,4k tokens en el 4B/7B). En un agente con 32k de contexto eso es la diferencia entre esperar 6 s o 14 s antes del primer token.
+- Los modelos con MTP (`gemma4-*`, `qwen3.5:0.8b`) traen decodificación especulativa (`draft-mtp`): `ollama ps` muestra el tamaño del draft (~375–484 MB), **no** del modelo completo. El offload real está en el log (`load_tensors: offloaded 33/33 layers to GPU`).
 - Si un modelo rinde la mitad de esto: sospechar otro proceso comiendo VRAM (juego, compositor), caída a CPU, o servicio sin el drop-in aplicado.
 - Bajar el contexto a 4096 no mejora el reparto (18,3 vs 17,1 tok/s): no vale la pena.
 
@@ -62,24 +59,30 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 - Cualquier cambio en `/etc/systemd` o paquetes necesita sudo: pedirlo al usuario, no intentar rodearlo.
 - El servicio corre como usuario `ollama`, no `jonathan`; `ollama pull` funciona igual (va por HTTP al daemon).
 - Un solo modelo cargado a la vez (`MAX_LOADED_MODELS=1`): cambiar de modelo recarga (10-35 s).
-- **Un `tools` en `ollama show` no garantiza tool-calling**: verificarlo con `journalctl -u ollama -b --no-pager | grep "template selection"`; si el modelo sale `selected=gguf_chat_template renderer=""` (y no `selected=renderer_parser`), las herramientas no se inyectan ni se parsean. Señal rápida contra `/v1/chat/completions`: al agregar la tool el `prompt_tokens` **no sube** (~21-34 en vez de ~295) y el modelo **confabula** la respuesta en vez de llamarla. Por esto `deepseek-r1:latest` está declarado con `capabilities.tools: false`.
+- **Un `tools` en `ollama show` no garantiza tool-calling**: verificarlo con `journalctl -u ollama -b --no-pager | grep "template selection"`; si el modelo sale `selected=gguf_chat_template renderer=""` (y no `selected=renderer_parser`), las herramientas no se inyectan ni se parsean. Señal rápida contra `/v1/chat/completions`: al agregar la tool el `prompt_tokens` **no sube** (~21-34 en vez de ~295) y el modelo **confabula** la respuesta en vez de llamarla. Los tres modelos actuales sí usan `renderer_parser`; los descartados por esto están en "Probados y descartados".
 - Los nodos `/dev/dri/renderD*` están en 0666: no hace falta el grupo `render`.
-- Alias de shell en `config/.zsh_aliases`: `ai` (qwen3.5:9b), `ai-fast` (qwen3.5:4b), `ai-big` (gemma4:12b), `ai-models`, `ai-gpu`, `ai-svc`.
-- En OpenCode V2 el provider `ollama` se **autodescubre** en `127.0.0.1:11434`; en `opencode.json` solo van los overrides (`capabilities` + `limit` 8192/4096) porque el modelo descubierto hereda el ctx máximo del modelo (131072) y no el cap del servicio. Después de editarlo hace falta `opencode service restart`; para verificar sin cortar la sesión: `opencode api --standalone get /api/model`.
+- Alias de shell en `config/.zsh_aliases`: solo informativos (`ai-models`, `ai-gpu`, `ai-svc`). No hay atajos `ai`/`ai-fast`/`ai-big` desde 25/10/2026: apuntaban a modelos borrados y se eliminaron. Lanzar un modelo es `ollama run <modelo>`.
+- **Autocompletado de zsh** en `config/shell/completions/_ollama`: completa subcomandos y los modelos instalados (`run`, `show`, `rm`, `stop`, `cp`, `push`). Cachea la lista 1 minuto en `~/.cache/zsh/ollama-models`; si sacás un modelo nuevo y no aparece, borrá ese archivo. Se activa al final de `config/.zshrc` (`fpath` + `compdef`), después de `compinit`.
+- En OpenCode V2 el provider `ollama` se **autodescubre** en `127.0.0.1:11434`; en `opencode.json` solo van los overrides (`capabilities` + `limit` 32768/4096) porque el modelo descubierto hereda el ctx máximo del modelo (131072/262144) y no el cap del servicio. Después de editarlo hace falta `opencode service restart`; para verificar sin cortar la sesión: `opencode api --standalone get /api/model`.
 - `make lint` corre shellcheck sobre `scripts/*.sh`, `install.sh`, `link.sh`, `check.sh`, `config/shell/path.sh` y `config/colors/palette.sh`: hoy pasa limpio, mantenerlo así al tocar shell.
 
-## Probados y descartados (18/10/2026)
+## Probados y descartados
 
-Se probaron modelos "sin censura" y se borraron; no volver a bajarlos sin motivo:
+Se probaron modelos y se borraron; no volver a bajarlos sin motivo:
 
+- `bonsai-2:9b` (9B, **Q2_0**, 3,2 GB): 26 tok/s con todo en GPU, la mitad que el resto. La cuantización a 2 bits tiene kernels pobres en Vulkan y encima degrada la calidad. Borrado el 25/10/2026.
+- `gemma4:e4b`/`gemma4:latest` (7,5B Q4_K_M), `Gemma-4-E4B-Uncensored Q3_K_M` y `Qwen3.5-4B-Uncensored Q8_0`: borrados el 25/10/2026 al recortar el set a los tres modelos rápidos. Ojo con datos medidos: `gemma4:e4b` daba ~62 tok/s y prefill 565; el Qwen3.5-4B-Uncensored Q8 era el más lento generando (57) pero el mejor leyendo contexto (prefill 1.393).
+- `Qwen3.5-4B-Uncensored-HauhauCS-Aggressive:Q8_0` (HF): declaraba `tools` en la metadata pero caía en `selected=gguf_chat_template renderer=""` → **nunca tuvo tool-calling real**, aunque `opencode.json` lo declaraba `tools: true`. Ejemplo de manual del gotcha de abajo.
 - `UncensoredAi/diddy:latest` (llama 1.5B, 955 MB): declara `tools` pero cae en `selected=go_template renderer=""` → **no inyecta ni parsea herramientas**.
 - `wizard-vicuna-uncensored:latest` (7B Q4_0, Llama 2 de 2023): renderer viejo, sin tools ni visión, contexto nativo 4096; peor que el Gemma-4-Uncensored en todo. Se bajó y se borró el mismo día.
+- `deepseek-r1:latest` (8.2B Q4_K_M): razona bien pero **sin tools** (Ollama no le inyecta herramientas) y sin visión.
+- `gemma3:12b` (Q4_K_M): 17 tok/s con 12 % en CPU; superado por los modelos actuales.
 
-Lección: para modelos cuyo contexto nativo es menor que el cap del servicio (ej. Llama 2 = 4096 vs `OLLAMA_CONTEXT_LENGTH=8192`), declarar `limit.context` en el tamaño nativo en `opencode.json` en vez de 8192.
+Lección: para modelos cuyo contexto nativo es menor que el cap del servicio (ej. Llama 2 = 4096 vs `OLLAMA_CONTEXT_LENGTH=32768`), declarar `limit.context` en el tamaño nativo en `opencode.json`.
 
 ## Recetas
 
-**Agregar un modelo**: `ollama pull <modelo>` → `make ia` (verifica que Ollama y OpenCode lo vean) → **verificar el soporte real de tools** (gotchas: la metadata puede mentir) → declarar el **override** en `~/.config/opencode/opencode.json` (`providers.ollama.models` con `limit` 8192/4096 y, si no hace tool-calling, `capabilities.tools: false`) → alias si hace falta → `opencode service restart` → commit.
+**Agregar un modelo**: `ollama pull <modelo>` → `make ia` (verifica que Ollama y OpenCode lo vean) → **verificar el soporte real de tools** (gotchas: la metadata puede mentir) → declarar el **override** en `~/.config/opencode/opencode.json` (`providers.ollama.models` con `limit` 32768/4096 y, si no hace tool-calling, `capabilities.tools: false`) → `rm -f ~/.cache/zsh/ollama-models` para que el autocompletado lo vea → `opencode service restart` → commit.
 
 **Diagnóstico de lentitud**: `ollama ps` (reparto), `journalctl -u ollama -b --no-pager | grep "inference compute"` (GPU y VRAM), `scripts/ollama-check.sh --bench <modelo>` (tok/s).
 
