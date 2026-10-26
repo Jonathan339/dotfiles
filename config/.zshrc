@@ -223,5 +223,8 @@ fpath+=${ZDOTDIR:-~}/.zsh_functions
 # Ollama: completado de subcomandos y modelos instalados (config/shell/completions/_ollama)
 if [[ -d "$HOME/.config/shell/completions" ]]; then
   (( ${fpath[(I)$HOME/.config/shell/completions]} )) || fpath=("$HOME/.config/shell/completions" $fpath)
-  (( $+functions[compdef] )) && compdef _ollama ollama
+  if (( $+functions[compdef] )); then
+    autoload -Uz _ollama
+    compdef _ollama ollama
+  fi
 fi
