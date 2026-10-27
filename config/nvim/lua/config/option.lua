@@ -20,6 +20,17 @@ if not vim.env.PATH:find(mason_bin, 1, true) then
   vim.env.PATH = mason_bin .. ':' .. vim.env.PATH
 end
 
+-- Toolchain de Rust (rustup). Nvim puede lanzarse desde el lanzador del
+-- escritorio sin el PATH del shell, y conform solo activa rustfmt si lo
+-- encuentra al iniciar.
+local cargo_bin = vim.fn.expand('~/.cargo/bin')
+if
+  vim.fn.isdirectory(cargo_bin) == 1
+  and not vim.env.PATH:find(cargo_bin, 1, true)
+then
+  vim.env.PATH = cargo_bin .. ':' .. vim.env.PATH
+end
+
 -- Leader
 vim.g.mapleader = ','
 vim.g.maplocalleader = ','

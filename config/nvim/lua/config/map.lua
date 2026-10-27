@@ -242,12 +242,3 @@ end, {
   desc = "Redimensionar derecha",
 })
 
--- ======================================================
--- COMPILAR Y EJECUTAR C/C++
--- ======================================================
-
-map("n", "<leader>R", function()
-  require("config.autocmd").run_c_cpp()
-end, {
-  desc = "Compilar y ejecutar C/C++",
-})
