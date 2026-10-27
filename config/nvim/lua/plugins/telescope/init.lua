@@ -25,8 +25,9 @@ M.config = function()
 
   -- Accion de seleccion sin entrada activa no debe avisar (p.ej. picker vacio)
   local action_state = require("telescope.actions.state")
-  local original_edit = actions.set.edit
-  actions.set.edit = function(prompt_bufnr, command)
+  local action_set = require("telescope.actions.set")
+  local original_edit = action_set.edit
+  action_set.edit = function(prompt_bufnr, command)
     local entry = action_state.get_selected_entry()
     if not entry then
       return
