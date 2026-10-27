@@ -24,8 +24,14 @@ return {
       severity_sort = true,
       float = { border = 'rounded', source = 'always' },
     })
-    for type, icon in pairs({ Error = ' ', Warn = ' ', Hint = ' ', Info = ' ' }) do
-      vim.fn.sign_define('DiagnosticSign' .. type, { text = icon, texthl = 'DiagnosticSign' .. type })
+    local signs = {
+      Error = { text = '✗', texthl = 'DiagnosticSignError' },
+      Warn = { text = '⚠', texthl = 'DiagnosticSignWarn' },
+      Info = { text = 'ℹ', texthl = 'DiagnosticSignInfo' },
+      Hint = { text = '💡', texthl = 'DiagnosticSignHint' },
+    }
+    for type, sign in pairs(signs) do
+      vim.fn.sign_define('DiagnosticSign' .. type, sign)
     end
 
     local handlers = require('plugins.lsp.handlers')
