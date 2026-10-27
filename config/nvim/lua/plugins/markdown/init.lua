@@ -3,7 +3,6 @@ local M = {
   'MeanderingProgrammer/render-markdown.nvim',
   dependencies = {
     'nvim-treesitter/nvim-treesitter',
-    'echasnovski/mini.nvim',
     'nvim-tree/nvim-web-devicons',
   },
   ft = { 'markdown', 'quarto' },
@@ -18,17 +17,7 @@ M.config = function()
   -- Highlights “amigables con cualquier tema”
   vim.api.nvim_set_hl(0, 'render-markdownBullet', { link = 'Special', default = true })
 
-  -- Ajustes de buffer útiles para MD/Quarto
-  vim.api.nvim_create_autocmd('FileType', {
-    pattern = { 'markdown', 'quarto' },
-    callback = function()
-      vim.opt_local.conceallevel = 2
-      vim.opt_local.wrap = true
-      vim.opt_local.linebreak = true
-      vim.opt_local.spell = false -- poné true si querés spell-check
-      vim.opt_local.colorcolumn = ''
-    end,
-  })
+  -- Los ajustes de buffer (wrap/spell/conceallevel) viven en config/autocmd.lua
 
   -- Config básica del plugin (segura)
   require('render-markdown').setup({

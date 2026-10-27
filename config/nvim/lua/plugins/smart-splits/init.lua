@@ -5,7 +5,8 @@ local M = {
   opts = {
     ignored_filetypes = { 'nofile', 'quickfix', 'qf', 'prompt' },
     ignored_buftypes = { 'nofile' },
-    default_amount = 3, -- px/cols por resize
+    -- desde v1 `default_amount` se movió a `resize.amount`
+    resize = { amount = 3 },
   },
 }
 

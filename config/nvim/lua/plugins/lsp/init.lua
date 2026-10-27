@@ -1,16 +1,19 @@
+-- lua/plugins/lsp/init.lua
+-- LSP independiente de Mason: se activa al abrir un archivo, no cuando Mason
+-- termina de cargar (antes, si Mason fallaba, no había LSP).
 return {
-  'williamboman/mason.nvim',
-  event = 'VeryLazy',
-  cmd = { 'Mason', 'MasonInstall', 'MasonUpdate' },
+  'neovim/nvim-lspconfig',
+  event = { 'BufReadPre', 'BufNewFile' },
   dependencies = {
-    'neovim/nvim-lspconfig',
     -- cmp-nvim-lsp se carga en InsertEnter, pero acá lo requerimos al calcular
-    -- capabilities (VeryLazy). Sin esta dependencia el require falla y el LSP
-    -- anuncia capabilities sin snippetSupport/labelDetails.
+    -- capabilities. Sin esta dependencia el require falla y el LSP anuncia
+    -- capabilities sin snippetSupport/labelDetails.
     'hrsh7th/cmp-nvim-lsp',
-    'WhoIsSethDaniel/mason-tool-installer.nvim',
-    { 'j-hui/fidget.nvim', tag = 'legacy', opts = { text = { done = '✓' }, window = { relative = 'win' } } },
-
+    {
+      'j-hui/fidget.nvim',
+      tag = 'legacy',
+      opts = { text = { done = '✓' }, window = { relative = 'win' } },
+    },
   },
   config = function()
     vim.diagnostic.config({
@@ -25,62 +28,32 @@ return {
       vim.fn.sign_define('DiagnosticSign' .. type, { text = icon, texthl = 'DiagnosticSign' .. type })
     end
 
-    require('mason').setup({
-      ui = {
-        border = 'rounded',
-        icons = { package_installed = '✓', package_pending = '➜', package_uninstalled = '✗' },
-      },
-    })
-
-    require('mason-tool-installer').setup({
-      ensure_installed = {
-        'bash-language-server',
-        'clangd',
-        'clang-format',
-        'css-lsp',
-        'emmet-language-server',
-        'tailwindcss-language-server',
-        'eslint-lsp',
-        'eslint_d',
-        'html-lsp',
-        'json-lsp',
-        'lua-language-server',
-        'marksman',
-        'prettier',
-        'pyright',
-        'ruff',
-        'black',
-        'isort',
-        'shfmt',
-        'shellcheck',
-        'stylua',
-        'luacheck',
-        'taplo',
-        'yamllint',
-        'gofumpt',
-        'goimports-reviser',
-        'staticcheck',
-        'vtsls',
-        'yaml-language-server',
-        'typos-lsp',
-      },
-    })
-
-    local has_lsp_config = pcall(function() return vim.lsp.config end)
-    local servers = {}
-
     local handlers = require('plugins.lsp.handlers')
-    for _, name in ipairs({ 'bashls', 'pyright', 'html', 'cssls', 'clangd', 'vtsls', 'eslint', 'lua_ls', 'efm', 'typos_lsp', 'jsonls', 'tailwindcss', 'marksman', 'emmet_ls' }) do
+    local servers = {}
+    for _, name in ipairs({
+      'bashls',
+      'pyright',
+      'ruff',
+      'html',
+      'cssls',
+      'clangd',
+      'vtsls',
+      'eslint',
+      'lua_ls',
+      'typos_lsp',
+      'jsonls',
+      'yamlls',
+      'taplo',
+      'tailwindcss',
+      'marksman',
+      'emmet_ls',
+    }) do
       if handlers[name] then
         handlers[name]()
-        if has_lsp_config then
-          table.insert(servers, name)
-        end
+        table.insert(servers, name)
       end
     end
 
-    if has_lsp_config then
-      vim.lsp.enable(servers)
-    end
+    vim.lsp.enable(servers)
   end,
 }

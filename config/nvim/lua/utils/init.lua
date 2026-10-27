@@ -1,5 +1,4 @@
 local M = {}
-local has_lsp_config = pcall(function() return vim.lsp.config end)
 
 M.setup_lsp = function(server, config)
   local defaults = require("plugins.lsp.defaults")
@@ -16,7 +15,9 @@ M.setup_lsp = function(server, config)
     on_init = defaults.on_init,
   }, config)
 
-  if has_lsp_config then
+  -- vim.lsp.config existe desde 0.11; comprobarlo acá evita cargar vim.lsp
+  -- durante el arranque (utils se requiere desde config.map).
+  if vim.lsp.config then
     vim.lsp.config(server, opts)
   else
     local lspconfig = require("lspconfig")

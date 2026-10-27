@@ -44,6 +44,8 @@ local M = {
       end,
     }
   end,
+  -- No sobreescribir vim.notify: noice ya lo rutea a nvim-notify cuando
+  -- notify.enabled = true (ver plugins/noice/init.lua).
 }
 
 M.config = function(_, opts)
@@ -52,24 +54,7 @@ M.config = function(_, opts)
     return
   end
 
-  local notify = require('notify')
-  notify.setup(opts)
-
-  -- Anti-spam: colapsa notificaciones idénticas en intervalos cortos
-  local last_msg, last_time = nil, 0
-  vim.notify = function(msg, level, nopts)
-    local now = vim.uv.hrtime() / 1e6
-    if msg == last_msg and (now - last_time) < 250 then
-      return
-    end
-    last_msg, last_time = msg, now
-
-    -- timeout por nivel (INFO menos, ERROR más)
-    local t = (level == vim.log.levels.ERROR and 5000) or (level == vim.log.levels.WARN and 3500) or 2000
-    nopts = nopts or {}
-    nopts.timeout = nopts.timeout or t
-    return notify(msg, level, nopts)
-  end
+  require('notify').setup(opts)
 
   -- Telescope (si está): :Telescope notify
   pcall(function()

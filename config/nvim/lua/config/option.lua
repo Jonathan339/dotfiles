@@ -1,9 +1,23 @@
--- lua/config/options.lua
+-- lua/config/option.lua
 ---@diagnostic disable: undefined-global
 
 -- Cargador nativo (arranque más rápido)
 if vim.loader then
   vim.loader.enable()
+end
+
+-- Providers que no usamos: evitan el chequeo/arranque de python3/perl/ruby/node
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_node_provider = 0
+
+-- Mason bin al PATH desde el inicio. Mason carga en VeryLazy y el LSP en
+-- BufReadPre, así que sin esto el servidor arranca antes de que mason agregue
+-- su bin al PATH (error "missing from PATH").
+local mason_bin = vim.fn.stdpath('data') .. '/mason/bin'
+if not vim.env.PATH:find(mason_bin, 1, true) then
+  vim.env.PATH = mason_bin .. ':' .. vim.env.PATH
 end
 
 -- Leader
@@ -36,6 +50,7 @@ vim.opt.signcolumn = 'yes' -- evita “salto” al aparecer diagnósticos
 vim.opt.incsearch = true
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
+vim.opt.inccommand = 'split' -- preview de :s en vivo
 
 -- Interacción
 vim.opt.mouse = '' -- vacío = sin mouse (déjalo así si te gusta)
@@ -58,8 +73,8 @@ vim.opt.wrap = false
 vim.opt.completeopt = { 'menu', 'menuone', 'noselect' }
 vim.opt.pumheight = 12
 
---
-vim.opt.conceallevel = 1
+-- Conceal: markdown/quarto lo suben a 2 en config/autocmd.lua
+vim.opt.conceallevel = 0
 
 -- Paths / ignore
 vim.opt.path:append({ '**' })

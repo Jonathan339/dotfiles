@@ -1,12 +1,13 @@
 -- lua/plugins/lsp/handlers.lua
+-- Cada handler solo declara lo específico del servidor: utils.setup_lsp inyecta
+-- capabilities/on_init/on_attach de lsp/defaults.lua.
+--
+-- root_dir usa la firma de Neovim 0.11+: fun(bufnr, on_dir). La firma vieja
+-- fun(fname) recibía el número de buffer y rompía vim.fs.find.
 local M = {}
 local setup = require('utils').setup_lsp
-local util = require('lspconfig.util')
-local root_pattern = util.root_pattern
 
 local function simple(name)
-  -- setup_lsp ya inyecta capabilities/on_init/on_attach de defaults:
-  -- pasarlos de nuevo hacía que on_attach corriera dos veces por attach.
   M[name] = function()
     setup(name, {})
   end
@@ -14,8 +15,12 @@ end
 
 simple('bashls')
 simple('pyright')
+simple('ruff')
 simple('html')
 simple('cssls')
+simple('yamlls')
+simple('taplo')
+
 M['clangd'] = function()
   setup('clangd', {
     cmd = {
@@ -27,19 +32,6 @@ M['clangd'] = function()
   })
 end
 
--- EFM (agregador genérico) -> requiere configurar linters en efm-langserver
-M['efm'] = function()
-  setup('efm', {
-    cmd = { 'efm-langserver' },
-    init_options = { documentFormatting = false, documentRangeFormatting = false },
-    root_dir = root_pattern('.git', '.efm.json', '.efmrc', '.config/efm-langserver/config.yaml'),
-    settings = {
-      rootMarkers = { '.git/' },
-      lintDebounce = '500ms',
-    },
-  })
-end
-
 -- typos (spell checker multi-idioma por LSP)
 M['typos_lsp'] = function()
   setup('typos_lsp', {
@@ -47,13 +39,9 @@ M['typos_lsp'] = function()
   })
 end
 
--- JSON LS
--- No hace falta require('schemastore'): nvim-lspconfig ya inyecta los schemas
--- de schemastore al configurar el servidor (antes devolvía nil siempre).
+-- JSON LS: nvim-lspconfig ya inyecta los schemas de schemastore
 M['jsonls'] = function()
   setup('jsonls', {
-    cmd = { 'vscode-json-language-server', '--stdio' },
-    filetypes = { 'json', 'jsonc' },
     settings = {
       json = {
         validate = { enable = true },
@@ -73,8 +61,11 @@ local function ts_handler(name)
           vim.lsp.handlers['textDocument/definition'](err, result, ctx, ...)
         end,
       },
-      root_dir = function(fname)
-        return root_pattern('tsconfig.json', 'jsconfig.json', 'package.json')(fname) or util.find_git_ancestor(fname) or vim.uv.cwd()
+      root_dir = function(bufnr, on_dir)
+        local root = vim.fs.root(bufnr, { 'tsconfig.json', 'jsconfig.json', 'package.json' })
+          or vim.fs.root(bufnr, '.git')
+          or vim.uv.cwd()
+        on_dir(root)
       end,
       settings = {
         typescript = {
@@ -82,10 +73,9 @@ local function ts_handler(name)
             includeInlayEnumMemberValueHints = true,
             includeInlayFunctionLikeReturnTypeHints = true,
             includeInlayFunctionParameterTypeHints = true,
-            includeInlayParameterNameHints = 'all',
+            includeInlayParameterNameHints = 'min',
             includeInlayPropertyDeclarationTypeHints = true,
             includeInlayVariableTypeHints = true,
-            includeInlayVariableTypeHintsWhenTypeMatchesName = true,
           },
         },
         javascript = {
@@ -93,14 +83,13 @@ local function ts_handler(name)
             includeInlayEnumMemberValueHints = true,
             includeInlayFunctionLikeReturnTypeHints = true,
             includeInlayFunctionParameterTypeHints = true,
-            includeInlayParameterNameHints = 'all',
+            includeInlayParameterNameHints = 'min',
             includeInlayPropertyDeclarationTypeHints = true,
             includeInlayVariableTypeHints = true,
-            includeInlayVariableTypeHintsWhenTypeMatchesName = true,
           },
         },
       },
-      on_attach = function(client, bufnr)
+      on_attach = function(_, bufnr)
         if vim.lsp.inlay_hint and vim.lsp.inlay_hint.enable then
           pcall(vim.lsp.inlay_hint.enable, true, { bufnr = bufnr })
         end
@@ -114,9 +103,21 @@ M['vtsls'] = ts_handler('vtsls')
 -- ESLint LSP (solo diagnósticos y code actions)
 M['eslint'] = function()
   setup('eslint', {
-    cmd = { 'vscode-eslint-language-server', '--stdio' },
-    root_dir = function(fname)
-      return root_pattern('.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', '.eslintrc.yml', 'eslint.config.js', 'eslint.config.cjs', 'eslint.config.mjs', 'eslint.config.ts', 'package.json')(fname) or util.find_git_ancestor(fname)
+    root_dir = function(bufnr, on_dir)
+      local root = vim.fs.root(bufnr, {
+        '.eslintrc',
+        '.eslintrc.js',
+        '.eslintrc.cjs',
+        '.eslintrc.json',
+        '.eslintrc.yaml',
+        '.eslintrc.yml',
+        'eslint.config.js',
+        'eslint.config.cjs',
+        'eslint.config.mjs',
+        'eslint.config.ts',
+        'package.json',
+      }) or vim.fs.root(bufnr, '.git') or vim.uv.cwd()
+      on_dir(root)
     end,
     filetypes = {
       'javascript',
@@ -162,18 +163,35 @@ M['lua_ls'] = function()
 end
 
 M['tailwindcss'] = function()
-  local root_pattern = require('lspconfig.util').root_pattern
   setup('tailwindcss', {
-    root_dir = root_pattern('.git'),
+    root_dir = function(bufnr, on_dir)
+      local root = vim.fs.root(bufnr, {
+        'tailwind.config.js',
+        'tailwind.config.cjs',
+        'tailwind.config.mjs',
+        'tailwind.config.ts',
+      }) or vim.fs.root(bufnr, '.git') or vim.uv.cwd()
+      on_dir(root)
+    end,
   })
 end
 
--- emmet_ls (Emmet LSP)
+-- emmet_ls cubre la expansión de abreviaturas vía cmp (reemplaza nvim-emmet)
 M['emmet_ls'] = function()
   setup('emmet_ls', {
-    filetypes = { 'html', 'xml', 'jsx', 'tsx', 'svelte', 'vue', 'astro', 'css', 'scss' },
-    root_dir = function(fname)
-      return util.find_git_ancestor(fname) or vim.uv.cwd()
+    filetypes = {
+      'html',
+      'xml',
+      'javascriptreact',
+      'typescriptreact',
+      'svelte',
+      'vue',
+      'astro',
+      'css',
+      'scss',
+    },
+    root_dir = function(bufnr, on_dir)
+      on_dir(vim.fs.root(bufnr, '.git') or vim.uv.cwd())
     end,
   })
 end
@@ -181,8 +199,8 @@ end
 -- marksman (Markdown LSP)
 M['marksman'] = function()
   setup('marksman', {
-    root_dir = function(fname)
-      return root_pattern('.git', '.marksman.toml', 'markdown.json')(fname) or util.find_git_ancestor(fname) or vim.uv.cwd()
+    root_dir = function(bufnr, on_dir)
+      on_dir(vim.fs.root(bufnr, { '.git', '.marksman.toml', 'markdown.json' }) or vim.uv.cwd())
     end,
     settings = {
       markdown = {
@@ -190,11 +208,6 @@ M['marksman'] = function()
       },
     },
   })
-end
-
--- Compat: si algo intenta usar "tsserver", redirigimos a vtsls
-M['tsserver'] = function()
-  return M['vtsls']()
 end
 
 return M

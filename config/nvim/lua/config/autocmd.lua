@@ -39,10 +39,15 @@ autocmd('BufWritePre', {
 -----------------------------------------------------------------------
 autocmd('FileType', {
   group = augroup('text_settings'),
-  pattern = { 'gitcommit', 'markdown', 'NeogitCommitMessage' },
-  callback = function()
+  pattern = { 'gitcommit', 'markdown', 'quarto', 'NeogitCommitMessage' },
+  callback = function(ev)
     vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
     vim.opt_local.spell = true
+    if ev.match == 'markdown' or ev.match == 'quarto' then
+      vim.opt_local.conceallevel = 2
+      vim.opt_local.colorcolumn = ''
+    end
   end,
 })
 

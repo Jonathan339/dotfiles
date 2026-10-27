@@ -1,20 +1,22 @@
+-- lua/plugins/lint/init.lua
 return {
-  "mfussenegger/nvim-lint",
-  event = { "BufReadPre", "BufWritePost" },
+  'mfussenegger/nvim-lint',
+  event = { 'BufReadPre', 'BufWritePost' },
   config = function()
-    local lint = require("lint")
+    local lint = require('lint')
 
+    -- Python lo cubre el LSP de ruff (diagnósticos + code actions), así que no
+    -- se repite acá. Lua lo cubre lua_ls.
     local available_by_ft = {
-      sh = { "shellcheck" },
-      bash = { "shellcheck" },
-      zsh = { "shellcheck" },
+      sh = { 'shellcheck' },
+      bash = { 'shellcheck' },
+      zsh = { 'shellcheck' },
       -- markdownlint-cli2 es el que instala mason (no existe `markdownlint`)
-      markdown = { "markdownlint-cli2" },
-      yaml = { "yamllint" },
-      python = { "ruff" },
-      go = { "staticcheck" },
-      lua = { "luacheck" },
+      markdown = { 'markdownlint-cli2' },
+      yaml = { 'yamllint' },
+      go = { 'staticcheck' },
     }
+
     lint.linters_by_ft = {}
     for ft, linters in pairs(available_by_ft) do
       local ready = {}
@@ -28,13 +30,12 @@ return {
       end
     end
 
-    local lint_augroup = vim.api.nvim_create_augroup("nvim-lint", { clear = true })
-    vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
+    local lint_augroup = vim.api.nvim_create_augroup('nvim-lint', { clear = true })
+    vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufReadPost' }, {
       group = lint_augroup,
       callback = function()
         lint.try_lint()
       end,
     })
-
   end,
 }
