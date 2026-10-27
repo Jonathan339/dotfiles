@@ -34,6 +34,12 @@ return {
       vim.fn.sign_define('DiagnosticSign' .. type, sign)
     end
 
+    -- Colores custom para los signs de diagnostico
+    vim.api.nvim_set_hl(0, { group = 'DiagnosticSignError', fg = '#ff5555' })
+    vim.api.nvim_set_hl(0, { group = 'DiagnosticSignWarn', fg = '#ffaa00' })
+    vim.api.nvim_set_hl(0, { group = 'DiagnosticSignInfo', fg = '#44aaff' })
+    vim.api.nvim_set_hl(0, { group = 'DiagnosticSignHint', fg = '#aa44ff' })
+
     local handlers = require('plugins.lsp.handlers')
     local servers = {}
     for _, name in ipairs({
