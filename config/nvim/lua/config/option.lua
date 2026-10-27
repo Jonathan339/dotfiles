@@ -64,7 +64,7 @@ vim.opt.smartcase = true
 vim.opt.inccommand = 'split' -- preview de :s en vivo
 
 -- Interacción
-vim.opt.mouse = '' -- vacío = sin mouse (déjalo así si te gusta)
+vim.opt.mouse = 'a' -- 'a' = ratón completo (click, scroll, drag) si el terminal lo soporta
 vim.opt.timeoutlen = 400
 vim.opt.updatetime = 200
 vim.opt.scrolloff = 10
