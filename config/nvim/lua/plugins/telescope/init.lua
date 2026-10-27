@@ -23,6 +23,17 @@ M.config = function()
   local actions = require("telescope.actions")
   local lga_actions = require("telescope-live-grep-args.actions")
 
+  -- Accion de seleccion sin entrada activa no debe avisar (p.ej. picker vacio)
+  local action_state = require("telescope.actions.state")
+  local original_edit = actions.set.edit
+  actions.set.edit = function(prompt_bufnr, command)
+    local entry = action_state.get_selected_entry()
+    if not entry then
+      return
+    end
+    return original_edit(prompt_bufnr, command)
+  end
+
   -- Cacheamos variables globales de uso frecuente dentro de la config
   local math_floor = math.floor
 
