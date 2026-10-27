@@ -18,7 +18,14 @@ return {
   config = function()
     vim.diagnostic.config({
       virtual_text = { prefix = '●', spacing = 2, source = 'always' },
-      signs = true,
+      signs = {
+        text = {
+          [vim.diagnostic.severity.ERROR] = '✗',
+          [vim.diagnostic.severity.WARN] = '⚠',
+          [vim.diagnostic.severity.INFO] = 'ℹ',
+          [vim.diagnostic.severity.HINT] = '💡',
+        },
+      },
       underline = true,
       update_in_insert = true,
       severity_sort = true,
