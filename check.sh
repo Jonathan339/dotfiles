@@ -299,7 +299,7 @@ done
 # Opencode (archivos en ~/.config/opencode)
 echo ""
 echo "━━━ opencode ━━━"
-for f in ".config/opencode/AGENTS.md" ".config/opencode/opencode.json" ".config/opencode/opencode.jsonc" ".config/opencode/package.json" ".config/opencode/package-lock.json"; do
+for f in ".config/opencode/AGENTS.md" ".config/opencode/opencode.json" ".config/opencode/package.json" ".config/opencode/package-lock.json"; do
   dest="$HOME/$f"
   label="opencode → $dest"
   if [[ ! -e "$dest" ]] && [[ ! -L "$dest" ]]; then
