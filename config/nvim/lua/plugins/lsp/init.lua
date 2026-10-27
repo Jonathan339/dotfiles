@@ -35,10 +35,10 @@ return {
     end
 
     -- Colores custom para los signs de diagnostico
-    vim.api.nvim_set_hl(0, 'DiagnosticSignError', { fg = '#ff5555' })
-    vim.api.nvim_set_hl(0, 'DiagnosticSignWarn', { fg = '#ffaa00' })
-    vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { fg = '#44aaff' })
-    vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { fg = '#aa44ff' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignError', { fg = '#ff4d5e' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignWarn', { fg = '#ffb020' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { fg = '#38bdf8' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { fg = '#a78bfa' })
 
     local handlers = require('plugins.lsp.handlers')
     local servers = {}
