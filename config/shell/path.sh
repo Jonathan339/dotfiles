@@ -12,6 +12,7 @@ path_add() {
 }
 
 path_add "$HOME/.local/bin"
+path_add "$HOME/.cargo/bin"
 path_add "$PNPM_HOME"
 path_add "$BUN_INSTALL/bin"
 path_add "$FNM_PATH"
