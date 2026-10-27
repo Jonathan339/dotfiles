@@ -38,8 +38,10 @@ cat > "$DROPIN" <<'EOF'
 Environment="OLLAMA_FLASH_ATTENTION=1"
 # KV cache cuantizada: permite más contexto dentro de los 10 GB de VRAM
 Environment="OLLAMA_KV_CACHE_TYPE=q8_0"
-# Contexto por defecto (bajalo si un modelo grande no entra entero en VRAM)
-Environment="OLLAMA_CONTEXT_LENGTH=8192"
+# Contexto por defecto (bajalo si un modelo grande no entra entero en VRAM).
+# 32k: el prompt base de OpenCode ronda los 8-9k tokens, así que 8192 no alcanza
+# ni para el system prompt. Con KV q8_0 un 4B Q8 de ~5 GB sigue entrando en la Arc.
+Environment="OLLAMA_CONTEXT_LENGTH=32768"
 # Sin VRAM para dos modelos: uno a la vez
 Environment="OLLAMA_MAX_LOADED_MODELS=1"
 # Mantener el modelo cargado entre consultas

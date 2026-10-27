@@ -105,6 +105,12 @@ else
   err "no responde en $OLLAMA_URL"
 fi
 
+# El instalador oficial deja su propio unit en /etc/systemd/system (sin OLLAMA_MODELS)
+EXEC_SVC="$(systemctl show ollama.service -p ExecStart --value 2>/dev/null | grep -o '/[^ ;]*' | head -1 || true)"
+if [[ -n "$EXEC_SVC" && "$EXEC_SVC" != "/usr/bin/ollama" ]]; then
+  warn "el servicio corre $EXEC_SVC, no el binario del paquete (/usr/bin/ollama)"
+fi
+
 # ==============================================================================
 titulo "Configuración del servicio (drop-in)"
 # ==============================================================================
@@ -123,9 +129,11 @@ else
     [OLLAMA_VULKAN]="true"
     [OLLAMA_FLASH_ATTENTION]="true"
     [OLLAMA_KV_CACHE_TYPE]="q8_0"
-    [OLLAMA_CONTEXT_LENGTH]="8192"
+    [OLLAMA_CONTEXT_LENGTH]="32768"
     [OLLAMA_MAX_LOADED_MODELS]="1"
     [OLLAMA_KEEP_ALIVE]="30m0s"
+    # Sin esto el daemon busca los modelos en $HOME/.ollama/models y ve el store vacío
+    [OLLAMA_MODELS]="/var/lib/ollama"
   )
   for var in "${!ESPERADO[@]}"; do
     valor="${ESPERADO[$var]}"
@@ -166,7 +174,7 @@ titulo "Modelos instalados"
 if ollama list 2>/dev/null | tail -n +2 | grep -q .; then
   ollama list | sed 's/^/  /'
 else
-  warn "no hay modelos (ollama pull qwen3.5:9b)"
+  err "ollama no ve ningún modelo (revisá OLLAMA_MODELS: systemctl cat ollama)"
 fi
 
 # ==============================================================================
@@ -188,7 +196,7 @@ titulo "Integración con OpenCode"
 # ==============================================================================
 CONFIG_OPENCODE="$HOME/.config/opencode/opencode.json"
 if [[ -r "$CONFIG_OPENCODE" ]]; then
-  CONFIG_OPENCODE="$CONFIG_OPENCODE" python3 - <<'PY'
+  SALIDA_OPENCODE="$(CONFIG_OPENCODE="$CONFIG_OPENCODE" python3 - <<'PY'
 import json, os, urllib.request
 
 try:
@@ -220,6 +228,12 @@ for modelo in declarados:
     else:
         print(f"  [ERR] {modelo} declarado en opencode pero NO está instalado")
 PY
+)"
+  printf '%s\n' "$SALIDA_OPENCODE"
+  # El bloque de Python imprime [OK]/[WARN]/[ERR]: contarlos acá o el resumen miente
+  OK_=$((OK_ + $(grep -c '\[OK\]' <<<"$SALIDA_OPENCODE" || true)))
+  WARN_=$((WARN_ + $(grep -c '\[WARN\]' <<<"$SALIDA_OPENCODE" || true)))
+  ERR_=$((ERR_ + $(grep -c '\[ERR\]' <<<"$SALIDA_OPENCODE" || true)))
 else
   warn "no se encontró $CONFIG_OPENCODE"
 fi
@@ -230,9 +244,9 @@ titulo "Bench"
 if $BENCH; then
   if [[ -z "$MODELO_BENCH" ]]; then
     MODELO_BENCH="$(ollama ps 2>/dev/null | tail -n +2 | awk 'NR==1 {print $1}')"
-    [[ -z "$MODELO_BENCH" ]] && MODELO_BENCH="qwen3.5:9b"
+    [[ -z "$MODELO_BENCH" ]] && MODELO_BENCH="$(ollama list 2>/dev/null | tail -n +2 | awk 'NR==1 {print $1}')"
   fi
-  echo "  midiendo $MODELO_BENCH (referencia: qwen3.5:9b ≈ 45 tok/s · qwen3.5:4b ≈ 70 tok/s · gemma4:12b ≈ 32 tok/s)"
+  echo "  midiendo $MODELO_BENCH (referencias medidas: ver skill ia-local)"
   bench "$MODELO_BENCH"
 else
   echo "  (usá --bench [modelo] para medir tok/s)"
