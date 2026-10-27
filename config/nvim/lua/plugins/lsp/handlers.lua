@@ -100,45 +100,9 @@ end
 
 M['vtsls'] = ts_handler('vtsls')
 
--- ESLint LSP (solo diagnósticos y code actions)
+-- ESLint: usar nvim-eslint (plugin externo usa vscode-eslint LSP más completo)
 M['eslint'] = function()
-  setup('eslint', {
-    root_dir = function(bufnr, on_dir)
-      local root = vim.fs.root(bufnr, {
-        '.eslintrc',
-        '.eslintrc.js',
-        '.eslintrc.cjs',
-        '.eslintrc.json',
-        '.eslintrc.yaml',
-        '.eslintrc.yml',
-        'eslint.config.js',
-        'eslint.config.cjs',
-        'eslint.config.mjs',
-        'eslint.config.ts',
-        'package.json',
-      }) or vim.fs.root(bufnr, '.git') or vim.uv.cwd()
-      on_dir(root)
-    end,
-    filetypes = {
-      'javascript',
-      'javascriptreact',
-      'typescript',
-      'typescriptreact',
-      'vue',
-      'svelte',
-      'astro',
-    },
-    settings = {
-      codeAction = {
-        disableRuleComment = { enable = true, location = 'separateLine' },
-        showDocumentation = { enable = true },
-      },
-      codeActionOnSave = { enable = false, mode = 'all' },
-      format = false,
-      validate = 'on',
-      workingDirectory = { mode = 'location' },
-    },
-  })
+  setup('eslint', {})
 end
 
 -- Lua (Neovim)
