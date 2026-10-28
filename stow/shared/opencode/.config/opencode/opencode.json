@@ -12,7 +12,7 @@
             "input": ["text", "image"],
             "output": ["text"]
           },
-          "limit": {"context": 32768, "output": 4096}
+          "limit": { "context": 32768, "output": 4096 }
         },
         "qwen2.5-coder:7b": {
           "name": "Qwen2.5 Coder 7B (no configurado)",
@@ -21,7 +21,7 @@
             "input": ["text"],
             "output": ["text"]
           },
-          "limit": {"context": 32768, "output": 4096}
+          "limit": { "context": 32768, "output": 4096 }
         }
       }
     }
@@ -38,7 +38,10 @@
       },
       "playwright": {
         "type": "local",
-        "command": ["/home/jonathan/.bun/bin/bunx", "@executeautomation/playwright-mcp-server"]
+        "command": [
+          "/home/jonathan/.bun/bin/bunx",
+          "@executeautomation/playwright-mcp-server"
+        ]
       },
       "browserbase": {
         "type": "local",

@@ -5,8 +5,7 @@ local M = {
   opts = {
     ignored_filetypes = { 'nofile', 'quickfix', 'qf', 'prompt' },
     ignored_buftypes = { 'nofile' },
-    -- desde v1 `default_amount` se movió a `resize.amount`
-    resize = { amount = 3 },
+    resize = { amount = 3 }, -- Nvim resize amount
   },
 }
 
