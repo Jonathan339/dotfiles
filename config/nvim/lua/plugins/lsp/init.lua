@@ -10,18 +10,7 @@ return {
     -- capabilities sin snippetSupport/labelDetails.
     'hrsh7th/cmp-nvim-lsp',
     {
-      'esmuellert/nvim-eslint',
-      tag = 'legacy',
-      init = function()
-        pcall(require('nvim-eslint').ensure_installed, true)
-        -- Instalar ESLint y sus dependencias globales necesarias para el LSP
-        pcall(require('pkgfile').install, {
-          pkgs = { 'nodejs', 'npm', 'eslint' },
-        })
-      end,
-    },
-    {
-      'j-hui/fidget-ls',
+      'j-hui/fidget.nvim',
       tag = 'legacy',
       opts = { text = { done = '✓' }, window = { relative = 'win' } },
     },
