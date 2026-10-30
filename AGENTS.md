@@ -20,8 +20,8 @@ Cadena de dos saltos: `~/.config/x` → `stow/<capa>/<pkg>/.config/x` → `confi
 
 Precedencia (la última gana): `stow/shared` < `stow/os/<id>` < `stow/wm/<de>` < `stow/host/<hostname>`.
 
-- Presentes: `shared` (shell, nvim, terminales, rofi, opencode) y `wm` (`hyprland`: hypr/waybar/dunst;
-  `kde`: plasma). `os/` y `host/` todavía no existen.
+- Presentes: `shared` (shell, nvim, terminales, rofi, opencode), `wm` (`hyprland`: hypr/waybar/dunst;
+  `kde`: plasma) y `host/cachyos` (`systemd`: `llama-server.service`). `os/` todavía no existe.
 - Detección automática: `/etc/os-release`, `XDG_CURRENT_DESKTOP` (fallback `pgrep`), `hostname`. Si el
   directorio de capa no existe, se omite: no hardcodees capas en scripts.
 
