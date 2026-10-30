@@ -5,7 +5,7 @@
     "ollama": {
       "name": "Ollama (local, Intel Arc B570)",
       "models": {
-        "qwen3.5-uncensored:4b": {
+        "baytout3/qwen3.5-uncensored:4b": {
           "name": "Qwen3.5 Uncensored 4B",
           "capabilities": {
             "tools": true,
