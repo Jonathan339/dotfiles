@@ -1,7 +1,7 @@
 [user]
 	name = Jonathan D. Dominguez
 	email = dominguez.jonathan.david@gmail.com
-	signingkey = ~/.ssh/id_ed25519
+	signingkey = ~/.ssh/id_rsa
 
 [core]
 	editor = nvim
