@@ -7,6 +7,15 @@ description: "IA local de esta máquina (Ollama sobre Intel Arc B570 vía Vulkan
 
 Para lo general de OpenCode está el skill `opencode-local`; acá va la IA local de esta máquina.
 
+> **Estado al 01/11/2026 (leer primero).** Ollama está **desinstalado** (sin binario, sin
+> `~/.ollama`, `ollama.service` inactivo) y el GGUF del 9B (`Qwen3.5-9B-Uncensored-…Q4_K_M.gguf`)
+> ya no está en `~/models/`. Lo que corre hoy es **solo llama.cpp**: `qwen2.5-coder-7b`
+> (Q5_K_M) en `127.0.0.1:8082` vía `~/models/qwen2.5-coder-7b/serve.sh`, declarado en OpenCode
+> como provider `llamacpp-coder` (y es el modelo por defecto). **Jonathan va a reinstalar Ollama**,
+> así que las secciones de abajo sobre Ollama quedan como referencia válida, no como inventario
+> actual; mientras tanto el camino operativo es llama.cpp. Al volver Ollama hay que re-declarar
+> los overrides en `providers.ollama.models` y verificar tools de nuevo.
+
 ## Verificación en un comando
 
 ```sh
