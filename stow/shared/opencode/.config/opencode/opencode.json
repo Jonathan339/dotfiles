@@ -3,47 +3,6 @@
   "shell": "/bin/zsh",
   "model": "llamacpp-coder/qwen2.5-coder-7b",
   "providers": {
-    "ollama": {
-      "name": "Ollama (local, Intel Arc B570)",
-      "models": {
-        "baytout3/qwen3.5-uncensored:4b": {
-          "name": "Qwen3.5 Uncensored 4B",
-          "capabilities": {
-            "tools": true,
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": { "context": 32768, "output": 4096 }
-        },
-        "qwen2.5-coder:7b": {
-          "name": "Qwen2.5 Coder 7B (no configurado)",
-          "capabilities": {
-            "tools": true,
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "limit": { "context": 32768, "output": 4096 }
-        }
-      }
-    },
-    "llamacpp": {
-      "name": "llama.cpp (local, Intel Arc B570)",
-      "package": "@opencode/ai/providers/openai-compatible",
-      "settings": {
-        "baseURL": "http://127.0.0.1:8080/v1"
-      },
-      "models": {
-        "qwen3.5-9b": {
-          "name": "Qwen3.5 9B Uncensored (llama.cpp)",
-          "capabilities": {
-            "tools": true,
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "limit": { "context": 24576, "output": 4096 }
-        }
-      }
-    },
     "llamacpp-coder": {
       "name": "llama.cpp coder (local, Intel Arc B570)",
       "package": "@opencode/ai/providers/openai-compatible",
