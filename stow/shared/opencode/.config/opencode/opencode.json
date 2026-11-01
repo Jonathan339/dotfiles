@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "shell": "/bin/zsh",
-  "model": "llamacpp/qwen3.5-9b",
+  "model": "llamacpp-coder/qwen2.5-coder-7b",
   "providers": {
     "ollama": {
       "name": "Ollama (local, Intel Arc B570)",
@@ -41,6 +41,24 @@
             "output": ["text"]
           },
           "limit": { "context": 24576, "output": 4096 }
+        }
+      }
+    },
+    "llamacpp-coder": {
+      "name": "llama.cpp coder (local, Intel Arc B570)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:8082/v1"
+      },
+      "models": {
+        "qwen2.5-coder-7b": {
+          "name": "Qwen2.5 Coder 7B Instruct Q5_K_M (llama.cpp)",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "limit": { "context": 32768, "output": 4096 }
         }
       }
     }
