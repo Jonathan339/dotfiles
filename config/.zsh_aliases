@@ -10,8 +10,10 @@ alias grep='grep --color=auto'
 
 alias cp='cp -i'
 alias mv='mv -i'
-alias rm='rm -rf'
-alias rmf='rm -rf'
+# rm ya es recursivo: -I pide confirmación antes de borrados grandes y
+# --preserve-root evita `rm -rf /` accidentales.
+alias rm='rm -I --preserve-root'
+alias rmf='rm -rf --preserve-root'
 
 # -------------------------
 # Arch Linux (pacman)
@@ -23,7 +25,7 @@ alias pi='sudo pacman -S --needed'
 # -------------------------
 alias gs='git status'
 alias gp='git pull'
-alias gpp='git push'   # Consejo: a veces se usa 'gps' (git push), pero 'gpp' está perfecto.
+alias gpp='git push'
 alias gc='git commit -am'
 
 # -------------------------
