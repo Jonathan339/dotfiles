@@ -131,6 +131,27 @@ end, {
 })
 
 -- ======================================================
+-- FORMATO / DIAGNÓSTICOS
+-- ======================================================
+
+-- Conform se carga por evento (BufWritePre): forzamos el lazy-load antes de
+-- formatear para que <Leader>F funcione también sin haber guardado antes.
+map({ "n", "x" }, "<Leader>F", function()
+  require("lazy").load({ plugins = { "conform.nvim" } })
+  require("conform").format({ async = true, lsp_fallback = false })
+end, {
+  desc = "Formatear buffer",
+})
+
+map("n", "<Leader>D", "<cmd>Trouble diagnostics toggle<CR>", {
+  desc = "Diagnósticos (Trouble)",
+})
+
+map("n", "<Leader>I", "<cmd>checkhealth vim.lsp<CR>", {
+  desc = "Información LSP",
+})
+
+-- ======================================================
 -- SMART SPLITS — Navegación
 -- ======================================================
 

@@ -16,6 +16,14 @@ return {
     },
   },
   config = function()
+    require('plugins.lsp.keymaps').setup()
+
+    -- nvim-highlight-colors ya pinta los colores del buffer; desactivar el
+    -- document color del LSP evita resaltados duplicados (igual que craftzdog).
+    if vim.lsp.document_color then
+      vim.lsp.document_color.enable(false)
+    end
+
     vim.diagnostic.config({
       virtual_text = { prefix = '●', spacing = 2, source = 'always' },
       signs = {
@@ -27,7 +35,9 @@ return {
         },
       },
       underline = true,
-      update_in_insert = true,
+      -- craftzdog lo deja en false: actualizar diagnósticos en cada tecla
+      -- cuesta caro en archivos grandes y mete ruido visual.
+      update_in_insert = false,
       severity_sort = true,
       float = { border = 'rounded', source = 'always' },
     })
@@ -49,6 +59,9 @@ return {
 
     local handlers = require('plugins.lsp.handlers')
     local servers = {}
+    -- Oxlint reemplaza a ESLint cuando está instalado; si todavía no está,
+    -- seguimos usando ESLint (Mason lo instala en segundo plano).
+    local has_oxlint = vim.fn.executable('oxlint') == 1
     for _, name in ipairs({
       'bashls',
       'pyright',
@@ -58,6 +71,7 @@ return {
       'clangd',
       'vtsls',
       'eslint',
+      'oxlint',
       'lua_ls',
       'typos_lsp',
       'jsonls',
@@ -67,7 +81,9 @@ return {
       'marksman',
       'emmet_ls',
     }) do
-      if handlers[name] then
+      if name == 'oxlint' and not has_oxlint then
+        -- Sin binario no lo arrancamos: ESLint queda como fallback.
+      elseif handlers[name] then
         handlers[name]()
         table.insert(servers, name)
       end

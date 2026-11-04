@@ -12,49 +12,77 @@ local eslintrc_files = {
   'eslint.config.ts',
 }
 
-local function has_eslintrc(ctx)
+local function has_eslintrc(_, ctx)
   if not ctx or not ctx.buf then
     return false
   end
-  local dir = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ctx.buf), ':h')
-  if dir == '' then
+  return vim.fs.root(ctx.buf, eslintrc_files) ~= nil
+end
+
+local oxfmtrc_files = {
+  '.oxfmtrc.json',
+  '.oxfmtrc.jsonc',
+  'oxfmt.config.ts',
+}
+
+-- Conform llama `condition(self, ctx)` para formatters de job. El parámetro
+-- importante es el segundo (ctx); el primero es la config del formatter.
+local function has_oxfmtrc(_, ctx)
+  if not ctx or not ctx.buf then
     return false
   end
-  for _, f in ipairs(eslintrc_files) do
-    if vim.fn.findfile(f, dir .. ';') ~= '' then
-      return true
-    end
-  end
-  return false
+  return vim.fs.root(ctx.buf, oxfmtrc_files) ~= nil
 end
 
 local function exe(name)
   return vim.fn.executable(name) == 1
 end
 
+-- Oxfmt solo se usa si el proyecto tiene config de Oxc y el binario existe.
+-- Si no, se cae a ESLint/Prettier como antes.
+local function oxfmt_available(bufnr)
+  return require('conform').get_formatter_info('oxfmt', bufnr).available
+end
+
+local function js_formatters(bufnr)
+  if oxfmt_available(bufnr) then
+    return { 'oxfmt', 'prettier', stop_after_first = true }
+  end
+  return { 'eslint_d', 'prettier' }
+end
+
+local function oxfmt_or_prettier(bufnr)
+  if oxfmt_available(bufnr) then
+    return { 'oxfmt', 'prettier', stop_after_first = true }
+  end
+  return { 'prettier' }
+end
+
 return {
   'stevearc/conform.nvim',
   event = { 'BufWritePre' },
-  cmd = { 'ConformInfo', 'Format', 'FormatToggle' },
+  cmd = { 'ConformInfo', 'FormatToggle' },
   config = function()
     -- Filetypes reales de Neovim (jsx/tsx == javascriptreact/typescriptreact)
     local formatters_by_ft = {
-      javascript = { 'eslint_d', 'prettier' },
-      javascriptreact = { 'eslint_d', 'prettier' },
-      typescript = { 'eslint_d', 'prettier' },
-      typescriptreact = { 'eslint_d', 'prettier' },
-      vue = { 'eslint_d', 'prettier' },
-      svelte = { 'eslint_d', 'prettier' },
-      astro = { 'eslint_d', 'prettier' },
+      javascript = js_formatters,
+      javascriptreact = js_formatters,
+      typescript = js_formatters,
+      typescriptreact = js_formatters,
+      vue = js_formatters,
+      svelte = js_formatters,
+      astro = js_formatters,
       lua = { 'stylua' },
       python = { 'ruff_organize_imports', 'ruff_format' },
       sh = { 'shfmt' },
-      json = { 'prettier' },
-      jsonc = { 'prettier' },
-      yaml = { 'prettier' },
-      markdown = { 'prettier' },
-      css = { 'prettier' },
-      html = { 'prettier' },
+      json = oxfmt_or_prettier,
+      jsonc = oxfmt_or_prettier,
+      yaml = oxfmt_or_prettier,
+      markdown = oxfmt_or_prettier,
+      css = oxfmt_or_prettier,
+      scss = oxfmt_or_prettier,
+      less = oxfmt_or_prettier,
+      html = oxfmt_or_prettier,
       toml = { 'taplo' },
       c = { 'clang-format' },
       cpp = { 'clang-format' },
@@ -73,8 +101,10 @@ return {
     end
 
     require('conform').setup({
-      format_on_save = function()
-        if vim.g.autoformat_enabled == false then
+      format_on_save = function(bufnr)
+        -- Flag global (:FormatToggle) + flag por buffer, como craftzdog:
+        -- permite desactivar el autoformato solo en un archivo puntual.
+        if vim.g.autoformat_enabled == false or vim.b[bufnr].disable_autoformat then
           return
         end
         -- lsp_fallback = false porque plugins/lsp/format.lua desactiva las
@@ -84,6 +114,9 @@ return {
       max_file_size = 200 * 1024,
       formatters_by_ft = formatters_by_ft,
       formatters = {
+        oxfmt = {
+          condition = has_oxfmtrc,
+        },
         eslint_d = {
           condition = has_eslintrc,
           cwd = require('conform.util').root_file({

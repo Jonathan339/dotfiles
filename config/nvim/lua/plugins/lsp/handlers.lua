@@ -100,10 +100,23 @@ end
 
 M['vtsls'] = ts_handler('vtsls')
 
--- ESLint LSP (solo diagnósticos y code actions)
+-- ESLint LSP (fallback: solo si el proyecto no usa Oxlint)
 M['eslint'] = function()
   setup('eslint', {
     root_dir = function(bufnr, on_dir)
+      -- Oxlint tiene prioridad si está instalado y el proyecto tiene su config.
+      -- Así no se duplican diagnósticos en proyectos con ambos linters.
+      local has_oxlint = vim.fn.executable('oxlint') == 1
+      local oxlint_root = vim.fs.root(bufnr, {
+        '.oxlintrc.json',
+        '.oxlintrc.jsonc',
+        'oxlint.config.ts',
+      })
+      if has_oxlint and oxlint_root then
+        -- No llamamos on_dir(): así Neovim no arranca ESLint en single-file.
+        return
+      end
+
       local root = vim.fs.root(bufnr, {
         '.eslintrc',
         '.eslintrc.js',
@@ -115,9 +128,24 @@ M['eslint'] = function()
         'eslint.config.cjs',
         'eslint.config.mjs',
         'eslint.config.ts',
-        'package.json',
-      }) or vim.fs.root(bufnr, '.git') or vim.uv.cwd()
-      on_dir(root)
+      })
+
+      -- Soporte para proyectos que definen `eslintConfig` dentro de package.json.
+      if not root then
+        local pkg_root = vim.fs.root(bufnr, 'package.json')
+        if pkg_root then
+          local ok, lines = pcall(vim.fn.readfile, pkg_root .. '/package.json')
+          if ok and table.concat(lines, '\n'):find('"eslintConfig"', 1, true) then
+            root = pkg_root
+          end
+        end
+      end
+
+      -- Sin config de ESLint no arrancamos el servidor (evita el warning
+      -- "Unable to find ESLint library" en proyectos que no usan ESLint).
+      if root then
+        on_dir(root)
+      end
     end,
     filetypes = {
       'javascript',
@@ -138,6 +166,53 @@ M['eslint'] = function()
       validate = 'on',
       workingDirectory = { mode = 'location' },
     },
+  })
+end
+
+-- Oxlint LSP: reemplaza a ESLint en proyectos con config de Oxc. Es mucho más
+-- rápido (Rust) y cubre +500 reglas de ESLint. El fallback a ESLint vive en el
+-- handler de arriba y en Conform (eslint_d/prettier).
+local function oxlint_root(bufnr)
+  local root = vim.fs.root(bufnr, {
+    '.oxlintrc.json',
+    '.oxlintrc.jsonc',
+    'oxlint.config.ts',
+  })
+  if root then
+    return root
+  end
+
+  -- package.json con campo "oxlint" (o Vite+) también cuenta como config.
+  local pkg_root = vim.fs.root(bufnr, 'package.json')
+  if not pkg_root then
+    return nil
+  end
+  local ok, lines = pcall(vim.fn.readfile, pkg_root .. '/package.json')
+  if ok then
+    local content = table.concat(lines, '\n')
+    if content:find('"oxlint"', 1, true) or content:find('"vite-plus"', 1, true) then
+      return pkg_root
+    end
+  end
+end
+
+M['oxlint'] = function()
+  setup('oxlint', {
+    root_dir = function(bufnr, on_dir)
+      local root = oxlint_root(bufnr)
+      if root then
+        on_dir(root)
+      end
+    end,
+    on_attach = function(client, bufnr)
+      vim.api.nvim_buf_create_user_command(bufnr, 'LspOxlintFixAll', function()
+        client:exec_cmd({
+          title = 'Apply Oxlint automatic fixes',
+          command = 'oxc.fixAll',
+          arguments = { { uri = vim.uri_from_bufnr(bufnr) } },
+        })
+      end, { desc = 'Aplicar fixes automáticos de Oxlint' })
+    end,
   })
 end
 

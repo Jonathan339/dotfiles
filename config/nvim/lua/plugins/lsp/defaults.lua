@@ -8,6 +8,14 @@ local ok_cmp, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
 local base_caps = vim.lsp.protocol.make_client_capabilities()
 M.capabilities = ok_cmp and cmp_nvim_lsp.default_capabilities(base_caps) or base_caps
 
+-- Operaciones de archivo (rename/move desde Oil). Inspirado en craftzdog:
+-- el servidor se entera cuando un archivo se renombra o mueve.
+M.capabilities.workspace = M.capabilities.workspace or {}
+M.capabilities.workspace.fileOperations = {
+  didRename = true,
+  willRename = true,
+}
+
 -- Ajustes finos de completionItem
 M.capabilities.textDocument = M.capabilities.textDocument or {}
 M.capabilities.textDocument.completion = M.capabilities.textDocument.completion or {}
