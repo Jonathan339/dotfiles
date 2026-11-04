@@ -11,6 +11,7 @@ path_add() {
   esac
 }
 
+path_add "$HOME/.npm-global/bin"
 path_add "$HOME/.local/bin"
 path_add "$HOME/.cargo/bin"
 path_add "$PNPM_HOME"

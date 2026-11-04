@@ -1,17 +1,20 @@
-export PATH="$HOME/.npm-global/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-# shellcheck shell=bash
 # =========================
 #  .bashrc optimizado
 #  Fecha: 2026-04-12
 # =========================
-# 0) Salir si no es interactivo
+# 0) PATH unificado (antes del check de interactividad para que
+#    los shells no interactivos también lo hereden)
+if [ -f "$HOME/.config/shell/path.sh" ]; then
+  . "$HOME/.config/shell/path.sh"
+fi
+
+# 1) Salir si no es interactivo
 case $- in
   *i*) ;;
   *) return ;;
 esac
 
-# 1) Auto-switch a zsh si existe
+# 2) Auto-switch a zsh si existe
 if [ -t 1 ] && [ -z "${ZSH_VERSION:-}" ] && command -v zsh >/dev/null 2>&1; then
   exec zsh -l
 fi
@@ -55,7 +58,11 @@ unset color_prompt
 # Aliases / colores
 # -------------------------
 if command -v dircolors >/dev/null 2>&1; then
-  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  if [ -r ~/.dircolors ]; then
+    eval "$(dircolors -b ~/.dircolors)"
+  else
+    eval "$(dircolors -b)"
+  fi
 
   alias ls='ls --color=auto'
   alias grep='grep --color=auto'
@@ -92,11 +99,6 @@ if command -v /home/linuxbrew/.linuxbrew/bin/brew >/dev/null 2>&1; then
 fi
 
 # -------------------------
-# PATH unificado
-# -------------------------
-[ -f "$HOME/.config/shell/path.sh" ] && source "$HOME/.config/shell/path.sh"
-
-# -------------------------
 # Deno
 # -------------------------
 [ -f "$HOME/.deno/env" ] && . "$HOME/.deno/env"
@@ -109,13 +111,9 @@ fi
 # -------------------------
 # FNM runtime
 # -------------------------
-if [ -d "$FNM_PATH" ]; then
+if [ -n "${FNM_PATH:-}" ] && [ -d "$FNM_PATH" ]; then
   eval "$(fnm env --shell bash)"
 fi
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
 
 # cargo env (solo si existe: en Arch cargo viene del paquete rust, sin env propio)
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"

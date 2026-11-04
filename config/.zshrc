@@ -1,9 +1,15 @@
-export PATH="$HOME/.npm-global/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-# shellcheck shell=bash
 # =========================
 # Zsh config — ULTRA CLEAN
 # =========================
+# shellcheck no analiza zsh: los scripts bash se validan con `make lint`.
+
+# -------------------------
+# PATH unificado
+# Se carga antes del check de interactividad para que los shells
+# no interactivos (scripts, editores) también hereden el PATH.
+# -------------------------
+[[ -f "$HOME/.config/shell/path.sh" ]] && source "$HOME/.config/shell/path.sh"
+typeset -U path PATH
 
 # Salir si no es interactiva
 [[ $- != *i* ]] && return
@@ -17,12 +23,6 @@ setopt autocd correct \
 
 # Deshabilitar XON/XOFF para que <C-s> funcione en Neovim
 [[ -t 0 ]] && stty -ixon
-
-# -------------------------
-# PATH unificado
-# -------------------------
-[[ -f "$HOME/.config/shell/path.sh" ]] && source "$HOME/.config/shell/path.sh"
-typeset -U path PATH
 
 # -------------------------
 # Editor
@@ -213,13 +213,16 @@ if [[ "$ZSH_PROFILING" == "1" ]]; then
   zmodload zsh/zprof
   zprof
 fi
-fpath+=${ZDOTDIR:-~}/.zsh_functions
+
+# Funciones propias (solo si el directorio existe)
+ZSH_FUNCTIONS="${ZDOTDIR:-$HOME}/.zsh_functions"
+[[ -d "$ZSH_FUNCTIONS" ]] && fpath=("$ZSH_FUNCTIONS" $fpath)
 
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # OpenClaw Completion
-[ -f '/home/jonathan/.openclaw/completions/openclaw.zsh' ] && source '/home/jonathan/.openclaw/completions/openclaw.zsh'
+[ -f "$HOME/.openclaw/completions/openclaw.zsh" ] && source "$HOME/.openclaw/completions/openclaw.zsh"
 
 # Ollama: completado de subcomandos y modelos instalados (config/shell/completions/_ollama)
 if [[ -d "$HOME/.config/shell/completions" ]]; then
