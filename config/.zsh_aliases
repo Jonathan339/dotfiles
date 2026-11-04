@@ -48,8 +48,10 @@ alias em='androidemulator'
 alias mkc='~/.dotfiles/scripts/mkc.sh'
 
 # -------------------------
-# IA local (Ollama sobre Intel Arc B570)
+# IA local (llama.cpp sobre Intel Arc B570)
 # -------------------------
-alias ai-models='ollama list'
-alias ai-gpu='ollama ps'
-alias ai-svc='systemctl status ollama --no-pager'
+alias ai-check='~/.dotfiles/scripts/llama-check.sh'
+alias ai-models='~/.dotfiles/scripts/llama-model.sh list'
+alias ai-model='~/.dotfiles/scripts/llama-model.sh'
+alias ai-bench='~/.dotfiles/scripts/llama-check.sh --bench'
+alias ai-svc='systemctl --user status llama-server --no-pager'
