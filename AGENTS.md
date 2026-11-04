@@ -29,12 +29,18 @@ Precedencia (la última gana): `stow/shared` < `stow/os/<id>` < `stow/wm/<de>` <
 
 - `make check` → valida symlinks; exit 0 = OK. **Corrélo después de tocar cualquier config.**
 - `make lint` → shellcheck (severity=warning) sobre `install.sh`, `link.sh`, `check.sh`, `scripts/*.sh`
-  y `config/colors/palette.sh`.
+  y `config/shell/path.sh`, `config/colors/palette.sh`, más `config/.bashrc` y `config/.zsh_aliases`
+  (forzados a bash) y `zsh -n` sobre `.zshrc`/`.zsh_aliases` (shellcheck no soporta zsh).
 - `make link` → aplica stow; `make link-fix` → repara conflictos con backups `*.bak.<ts>`.
 - `./link.sh shell nvim` → aplica paquetes sueltos (los busca en la última capa donde existan).
 - `make palette` → regenera colores; `make backup` → copia `config/` a `/tmp`.
 - **No corras `make install` / `make install-all`** sin pedido explícito: es interactivo, usa `sudo`,
   instala paquetes y re-aplica stow. Para enlazar usá `make link`.
+- `install.sh` sin flags abre un **selector interactivo** (`fzf` por defecto: Tab marca, Ctrl-a
+  todo, Ctrl-d nada, rueda/PgUp desplaza; `--ui whiptail` usa el checklist `[X]`). Cada ítem
+  marcado instala el paquete + aplica su config. Catálogo en `TOOL_CATALOG`
+  (`tag|etiqueta|comando|función|paquetes stow`). Flags sin sudo: `--list`, `--only tag1,tag2`,
+  `--config-only`, `--dry-run`, `--ui fzf|whiptail|numeric`.
 - No hay tests: la verificación es `make check` (+ `make lint`, + `make palette` si tocaste colores).
 
 ## Trampas
@@ -54,7 +60,8 @@ Precedencia (la última gana): `stow/shared` < `stow/os/<id>` < `stow/wm/<de>` <
 1. Archivo real en `config/…`.
 2. Symlink **relativo** en `stow/<capa>/<pkg>/…` apuntando a `config/…` (no hace falta replicar `$HOME`).
 3. `make link` y `make check`; si debe validarse, actualizá `check.sh`.
-4. Commit con el scope del área (`feat(kitty): …`).
+4. Si es un paquete nuevo, agregalo a `TOOL_CATALOG` en `install.sh` para que aparezca en el menú.
+5. Commit con el scope del área (`feat(kitty): …`).
 
 ## Generado
 

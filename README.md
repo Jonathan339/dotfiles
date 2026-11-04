@@ -41,16 +41,36 @@ Los archivos reales viven en `config/`; dentro de `stow/` hay symlinks hacia `co
 ## Uso rápido
 
 ```bash
-make install                # menú interactivo
+make install                # menú interactivo: marca herramientas e instala + configura
 make install-all            # instala todo (stow como default)
 ./install.sh --all --copy   # instala todo copiando archivos (sin stow)
 make link                   # aplica stow en $HOME
 make link-fix               # aplica + repara conflictos (backups *.bak.<ts>)
 make check                  # valida symlinks (exit 0 = OK)
 make palette                # regenera colores desde config/colors/palette.sh
-make lint                   # shellcheck (requiere shellcheck instalado)
+make lint                   # shellcheck + zsh -n (requiere shellcheck instalado)
 make backup                 # copia config/ a /tmp/dotfiles-backup-<ts>
 ```
+
+El menú usa `fzf` por defecto: **Tab** marca, **Ctrl-a** todo, **Ctrl-d** nada, **rueda/PgUp/PgDn**
+desplaza y **Enter** aplica. Cada ítem marcado instala el paquete si falta **y** aplica su
+configuración con stow. El primer ítem ("Sincronizar configs de lo instalado") aplica solo lo
+que ya tenés. Con `--ui whiptail` usás el checklist clásico (`[X]` con Espacio, scroll con
+PgUp/PgDn); con `--ui numeric`, un menú por números.
+
+Opciones no interactivas del instalador:
+
+```bash
+./install.sh --list                        # catálogo de herramientas y sus configs
+./install.sh --only alacritty              # instala + aplica solo eso
+./install.sh --only kitty,nvim,zsh         # varias, separadas por coma
+./install.sh --config-only --only alacritty  # solo aplica configs (no instala paquetes)
+./install.sh --dry-run --only alacritty    # muestra qué haría, sin ejecutar
+./install.sh --ui whiptail                 # checklist clásico
+```
+
+Con `--ui auto` (default) usa `fzf` si está instalado; si no, `whiptail`; y si tampoco,
+el menú numérico.
 
 También podés aplicar paquetes sueltos:
 

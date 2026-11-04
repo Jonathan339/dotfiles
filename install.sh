@@ -21,11 +21,42 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
 CONFIG_MODE="${DOTFILES_CONFIG_MODE:-stow}"
 ALL_MODE=false
+CONFIG_ONLY=false
+DRY_RUN=false
+ONLY_TAGS=""
+LIST_MODE=false
+UI_MODE="${DOTFILES_UI:-auto}"
+
+# Colores de la paleta compartida (fallback si el archivo no existe)
+PALETTE_FILE="$REPO_ROOT/config/colors/palette.sh"
+MENU_ACCENT="#8f45e3"
+MENU_BG="#252525"
+MENU_FG="#ffffff"
+MENU_PINK="#f485ed"
+MENU_COLOR3="#c47be8"
+MENU_COLOR7="#fab1ed"
+if [[ -f "$PALETTE_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$PALETTE_FILE"
+  MENU_ACCENT="${PALETTE_ACCENT:-$MENU_ACCENT}"
+  MENU_BG="${PALETTE_BG:-$MENU_BG}"
+  MENU_FG="${PALETTE_FG:-$MENU_FG}"
+  MENU_PINK="${PALETTE_COLOR5:-$MENU_PINK}"
+  MENU_COLOR3="${PALETTE_COLOR3:-$MENU_COLOR3}"
+  MENU_COLOR7="${PALETTE_COLOR7:-$MENU_COLOR7}"
+fi
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --all) ALL_MODE=true; shift ;;
     --copy) CONFIG_MODE="copy"; shift ;;
+    --config-only) CONFIG_ONLY=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    --only) ONLY_TAGS="${2:-}"; shift 2 ;;
+    --only=*) ONLY_TAGS="${1#*=}"; shift ;;
+    --ui) UI_MODE="${2:-auto}"; shift 2 ;;
+    --ui=*) UI_MODE="${1#*=}"; shift ;;
+    --list) LIST_MODE=true; shift ;;
     *) shift ;;
   esac
 done
@@ -315,6 +346,14 @@ install_spotify_snap() {
   ok "Spotify instalado."
 }
 
+install_vscode() {
+  install_snap_app code --classic
+}
+
+install_android_studio() {
+  install_snap_app android-studio --classic
+}
+
 install_yarn() {
   if [[ "$PM" == "pacman" ]]; then
     install_package_if_missing yarn
@@ -467,114 +506,359 @@ install_all() {
   ok "Instalación completa finalizada."
 }
 
-if [[ "$ALL_MODE" == "true" ]]; then
+# ==============================================================================
+# Catálogo: herramienta → instalación + configs
+# Formato: tag|etiqueta|comando requerido|función|paquetes stow
+# ==============================================================================
+TOOL_CATALOG=(
+  "__installed|Sincronizar configs de lo instalado||__installed|"
+  "__base|Paquetes base del sistema||install_packages|"
+  "nvim|Neovim|nvim|install_neovim|nvim"
+  "opencode|OpenCode|opencode|install_opencode|opencode"
+  "kitty|Kitty|kitty|install_kitty|kitty"
+  "alacritty|Alacritty|alacritty|install_alacritty|alacritty"
+  "ghostty|Ghostty|ghostty|install_ghostty|ghostty"
+  "wezterm|WezTerm|wezterm|install_wezterm|wezterm"
+  "zsh|Zsh + Oh My Zsh|zsh|install_zsh|shell"
+  "tmux|Tmux|tmux|install_tmux|shell"
+  "rofi|Rofi|rofi|install_rofi|rofi"
+  "hyprland|Hyprland + complementos|Hyprland|install_hyprland|hypr waybar dunst"
+  "vscode|VS Code|code|install_vscode|"
+  "spotify|Spotify|spotify|install_spotify_snap|"
+  "android-studio|Android Studio|android-studio|install_android_studio|"
+  "bun|Bun|bun|install_bun|"
+  "nodejs|Node.js (via FNM)|fnm|install_nodejs|"
+  "yarn|Yarn|yarn|install_yarn|"
+  "lazygit|Lazygit|lazygit|install_lazygit|"
+  "nerd-fonts|Nerd Fonts||install_nerd_fonts|"
+  "kitty-themes|kitty-themes||install_kitty_themes|"
+  "__all|Aplicar TODOS los dotfiles||__apply_all|"
+  "__check|Validar symlinks||__check|"
+  "__clean|Limpiar sistema||__clean|"
+)
+
+catalog_entry() {
+  local tag="$1" entry
+  for entry in "${TOOL_CATALOG[@]}"; do
+    if [[ "${entry%%|*}" == "$tag" ]]; then
+      printf '%s\n' "$entry"
+      return 0
+    fi
+  done
+  return 1
+}
+
+catalog_label() {
+  local entry label
+  if entry="$(catalog_entry "$1")"; then
+    IFS='|' read -r _ label _ _ _ <<< "$entry"
+    printf '%s' "$label"
+  else
+    printf '%s' "$1"
+  fi
+}
+
+list_tools() {
+  local entry tag label req pkgs
+  printf '%-16s %-38s %-12s %s\n' "TAG" "HERRAMIENTA" "REQUIERE" "CONFIGS"
+  printf '%-16s %-38s %-12s %s\n' "----" "-----------" "--------" "-------"
+  for entry in "${TOOL_CATALOG[@]}"; do
+    IFS='|' read -r tag label req _ pkgs <<< "$entry"
+    printf '%-16s %-38s %-12s %s\n' "$tag" "$label" "${req:--}" "${pkgs:--}"
+  done
+}
+
+run_tool_action() {
+  local fn="$1" label="$2"
+  case "$fn" in
+    "") return 0 ;;
+    __apply_all) apply_config_files ;;
+    __check) "$REPO_ROOT/check.sh" || true ;;
+    __clean) clean ;;
+    *)
+      if declare -F "$fn" >/dev/null 2>&1; then
+        "$fn"
+      else
+        warn "Acción desconocida: $fn ($label)"
+        return 1
+      fi
+      ;;
+  esac
+}
+
+installed_tags() {
+  local entry tag req
+  for entry in "${TOOL_CATALOG[@]}"; do
+    IFS='|' read -r tag _ req _ _ <<< "$entry"
+    [[ "$tag" == "__installed" ]] && continue
+    if [[ -n "$req" ]] && command -v "$req" >/dev/null 2>&1; then
+      printf '%s\n' "$tag"
+    fi
+  done
+}
+
+apply_tool() {
+  local tag="$1" entry label fn pkgs
+
+  # Pseudo-herramienta: expandir a todo lo que ya está instalado
+  if [[ "$tag" == "__installed" ]]; then
+    local t
+    while IFS= read -r t; do
+      if [[ -n "$t" ]]; then
+        apply_tool "$t" || true
+      fi
+    done < <(installed_tags)
+    return 0
+  fi
+
+  if ! entry="$(catalog_entry "$tag")"; then
+    warn "Herramienta desconocida: $tag"
+    return 1
+  fi
+  IFS='|' read -r _ label _ fn pkgs <<< "$entry"
+
+  # --config-only: solo acciones que aplican configs
+  if [[ "$CONFIG_ONLY" == true && -z "$pkgs" && "$fn" != "__apply_all" && "$fn" != "__check" ]]; then
+    warn "$label: no tiene configs para aplicar (modo --config-only)."
+    return 0
+  fi
+
+  log "▶ $label"
+
+  if [[ "$DRY_RUN" == true ]]; then
+    case "$fn" in
+      "") ;;
+      __apply_all|__check|__clean) echo "   acción   → $fn" ;;
+      *) [[ "$CONFIG_ONLY" == true ]] || echo "   instalar → $fn" ;;
+    esac
+    [[ -z "$pkgs" ]] || echo "   configs  → link.sh $pkgs"
+    return 0
+  fi
+
+  if [[ "$CONFIG_ONLY" != true && -n "$fn" ]]; then
+    run_tool_action "$fn" "$label" || warn "Falló: $label"
+  fi
+
+  if [[ -n "$pkgs" ]]; then
+    if [[ "$CONFIG_MODE" == "copy" ]]; then
+      warn "Modo --copy: usá 'Aplicar TODOS los dotfiles' para copiar configs."
+    else
+      # shellcheck disable=SC2086  # lista controlada desde el catálogo
+      "$REPO_ROOT/link.sh" $pkgs || warn "No se pudo aplicar la config de $label"
+    fi
+  fi
+}
+
+build_checklist_items() {
+  local entry tag label req state
+  CHECKLIST_ITEMS=()
+  for entry in "${TOOL_CATALOG[@]}"; do
+    IFS='|' read -r tag label req _ _ <<< "$entry"
+    state="OFF"
+    # Preseleccionar lo ya instalado: Enter = sincronizar configs
+    if [[ -n "$req" ]] && command -v "$req" >/dev/null 2>&1; then
+      state="ON"
+    fi
+    CHECKLIST_ITEMS+=("$tag" "$label" "$state")
+  done
+}
+
+run_numeric_menu() {
+  local i=1 entry tag label req choice n
+  echo "Herramientas disponibles:"
+  for entry in "${TOOL_CATALOG[@]}"; do
+    IFS='|' read -r tag label req _ _ <<< "$entry"
+    printf '  %2d) %-38s %s\n' "$i" "$label" "${req:+[$req]}"
+    i=$((i + 1))
+  done
+  printf '\nNúmeros separados por espacio (ej: 1 3 5), "a" = todas, Enter = salir: '
+  read -r choice || return 0
+  [[ -z "$choice" ]] && { log "Cancelado."; return 0; }
+
+  local tags=()
+  if [[ "$choice" == "a" || "$choice" == "all" ]]; then
+    for entry in "${TOOL_CATALOG[@]}"; do
+      tags+=("${entry%%|*}")
+    done
+  else
+    for n in $choice; do
+      if [[ ! "$n" =~ ^[0-9]+$ ]]; then
+        warn "Ignorando: $n"
+        continue
+      fi
+      entry="${TOOL_CATALOG[$((n - 1))]:-}"
+      if [[ -z "$entry" ]]; then
+        warn "Fuera de rango: $n"
+        continue
+      fi
+      tags+=("${entry%%|*}")
+    done
+  fi
+
+  [[ ${#tags[@]} -eq 0 ]] && return 0
+  for tag in "${tags[@]}"; do
+    apply_tool "$tag" || true
+  done
+  [[ "$DRY_RUN" == true ]] || "$REPO_ROOT/check.sh" || true
+}
+
+build_fzf_list() {
+  local entry tag label req state
+  for entry in "${TOOL_CATALOG[@]}"; do
+    IFS='|' read -r tag label req _ _ <<< "$entry"
+    state="○"
+    if [[ -n "$req" ]] && command -v "$req" >/dev/null 2>&1; then
+      state="●"
+    fi
+    printf '%s\t%s\t%s\n' "$tag" "$label" "$state"
+  done
+}
+
+run_fzf_menu() {
+  local tmp tag entry req
+  tmp="$(mktemp)"
+
+  if ! build_fzf_list | fzf --multi --height=100% --reverse --cycle \
+      --delimiter='\t' --with-nth=2,3 \
+      --highlight-line \
+      --header='Tab marca · Ctrl-a todo · Ctrl-d nada · rueda/PgUp desplaza · Enter aplica' \
+      --prompt='Instalar y configurar> ' \
+      --bind='ctrl-a:select-all,ctrl-d:deselect-all' \
+      --color="fg:${MENU_FG},bg:${MENU_BG},hl:${MENU_COLOR3},fg+:#ffffff,bg+:${MENU_ACCENT},hl+:#ffffff,selected-bg:${PALETTE_SEL_BG:-#170830},selected-fg:#ffffff,pointer:${MENU_PINK},marker:${MENU_PINK},header:${MENU_COLOR3},prompt:${MENU_PINK},spinner:${MENU_COLOR3},info:${MENU_COLOR7},border:${MENU_ACCENT},label:${MENU_COLOR3},query:${MENU_FG}" > "$tmp"; then
+    rm -f "$tmp"
+    log "Cancelado."
+    return 0
+  fi
+
+  local tags=()
+  while IFS=$'\t' read -r tag _; do
+    [[ -n "$tag" ]] && tags+=("$tag")
+  done < "$tmp"
+  rm -f "$tmp"
+
+  # Enter sin marcar nada: sincronizar lo que ya está instalado
+  if [[ ${#tags[@]} -eq 0 ]]; then
+    for entry in "${TOOL_CATALOG[@]}"; do
+      IFS='|' read -r tag _ req _ _ <<< "$entry"
+      if [[ -n "$req" ]] && command -v "$req" >/dev/null 2>&1; then
+        tags+=("$tag")
+      fi
+    done
+  fi
+
+  if [[ ${#tags[@]} -eq 0 ]]; then
+    warn "No seleccionaste nada."
+    return 0
+  fi
+
+  for tag in "${tags[@]}"; do
+    apply_tool "$tag" || true
+  done
+
+  if [[ "$DRY_RUN" != true ]]; then
+    log "Validando symlinks..."
+    "$REPO_ROOT/check.sh" || true
+  fi
+}
+
+run_checklist_menu() {
+  if ! command -v whiptail >/dev/null 2>&1; then
+    warn "whiptail no está instalado; usando menú numérico."
+    run_numeric_menu
+    return 0
+  fi
+
+  build_checklist_items
+
+  # Resalta la casilla enfocada con el acento de la paleta
+  local newt_colors="actcheckbox=white,${MENU_ACCENT}"
+
+  local out
+  if ! out="$(NEWT_COLORS="$newt_colors" whiptail --title "Dotfiles — herramientas" \
+      --separate-output --checklist \
+      "Espacio marca/desmarca · PgUp/PgDn desplaza · Enter aplica" \
+      26 82 18 "${CHECKLIST_ITEMS[@]}" 3>&1 1>&2 2>&3)"; then
+    log "Cancelado."
+    return 0
+  fi
+
+  local chosen=() line
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && chosen+=("$line")
+  done <<< "$out"
+
+  if [[ ${#chosen[@]} -eq 0 ]]; then
+    warn "No seleccionaste nada."
+    return 0
+  fi
+
+  local labels=() tag mode list confirm_text
+  for tag in "${chosen[@]}"; do
+    labels+=("$(catalog_label "$tag")")
+  done
+  mode="instalar paquetes + aplicar configs"
+  [[ "$CONFIG_ONLY" == true ]] && mode="solo aplicar configs"
+
+  list="$(printf '  • %s\n' "${labels[@]}")"
+  printf -v confirm_text 'Modo: %s\n\n%s\n¿Continuar?' "$mode" "$list"
+
+  if ! whiptail --title "Confirmar" --yesno "$confirm_text" 22 78; then
+    log "Cancelado."
+    return 0
+  fi
+
+  for tag in "${chosen[@]}"; do
+    apply_tool "$tag" || true
+  done
+
+  if [[ "$DRY_RUN" != true ]]; then
+    log "Validando symlinks..."
+    "$REPO_ROOT/check.sh" || true
+  fi
+}
+
+run_tool_menu() {
+  case "$UI_MODE" in
+    fzf) run_fzf_menu ;;
+    whiptail) run_checklist_menu ;;
+    numeric) run_numeric_menu ;;
+    auto)
+      if command -v fzf >/dev/null 2>&1; then
+        run_fzf_menu
+      elif command -v whiptail >/dev/null 2>&1; then
+        run_checklist_menu
+      else
+        run_numeric_menu
+      fi
+      ;;
+    *)
+      warn "UI desconocida: $UI_MODE (usá fzf, whiptail o numeric)."
+      run_checklist_menu
+      ;;
+  esac
+}
+
+# ==============================================================================
+# Punto de entrada
+# ==============================================================================
+if [[ "$LIST_MODE" == true ]]; then
+  list_tools
+  exit 0
+fi
+
+if [[ "$ALL_MODE" == true ]]; then
   install_all
   exit 0
 fi
 
-# --- Menú interactivo ---
+if [[ -n "$ONLY_TAGS" ]]; then
+  IFS=',' read -r -a ONLY_LIST <<< "$ONLY_TAGS"
+  for tag in "${ONLY_LIST[@]}"; do
+    [[ -z "$tag" ]] || apply_tool "$tag" || true
+  done
+  [[ "$DRY_RUN" == true ]] || "$REPO_ROOT/check.sh" || true
+  exit 0
+fi
 
-PS3="Elegí una opción: "
+run_tool_menu
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  SISTEMA"
-echo "━━━━━━━━━━━━━━━━━━━━━━━"
-
-select option in \
-  "Instalar TODO completo" \
-  "Instalar paquetes base" \
-  "Instalar apps extra (vscode, spotify, android-studio)" \
-  "Limpiar sistema" \
-  "Aplicar/validar symlinks" \
-  "" \
-  "━━━ HERRAMIENTAS ━━━" \
-  "Instalar Neovim" \
-  "Instalar OpenCode" \
-  "Instalar Kitty" \
-  "Instalar Alacritty" \
-  "Instalar Ghostty" \
-  "Instalar WezTerm" \
-  "Instalar Zsh + Oh My Zsh" \
-  "Instalar Tmux" \
-  "Instalar Rofi" \
-  "Instalar Hyprland + complementos" \
-  "" \
-  "━━━ DOTFILES ━━━" \
-  "Aplicar TODOS los dotfiles" \
-  "Aplicar solo config de shell" \
-  "Aplicar solo config de nvim" \
-  "Aplicar solo config de kitty" \
-  "Aplicar solo config de alacritty" \
-  "Aplicar solo config de ghostty" \
-  "Aplicar solo config de wezterm" \
-  "Aplicar solo config de rofi" \
-  "Aplicar solo config de hypr" \
-  "Aplicar solo config de waybar" \
-  "Aplicar solo config de dunst" \
-  "" \
-  "━━━ EXTRAS ━━━" \
-  "Instalar Bun" \
-  "Instalar Oh My Zsh" \
-  "Instalar kitty-themes" \
-  "Instalar Node.js (via FNM)" \
-  "Instalar Yarn" \
-  "Instalar Lazygit" \
-  "Instalar Nerd Fonts" \
-  "" \
-  "━━━ APPS EXTRA ━━━" \
-  "Instalar Spotify" \
-  "" \
-  "━━━ SALIR ━━━" \
-  "Salir"
-do
-  [[ -z "$REPLY" || "$REPLY" == "0" ]] && continue
-
-  case $option in
-    "Instalar TODO completo") install_all ;;
-    "Instalar paquetes base") install_packages ;;
-    "Instalar apps extra (vscode, spotify, android-studio)")
-      install_snap_app android-studio --classic
-      install_snap_app spotify
-      install_snap_app code --classic
-      ok "Apps extra instaladas."
-      ;;
-    "Limpiar sistema") clean ;;
-    "Aplicar/validar symlinks") "$REPO_ROOT/link.sh" --fix ;;
-
-    "Instalar Neovim") install_neovim ;;
-    "Instalar OpenCode") install_opencode ;;
-    "Instalar Kitty") install_kitty ;;
-    "Instalar Alacritty") install_alacritty ;;
-    "Instalar Ghostty") install_ghostty ;;
-    "Instalar WezTerm") install_wezterm ;;
-    "Instalar Zsh + Oh My Zsh") install_zsh ;;
-    "Instalar Tmux") install_tmux ;;
-    "Instalar Rofi") install_rofi ;;
-    "Instalar Hyprland + complementos") install_hyprland ;;
-
-    "Aplicar TODOS los dotfiles") apply_config_files ;;
-    "Aplicar solo config de shell") "$REPO_ROOT/link.sh" shell ;;
-    "Aplicar solo config de nvim") "$REPO_ROOT/link.sh" nvim ;;
-    "Aplicar solo config de kitty") "$REPO_ROOT/link.sh" kitty ;;
-    "Aplicar solo config de alacritty") "$REPO_ROOT/link.sh" alacritty ;;
-    "Aplicar solo config de ghostty") "$REPO_ROOT/link.sh" ghostty ;;
-    "Aplicar solo config de wezterm") "$REPO_ROOT/link.sh" wezterm ;;
-    "Aplicar solo config de rofi") "$REPO_ROOT/link.sh" rofi ;;
-    "Aplicar solo config de hypr") "$REPO_ROOT/link.sh" hypr ;;
-    "Aplicar solo config de waybar") "$REPO_ROOT/link.sh" waybar ;;
-    "Aplicar solo config de dunst") "$REPO_ROOT/link.sh" dunst ;;
-
-    "Instalar Bun") install_bun ;;
-    "Instalar Oh My Zsh") install_oh_my_zsh ;;
-    "Instalar kitty-themes") install_kitty_themes ;;
-    "Instalar Node.js (via FNM)") install_nodejs ;;
-    "Instalar Yarn") install_yarn ;;
-    "Instalar Lazygit") install_lazygit ;;
-    "Instalar Nerd Fonts") install_nerd_fonts ;;
-
-    "Instalar Spotify") install_spotify_snap ;;
-
-    "Salir") exit 0 ;;
-    *) warn "Opción inválida." ;;
-  esac
-done
