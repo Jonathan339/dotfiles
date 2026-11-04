@@ -70,6 +70,7 @@ declare -A SHELL_LINKS=(
   [".zsh_aliases"]="$HOME/.zsh_aliases"
   [".tmux.conf"]="$HOME/.tmux.conf"
   [".gitconfig"]="$HOME/.gitconfig"
+  [".gitignore_global"]="$HOME/.gitignore_global"
   [".config/shell/path.sh"]="$HOME/.config/shell/path.sh"
   [".config/shell/completions/_ollama"]="$HOME/.config/shell/completions/_ollama"
 )
@@ -215,6 +216,8 @@ check_stow_internal_symlinks() {
     local dir target resolved
     dir="$(dirname "$link")"
     target="$(readlink "$link")"
+    # Si cd falla, resolved queda vacío: el A && B || C es intencional.
+    # shellcheck disable=SC2015
     resolved="$(cd "$dir" && readlink -f "$target" 2>/dev/null || true)"
 
     if [[ -z "$resolved" ]] || [[ ! -e "$resolved" ]]; then
@@ -316,6 +319,37 @@ if [[ " ${LAYERS[*]} " == *" wm/kde "* ]]; then
   for f in ".config/kxkbrc" ".config/kcminputrc"; do
     dest="$HOME/$f"
     label="plasma → $dest"
+    if [[ ! -e "$dest" ]] && [[ ! -L "$dest" ]]; then
+      warn "No aplicado: $label"
+    else
+      check_symlink "$dest" "$label" || true
+    fi
+  done
+fi
+
+# Hyprland (capa wm/hyprland: paquetes hypr, waybar, dunst)
+if [[ " ${LAYERS[*]} " == *" wm/hyprland "* ]]; then
+  echo ""
+  echo "━━━ Hyprland ━━━"
+  for f in ".config/hypr/hyprland.conf" ".config/waybar/config" ".config/waybar/style.css" ".config/dunst/dunstrc"; do
+    dest="$HOME/$f"
+    label="hyprland → $dest"
+    if [[ ! -e "$dest" ]] && [[ ! -L "$dest" ]]; then
+      warn "No aplicado: $label"
+    else
+      check_symlink "$dest" "$label" || true
+    fi
+  done
+fi
+
+# systemd (capa host/*, paquete systemd)
+if [[ " ${LAYERS[*]} " == *"host/"* ]]; then
+  echo ""
+  echo "━━━ systemd ━━━"
+  SYSTEMD_LINKS=(".config/systemd/user/llama-server.service")
+  for f in "${SYSTEMD_LINKS[@]}"; do
+    dest="$HOME/$f"
+    label="systemd → $dest"
     if [[ ! -e "$dest" ]] && [[ ! -L "$dest" ]]; then
       warn "No aplicado: $label"
     else
