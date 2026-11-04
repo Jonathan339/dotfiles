@@ -20,6 +20,18 @@ if not vim.env.PATH:find(mason_bin, 1, true) then
   vim.env.PATH = mason_bin .. ':' .. vim.env.PATH
 end
 
+-- Node (fnm). Los servidores LSP de Mason son scripts con
+-- "#!/usr/bin/env node" y en el sistema no hay node fuera de fnm, que solo
+-- exporta un multishell por shell. Lanzado desde el escritorio (KDE) o sin
+-- .zshrc, nvim no ve node y bashls/tailwindcss/vtsls mueren con exit 127.
+local fnm_node_bin = vim.fn.expand('~/.local/share/fnm/aliases/default/bin')
+if
+  vim.fn.isdirectory(fnm_node_bin) == 1
+  and not vim.env.PATH:find(fnm_node_bin, 1, true)
+then
+  vim.env.PATH = fnm_node_bin .. ':' .. vim.env.PATH
+end
+
 -- Toolchain de Rust (rustup). Nvim puede lanzarse desde el lanzador del
 -- escritorio sin el PATH del shell, y conform solo activa rustfmt si lo
 -- encuentra al iniciar.
