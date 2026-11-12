@@ -1,17 +1,20 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-C=$(tput setaf 6 2>/dev/null)
-B=$(tput bold 2>/dev/null)
-R=$(tput sgr0 2>/dev/null)
+C=$(tput setaf 6 2>/dev/null || true)
+B=$(tput bold 2>/dev/null || true)
+R=$(tput sgr0 2>/dev/null || true)
+
+ME=${0##*/}
 
 usage() {
-	echo "Uso: $0 [nombre] [-cpp] [-t] [-clasico]"
-	echo "  nombre    nombre del proyecto (sin argumentos: menú interactivo)"
-	echo "  -cpp      estructura para C++ en vez de C"
-	echo "  -t        crea tests/ con un test de ejemplo"
-	echo "  -clasico  main de C++ con printf en vez de std::cout (solo con -cpp)"
-	exit 1
+	cat <<EOF
+Uso: $ME [nombre] [-cpp] [-t] [-clasico]
+  nombre    nombre del proyecto (sin argumentos: menú interactivo)
+  -cpp      estructura para C++ en vez de C
+  -t        crea tests/ con un test de ejemplo
+  -clasico  main de C++ con printf en vez de std::cout (solo con -cpp)
+EOF
 }
 
 preguntar_nombre() {
@@ -72,17 +75,25 @@ ESTILO="moderno"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-		-cpp) MODULO="cpp" ;;
-		-t) CON_TESTS="si" ;;
-		-clasico) ESTILO="clasico" ;;
-		-h | --help) usage ;;
-		*) NOMBRE="$1" ;;
+		-cpp | --cpp) MODULO="cpp" ;;
+		-t | --tests) CON_TESTS="si" ;;
+		-clasico | --clasico) ESTILO="clasico" ;;
+		-h | --help) usage; exit 0 ;;
+		-*)
+			echo "Opción desconocida: $1" >&2
+			usage >&2
+			exit 1
+			;;
+		*)
+			[ -z "$NOMBRE" ] || { echo "Error: solo se admite un nombre de proyecto" >&2; exit 1; }
+			NOMBRE="$1"
+			;;
 	esac
 	shift
 done
 
 if [ -z "$NOMBRE" ]; then
-	[ -t 0 ] || usage
+	[ -t 0 ] || { usage >&2; exit 1; }
 	NOMBRE=$(preguntar_nombre "demo")
 	if [ "$MODULO" = "c" ]; then
 		L=$(seleccionar "Lenguaje" "C" "C" "C++")
@@ -98,23 +109,32 @@ if [ -z "$NOMBRE" ]; then
 	fi
 fi
 
+# Nombre seguro para directorios, #include y Makefile
+[[ "$NOMBRE" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]*$ ]] || {
+	echo "Error: nombre inválido '$NOMBRE' (usa letras, números, '.', '_' o '-')" >&2
+	exit 1
+}
+
 [ -e "$NOMBRE" ] && { echo "Error: '$NOMBRE' ya existe" >&2; exit 1; }
 
 EXT="c"
 EXT_H="h"
 CC="gcc"
-FLAGS="-Wall -Wextra -Iinclude"
+CFLAGS="-Wall -Wextra -g -Iinclude"
 if [ "$MODULO" = "cpp" ]; then
 	EXT="cpp"
 	EXT_H="hpp"
 	CC="g++"
-	FLAGS="-Wall -Wextra -Iinclude -std=c++17"
+	CFLAGS="-Wall -Wextra -g -std=c++17 -Iinclude"
 fi
 
 mkdir -p "$NOMBRE"/{src,include,build}
 [ "$CON_TESTS" = "si" ] && mkdir -p "$NOMBRE/tests"
 
-GUARD=$(echo "$NOMBRE" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+GUARD=$(printf '%s' "$NOMBRE" | tr '[:lower:]' '[:upper:]' | tr -c 'A-Z0-9' '_')
+case "$GUARD" in
+	[0-9]*) GUARD="_$GUARD" ;;
+esac
 
 if [ "$MODULO" = "cpp" ] && [ "$ESTILO" = "moderno" ]; then
 	cat > "$NOMBRE/src/main.$EXT" <<EOF
@@ -145,19 +165,21 @@ EOF
 
 cat > "$NOMBRE/Makefile" <<'EOF'
 CC = @CC@
-CFLAGS = @FLAGS@
+CFLAGS = @CFLAGS@
 BUILD = build
 TARGET = $(BUILD)/@NOMBRE@
 SRCS = $(wildcard src/*.@EXT@)
 TEST = $(wildcard tests/test_*.@EXT@)
 
-default: run
+default: build
 
 $(TARGET): $(SRCS)
 	mkdir -p $(BUILD)
 	$(CC) $(CFLAGS) $(SRCS) -o $(TARGET)
 
-run: $(TARGET)
+build: $(TARGET)
+
+run: build
 	./$(TARGET)
 
 test: $(TARGET) $(TEST)
@@ -168,9 +190,9 @@ test: $(TARGET) $(TEST)
 clean:
 	rm -rf $(BUILD)
 
-.PHONY: default run test clean
+.PHONY: default build run test clean
 EOF
-sed -i "s/@CC@/$CC/; s|@FLAGS@|$FLAGS|; s/@NOMBRE@/$NOMBRE/; s/@EXT@/$EXT/" "$NOMBRE/Makefile"
+sed -i "s|@CC@|$CC|; s|@CFLAGS@|$CFLAGS|; s|@NOMBRE@|$NOMBRE|; s|@EXT@|$EXT|" "$NOMBRE/Makefile"
 
 if [ "$CON_TESTS" = "si" ]; then
 	cat > "$NOMBRE/tests/test_$NOMBRE.$EXT" <<'EOF'
@@ -190,7 +212,14 @@ int main(void) {
 EOF
 fi
 
-printf -- "-Iinclude\n" > "$NOMBRE/compile_flags.txt"
+{
+	printf -- '-Iinclude\n'
+	printf -- '-Wall\n'
+	printf -- '-Wextra\n'
+	if [ "$MODULO" = "cpp" ]; then
+		printf -- '-std=c++17\n'
+	fi
+} > "$NOMBRE/compile_flags.txt"
 
 cat > "$NOMBRE/.gitignore" <<'EOF'
 build/
