@@ -6,7 +6,7 @@ StartLimitBurst=10
 StartLimitIntervalSec=300
 
 [Service]
-ExecStart=/home/jonathan/.local/share/fnm/node-versions/v26.13.0/installation/bin/node --max-old-space-size=7674 /home/jonathan/.local/share/fnm/node-versions/v26.13.0/installation/lib/node_modules/openclaw/dist/index.js gateway --port 18789
+ExecStart=/home/jonathan/.local/share/fnm/node-versions/v26.13.0/installation/bin/node --max-old-space-size=3072 /home/jonathan/.local/share/fnm/node-versions/v26.13.0/installation/lib/node_modules/openclaw/dist/index.js gateway --port 18789
 Restart=always
 RestartSec=5
 RestartPreventExitStatus=78
@@ -15,6 +15,10 @@ TimeoutStartSec=30
 SuccessExitStatus=0 143
 OOMPolicy=continue
 KillMode=mixed
+
+# Tope de memoria del cgroup (heap Node 3 GB + overhead). Evita que un pico
+# del gateway dispare un OOM global como el del 05/11.
+MemoryMax=4G
 Environment=HOME=/home/jonathan
 Environment=TMPDIR=/tmp
 Environment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt

@@ -14,5 +14,9 @@ ExecStart=%h/.dotfiles/scripts/llama-serve.sh
 Restart=on-failure
 RestartSec=3
 
+# Tope duro de memoria del cgroup: si el server se dispara, se reinicia solo en
+# lugar de arrastrar a toda la sesión a un OOM global. Pico medido: ~7 GB.
+MemoryMax=8G
+
 [Install]
 WantedBy=default.target
