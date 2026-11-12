@@ -1,6 +1,13 @@
 # shellcheck shell=bash
+# =========================
+# Alias de shell — fuente única
+# =========================
+# Este archivo lo cargan tanto zsh (.zshrc) como bash (.bashrc), así que
+# debe ser compatible con ambos. Los alias que solo tienen sentido en zsh
+# (p. ej. los que llaman a funciones de .zshrc) se anotan como tal.
+
 # -------------------------
-# Navegación y Sistema (Seguros)
+# Navegación y sistema
 # -------------------------
 alias ls='ls --color=auto'
 alias la='ls -A'
@@ -8,6 +15,22 @@ alias ll='ls -alF'
 alias l='ls -CF'
 alias grep='grep --color=auto'
 
+# Ruta del PATH numerada (antes solo existía en bash).
+alias path='echo "$PATH" | tr ":" "\n" | nl'
+
+# Información del sistema en formato legible.
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+alias ip='ip -c'
+
+# Terminal.
+alias clr='clear'
+
+# Editor: nvim como predeterminado.
+alias vim='nvim'
+
+# Copiar/mover/borrar con protección.
 alias cp='cp -i'
 alias mv='mv -i'
 # rm ya es recursivo: -I pide confirmación antes de borrados grandes y
@@ -21,15 +44,17 @@ alias rmf='rm -rf --preserve-root'
 alias pi='sudo pacman -S --needed'
 
 # -------------------------
-# Git Shortcuts
+# Git (plugin git de oh-my-zsh)
 # -------------------------
+# gs y gpp no los define oh-my-zsh; gc y gp SÍ, pero aquí se sobreescriben
+# a propósito (ver comentarios).
 alias gs='git status'
-alias gp='git pull'
+alias gp='git pull'        # oh-my-zsh define gp='git push'
 alias gpp='git push'
-alias gc='git commit -am'
+alias gc='git commit -am'  # oh-my-zsh define gc='git commit --verbose'
 
 # -------------------------
-# Editor
+# Editor / herramientas
 # -------------------------
 alias n='nvim'
 alias oc='opencode'
@@ -40,7 +65,7 @@ alias oc='opencode'
 alias android='yarn android && code .'
 alias run-react='yarn react-native run-android && yarn react-native start'
 alias exp='bunx create-expo-app@latest --template blank-typescript'
-alias em='androidemulator'
+alias em='androidemulator'  # requiere la función androidemulator de .zshrc
 
 # -------------------------
 # Proyectos C/C++

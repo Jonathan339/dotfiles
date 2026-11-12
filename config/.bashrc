@@ -57,23 +57,22 @@ unset color_prompt
 # -------------------------
 # Aliases / colores
 # -------------------------
+# dircolors solo define LS_COLORS para ls; los alias vienen del archivo
+# compartido con zsh para no mantener dos listas.
 if command -v dircolors >/dev/null 2>&1; then
   if [ -r ~/.dircolors ]; then
     eval "$(dircolors -b ~/.dircolors)"
   else
     eval "$(dircolors -b)"
   fi
-
-  alias ls='ls --color=auto'
-  alias grep='grep --color=auto'
-  alias fgrep='fgrep --color=auto'
-  alias egrep='egrep --color=auto'
 fi
 
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias path='echo "$PATH" | tr ":" "\n" | nl'
+# Fuente única de alias (compartida con zsh)
+[ -f ~/.zsh_aliases ] && . ~/.zsh_aliases
+
+# Específicos de bash (oh-my-zsh ya los define en zsh)
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
 
 # -------------------------
 # Bash completion
