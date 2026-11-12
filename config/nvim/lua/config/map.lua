@@ -1,133 +1,133 @@
-local map = require("utils").map
+local map = require('utils').map
 
 -- ======================================================
 -- GENERAL
 -- ======================================================
 
-map("n", "<C-a>", "ggVG", {
-  desc = "Seleccionar todo",
+map('n', '<C-a>', 'ggVG', {
+  desc = 'Seleccionar todo',
 })
 
-map("i", ",,", "<ESC>", {
-  desc = "Salir del modo insertar",
+map('i', ',,', '<ESC>', {
+  desc = 'Salir del modo insertar',
 })
 
-map("n", "<Leader>w", ":w!<CR>", {
-  desc = "Guardar archivo actual",
+map('n', '<Leader>w', ':w!<CR>', {
+  desc = 'Guardar archivo actual',
 })
 
-map("n", "<Leader>q", ":x!<CR>", {
-  desc = "Salir del editor",
+map('n', '<Leader>q', ':x!<CR>', {
+  desc = 'Salir del editor',
 })
 
-map("n", "<Leader><Leader>", "<C-^>", {
-  desc = "Alternar entre archivos",
+map('n', '<Leader><Leader>', '<C-^>', {
+  desc = 'Alternar entre archivos',
 })
 
-map("n", "<Leader>r", ":%s/", {
-  desc = "Buscar y reemplazar",
+map('n', '<Leader>r', ':%s/', {
+  desc = 'Buscar y reemplazar',
 })
 
 -- ======================================================
 -- NEOTREE
 -- ======================================================
 
-map("n", "<Leader>n", ":Neotree float<CR>", {
-  desc = "Abrir Neotree",
+map('n', '<Leader>n', ':Neotree float<CR>', {
+  desc = 'Abrir Neotree',
 })
 
 -- ======================================================
 -- OIL
 -- ======================================================
 
-map("n", "-", "<CMD>Oil --float<CR>", {
-  desc = "Abrir directorio principal",
+map('n', '-', '<CMD>Oil --float<CR>', {
+  desc = 'Abrir directorio principal',
 })
 
 -- ======================================================
 -- TERMINAL
 -- ======================================================
 
-map("n", "<Leader>t", ":ToggleTerm<CR>", {
-  desc = "Abrir terminal",
+map('n', '<Leader>t', ':ToggleTerm<CR>', {
+  desc = 'Abrir terminal',
 })
 
 -- ======================================================
 -- BUFFERS
 -- ======================================================
 
-map("n", "<A-Right>", ":bnext<CR>", {
-  desc = "Siguiente buffer",
+map('n', '<A-Right>', ':bnext<CR>', {
+  desc = 'Siguiente buffer',
 })
 
-map("n", "<A-Left>", ":bprevious<CR>", {
-  desc = "Buffer anterior",
+map('n', '<A-Left>', ':bprevious<CR>', {
+  desc = 'Buffer anterior',
 })
 
-map("n", "<Leader>c", function()
+map('n', '<Leader>c', function()
   local buf = vim.api.nvim_get_current_buf()
   if vim.api.nvim_buf_is_valid(buf) then
     vim.api.nvim_buf_delete(buf, { force = false })
   end
 end, {
-  desc = "Cerrar buffer",
+  desc = 'Cerrar buffer',
 })
 
 -- ======================================================
 -- TELESCOPE
 -- ======================================================
 
-map("n", "<C-s>", ":Telescope current_buffer_fuzzy_find<CR>", {
-  desc = "Buscar en buffer actual",
+map('n', '<C-s>', ':Telescope current_buffer_fuzzy_find<CR>', {
+  desc = 'Buscar en buffer actual',
 })
 
-map("n", "<Leader>f", function()
-  require("telescope.builtin").find_files()
+map('n', '<Leader>f', function()
+  require('telescope.builtin').find_files()
 end, {
-  desc = "Buscar archivos",
+  desc = 'Buscar archivos',
 })
 
-map("n", "<Leader>b", function()
-  require("telescope.builtin").buffers()
+map('n', '<Leader>b', function()
+  require('telescope.builtin').buffers()
 end, {
-  desc = "Buscar buffers",
+  desc = 'Buscar buffers',
 })
 
-map("n", "<Leader>h", function()
-  require("telescope.builtin").help_tags()
+map('n', '<Leader>h', function()
+  require('telescope.builtin').help_tags()
 end, {
-  desc = "Ayuda de Telescope",
+  desc = 'Ayuda de Telescope',
 })
 
-map("n", "<Leader>l", function()
+map('n', '<Leader>l', function()
   local ok, lga = pcall(function()
-    return require("telescope").extensions.live_grep_args
+    return require('telescope').extensions.live_grep_args
   end)
   if ok and lga then
     lga.live_grep_args()
   else
-    require("telescope.builtin").live_grep()
+    require('telescope.builtin').live_grep()
   end
 end, {
-  desc = "Buscar palabras",
+  desc = 'Buscar palabras',
 })
 
 -- ======================================================
 -- RUN CODE
 -- ======================================================
 
-map("n", "<Leader>m", ":RunCode<CR>", {
-  desc = "Ejecutar archivo",
+map('n', '<Leader>m', ':RunCode<CR>', {
+  desc = 'Ejecutar archivo',
 })
 
 -- ======================================================
 -- LINT
 -- ======================================================
 
-map("n", "<leader>L", function()
-  require("lint").try_lint()
+map('n', '<leader>L', function()
+  require('lint').try_lint()
 end, {
-  desc = "Lint: ejecutar linters",
+  desc = 'Lint: ejecutar linters',
 })
 
 -- ======================================================
@@ -136,130 +136,128 @@ end, {
 
 -- Conform se carga por evento (BufWritePre): forzamos el lazy-load antes de
 -- formatear para que <Leader>F funcione también sin haber guardado antes.
-map({ "n", "x" }, "<Leader>F", function()
-  require("lazy").load({ plugins = { "conform.nvim" } })
-  require("conform").format({ async = true, lsp_fallback = false })
+map({ 'n', 'x' }, '<Leader>F', function()
+  require('lazy').load({ plugins = { 'conform.nvim' } })
+  require('conform').format({ async = true, lsp_fallback = false })
 end, {
-  desc = "Formatear buffer",
+  desc = 'Formatear buffer',
 })
 
-map("n", "<Leader>D", "<cmd>Trouble diagnostics toggle<CR>", {
-  desc = "Diagnósticos (Trouble)",
+map('n', '<Leader>D', '<cmd>Trouble diagnostics toggle<CR>', {
+  desc = 'Diagnósticos (Trouble)',
 })
 
-map("n", "<Leader>I", "<cmd>checkhealth vim.lsp<CR>", {
-  desc = "Información LSP",
+map('n', '<Leader>I', '<cmd>checkhealth vim.lsp<CR>', {
+  desc = 'Información LSP',
 })
 
 -- ======================================================
 -- SMART SPLITS — Navegación
 -- ======================================================
 
-map("n", "<C-h>", function()
-  require("smart-splits").move_cursor_left()
+map('n', '<C-h>', function()
+  require('smart-splits').move_cursor_left()
 end, {
-  desc = "Mover a split izquierda",
+  desc = 'Mover a split izquierda',
 })
 
-map("n", "<C-j>", function()
-  require("smart-splits").move_cursor_down()
+map('n', '<C-j>', function()
+  require('smart-splits').move_cursor_down()
 end, {
-  desc = "Mover a split abajo",
+  desc = 'Mover a split abajo',
 })
 
-map("n", "<C-k>", function()
-  require("smart-splits").move_cursor_up()
+map('n', '<C-k>', function()
+  require('smart-splits').move_cursor_up()
 end, {
-  desc = "Mover a split arriba",
+  desc = 'Mover a split arriba',
 })
 
-map("n", "<C-l>", function()
-  require("smart-splits").move_cursor_right()
+map('n', '<C-l>', function()
+  require('smart-splits').move_cursor_right()
 end, {
-  desc = "Mover a split derecha",
+  desc = 'Mover a split derecha',
 })
 
 -- ======================================================
 -- SMART SPLITS — Swap buffers entre splits
 -- ======================================================
-
-map("n", "<leader>sh", function()
-  require("smart-splits").swap_buf_left()
+map('n', '<leader>sh', function()
+  require('smart-splits').swap_buf_left()
 end, {
-  desc = "Swap split izquierda",
+  desc = 'Swap split izquierda',
 })
 
-map("n", "<leader>sj", function()
-  require("smart-splits").swap_buf_down()
+map('n', '<leader>sj', function()
+  require('smart-splits').swap_buf_down()
 end, {
-  desc = "Swap split abajo",
+  desc = 'Swap split abajo',
 })
 
-map("n", "<leader>sk", function()
-  require("smart-splits").swap_buf_up()
+map('n', '<leader>sk', function()
+  require('smart-splits').swap_buf_up()
 end, {
-  desc = "Swap split arriba",
+  desc = 'Swap split arriba',
 })
 
-map("n", "<leader>sl", function()
-  require("smart-splits").swap_buf_right()
+map('n', '<leader>sl', function()
+  require('smart-splits').swap_buf_right()
 end, {
-  desc = "Swap split derecha",
+  desc = 'Swap split derecha',
 })
 
 -- ======================================================
 -- MOVIMIENTO DE LÍNEAS
 -- ======================================================
 
-map("n", "<C-Up>", ":move -1<CR>==", {
-  desc = "Mover línea arriba",
+map('n', '<C-Up>', ':move -1<CR>==', {
+  desc = 'Mover línea arriba',
 })
 
-map("n", "<C-Down>", ":move +1<CR>==", {
-  desc = "Mover línea abajo",
+map('n', '<C-Down>', ':move +1<CR>==', {
+  desc = 'Mover línea abajo',
 })
 
-map("i", "<C-Up>", "<Esc>:move -1<CR>gi", {
-  desc = "Mover línea arriba",
+map('i', '<C-Up>', '<Esc>:move -1<CR>gi', {
+  desc = 'Mover línea arriba',
 })
 
-map("i", "<C-Down>", "<Esc>:move +1<CR>gi", {
-  desc = "Mover línea abajo",
+map('i', '<C-Down>', '<Esc>:move +1<CR>gi', {
+  desc = 'Mover línea abajo',
 })
 
-map("v", "<C-Up>", ":move '<-2<CR>gv=gv", {
-  desc = "Mover selección arriba",
+map('v', '<C-Up>', ":move '<-2<CR>gv=gv", {
+  desc = 'Mover selección arriba',
 })
 
-map("v", "<C-Down>", ":move '>+1<CR>gv=gv", {
-  desc = "Mover selección abajo",
+map('v', '<C-Down>', ":move '>+1<CR>gv=gv", {
+  desc = 'Mover selección abajo',
 })
 
 -- ======================================================
 -- SMART SPLITS
 -- ======================================================
 
-map("n", "<A-h>", function()
-  require("smart-splits").resize_left()
+map('n', '<A-h>', function()
+  require('smart-splits').resize_left()
 end, {
-  desc = "Redimensionar izquierda",
+  desc = 'Redimensionar izquierda',
 })
 
-map("n", "<A-j>", function()
-  require("smart-splits").resize_down()
+map('n', '<A-j>', function()
+  require('smart-splits').resize_down()
 end, {
-  desc = "Redimensionar abajo",
+  desc = 'Redimensionar abajo',
 })
 
-map("n", "<A-k>", function()
-  require("smart-splits").resize_up()
+map('n', '<A-k>', function()
+  require('smart-splits').resize_up()
 end, {
-  desc = "Redimensionar arriba",
+  desc = 'Redimensionar arriba',
 })
 
-map("n", "<A-l>", function()
-  require("smart-splits").resize_right()
+map('n', '<A-l>', function()
+  require('smart-splits').resize_right()
 end, {
-  desc = "Redimensionar derecha",
+  desc = 'Redimensionar derecha',
 })
-

@@ -1,31 +1,30 @@
 local M = {
-  "nvim-telescope/telescope.nvim",
-  cmd = "Telescope",
+  'nvim-telescope/telescope.nvim',
+  cmd = 'Telescope',
   -- Cambiado a event = "VeryLazy" para que las extensiones y comandos clave
   -- estén listos en segundo plano sin ralentizar el arranque inicial de Neovim
-  event = "VeryLazy",
+  event = 'VeryLazy',
   dependencies = {
-    "nvim-lua/plenary.nvim",
-    "nvim-telescope/telescope-live-grep-args.nvim",
-    "nvim-telescope/telescope-file-browser.nvim",
+    'nvim-lua/plenary.nvim',
+    'nvim-telescope/telescope-live-grep-args.nvim',
     {
-      "nvim-telescope/telescope-fzf-native.nvim",
-      build = "make",
+      'nvim-telescope/telescope-fzf-native.nvim',
+      build = 'make',
       cond = function()
-        return vim.fn.executable("make") == 1
+        return vim.fn.executable('make') == 1
       end,
     },
   },
 }
 
 M.config = function()
-  local telescope = require("telescope")
-  local actions = require("telescope.actions")
-  local lga_actions = require("telescope-live-grep-args.actions")
+  local telescope = require('telescope')
+  local actions = require('telescope.actions')
+  local lga_actions = require('telescope-live-grep-args.actions')
 
   -- Accion de seleccion sin entrada activa no debe avisar (p.ej. picker vacio)
-  local action_state = require("telescope.actions.state")
-  local action_set = require("telescope.actions.set")
+  local action_state = require('telescope.actions.state')
+  local action_set = require('telescope.actions.set')
   local original_edit = action_set.edit
   action_set.edit = function(prompt_bufnr, command)
     local entry = action_state.get_selected_entry()
@@ -41,45 +40,45 @@ M.config = function()
   telescope.setup({
     defaults = {
       vimgrep_arguments = {
-        "rg",
-        "--color=never",
-        "--no-heading",
-        "--with-filename",
-        "--line-number",
-        "--column",
-        "--smart-case",
-        "--hidden",
-        "--glob",
-        "!.git/*",
+        'rg',
+        '--color=never',
+        '--no-heading',
+        '--with-filename',
+        '--line-number',
+        '--column',
+        '--smart-case',
+        '--hidden',
+        '--glob',
+        '!.git/*',
       },
-      file_ignore_patterns = { "node_modules", "%.git/", "dist/", "build/" },
-      prompt_prefix = " ❯ ", -- Un espacio extra para que no pegue el texto al borde
-      selection_caret = "❯ ",
-      layout_strategy = "horizontal",
+      file_ignore_patterns = { 'node_modules', '%.git/', 'dist/', 'build/' },
+      prompt_prefix = ' ❯ ', -- Un espacio extra para que no pegue el texto al borde
+      selection_caret = '❯ ',
+      layout_strategy = 'horizontal',
       layout_config = {
         width = 0.95,
         height = 0.85,
-        prompt_position = "bottom",
+        prompt_position = 'bottom',
         horizontal = {
           preview_width = function(_, cols)
             return math_floor(cols * (cols > 200 and 0.5 or 0.7))
           end,
         },
       },
-      sorting_strategy = "ascending",
-      scroll_strategy = "cycle",
+      sorting_strategy = 'ascending',
+      scroll_strategy = 'cycle',
       mappings = {
         i = {
-          ["<C-n>"] = actions.move_selection_next,
-          ["<C-p>"] = actions.move_selection_previous,
-          ["<C-c>"] = actions.close, -- Atajo rápido para cerrar sin estirar la mano al Esc
+          ['<C-n>'] = actions.move_selection_next,
+          ['<C-p>'] = actions.move_selection_previous,
+          ['<C-c>'] = actions.close, -- Atajo rápido para cerrar sin estirar la mano al Esc
         },
       },
     },
 
     pickers = {
       find_files = {
-        find_command = { "rg", "--files", "--hidden", "--glob", "!.git/*" },
+        find_command = { 'rg', '--files', '--hidden', '--glob', '!.git/*' },
       },
     },
 
@@ -88,31 +87,32 @@ M.config = function()
         fuzzy = true,
         override_generic_sorter = true,
         override_file_sorter = true,
-        case_mode = "smart_case",
+        case_mode = 'smart_case',
       },
 
       live_grep_args = {
         auto_quoting = true,
         mappings = {
           i = {
-            ["<C-k>"] = lga_actions.quote_prompt(),
-            ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+            ['<C-k>'] = lga_actions.quote_prompt(),
+            ['<C-i>'] = lga_actions.quote_prompt({ postfix = ' --iglob ' }),
           },
         },
-      },
-
-      file_browser = {
-        grouped = true,
-        hijack_netrw = true,
-        hidden = true,
       },
     },
   })
 
-  -- Carga optimizada de extensiones
-  telescope.load_extension("fzf")
-  telescope.load_extension("file_browser")
-  telescope.load_extension("live_grep_args")
+  -- Carga de extensiones opcionales: si una no está compilada/disponible,
+  -- Telescope sigue funcionando con el resto.
+  local function load_extension(name)
+    local ok, err = pcall(telescope.load_extension, name)
+    if not ok then
+      vim.notify(('Telescope: no se pudo cargar %s: %s'):format(name, err), vim.log.levels.WARN)
+    end
+  end
+
+  load_extension('fzf')
+  load_extension('live_grep_args')
 end
 
 return M

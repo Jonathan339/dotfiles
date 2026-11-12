@@ -216,6 +216,19 @@ M['oxlint'] = function()
   })
 end
 
+-- Rust: rust-analyzer lo instala rustup (no Mason)
+M['rust_analyzer'] = function()
+  setup('rust_analyzer', {
+    settings = {
+      ['rust-analyzer'] = {
+        cargo = { allFeatures = true },
+        check = { command = 'clippy' },
+        procMacro = { enable = true },
+      },
+    },
+  })
+end
+
 -- Lua (Neovim)
 M['lua_ls'] = function()
   setup('lua_ls', {

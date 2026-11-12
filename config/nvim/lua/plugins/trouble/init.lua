@@ -1,5 +1,6 @@
 return {
   'folke/trouble.nvim',
-  cmd = { 'TroubleToggle', 'Trouble' },
-  opts = { use_diagnostic_signs = true },
+  -- Trouble v3 expone el comando `:Trouble`; `TroubleToggle` ya no existe.
+  cmd = 'Trouble',
+  opts = {},
 }

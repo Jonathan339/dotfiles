@@ -12,13 +12,19 @@ local function guard_name(_, snip)
 end
 
 return {
-  s('#ifn', fmta([[
+  s(
+    '#ifn',
+    fmta(
+      [[
 #ifndef <>
 #define <>
 
 <>
 #endif
-]], { f(guard_name, {}), f(guard_name, {}), i(1) })),
+]],
+      { f(guard_name, {}), f(guard_name, {}), i(1) }
+    )
+  ),
   s('#pragma', {
     t('#pragma once'),
   }),

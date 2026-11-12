@@ -1,26 +1,25 @@
 return {
   'lewis6991/gitsigns.nvim',
-  event = "User FilePost",
+  event = 'User FilePost',
   enabled = vim.fn.executable('git') == 1,
   opts = function()
     local icon = require('utils.icons').get('git')
     return {
+      -- Gitsigns solo reconoce estas claves de signos; el resto se ignoraba.
       signs = {
         add = { text = icon.Add },
-        branch = { text = icon.Branch },
-        diff = { text = icon.Diff },
-        git = { text = icon.Git },
-        ignored = { text = icon.Ignore },
-        modified = { text = icon.Modified },
-        modified_alt = { text = icon.Modified_alt },
-        remove = { text = icon.Remove },
-        renamed = { text = icon.Rename },
-        repo = { text = icon.Repo },
-        unmerged = { text = icon.Unmerged },
+        change = { text = icon.Modified },
+        delete = { text = icon.Remove },
+        topdelete = { text = icon.Remove },
+        changedelete = { text = icon.Modified_alt },
         untracked = { text = icon.Untracked },
-        unstaged = { text = icon.Unstaged },
-        staged = { text = icon.Staged },
-        conflict = { text = icon.Conflict },
+      },
+      signs_staged = {
+        add = { text = icon.Staged },
+        change = { text = icon.Modified },
+        delete = { text = icon.Remove },
+        topdelete = { text = icon.Remove },
+        changedelete = { text = icon.Modified_alt },
       },
       signs_staged_enable = true,
       signcolumn = true, -- Toggle with `:Gitsigns toggle_signs`

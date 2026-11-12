@@ -49,10 +49,6 @@ local M = {
     }
   end,
   config = function(_, opts)
-    -- (opcional) evita inicializar sin UI o en diff
-    if #vim.api.nvim_list_uis() == 0 or vim.wo.diff then
-      return
-    end
     require('dressing').setup(opts)
   end,
 }

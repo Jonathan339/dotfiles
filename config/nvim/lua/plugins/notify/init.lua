@@ -10,7 +10,7 @@ local M = {
       end,
       desc = 'Notificaciones: descartar',
     },
-    { '<leader>sn', '<cmd>Notifications<cr>', desc = 'Notificaciones: historial' },
+    { '<leader>uh', '<cmd>Notifications<cr>', desc = 'Notificaciones: historial' },
     -- Si usás Telescope: :Telescope notify
   },
   opts = function()
@@ -19,15 +19,12 @@ local M = {
       icons = require('utils.icons').icons
     end) -- fallback si no existe
 
-    -- Fondo por defecto (no pisa el tema si ya lo define)
-    vim.api.nvim_set_hl(0, 'NotifyBackground', { bg = '#000000', default = true })
-
     return {
       stages = 'fade_in_slide_out',
       render = 'compact',
       top_down = false,
       fps = 60,
-      background_colour = 'NotifyBackground',
+      background_colour = 'NormalFloat',
       timeout = 2000,
       max_width = function()
         return math.floor(vim.o.columns * 0.38)
@@ -49,11 +46,6 @@ local M = {
 }
 
 M.config = function(_, opts)
-  -- guardas: no inicializar sin UI o en diff
-  if #vim.api.nvim_list_uis() == 0 or vim.wo.diff then
-    return
-  end
-
   require('notify').setup(opts)
 
   -- Telescope (si está): :Telescope notify

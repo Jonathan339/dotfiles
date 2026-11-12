@@ -1,7 +1,11 @@
 local M = {}
 
+-- Política única de archivos grandes para toda la config. Se usa en
+-- config/autocmd.lua, conform, indent-blankline y render-markdown.
+M.large_file_size = 500 * 1024 -- bytes (500 KiB)
+
 M.setup_lsp = function(server, config)
-  local defaults = require("plugins.lsp.defaults")
+  local defaults = require('plugins.lsp.defaults')
   local user_on_attach = config.on_attach
   config.on_attach = function(client, bufnr)
     if user_on_attach then
@@ -10,24 +14,17 @@ M.setup_lsp = function(server, config)
     defaults.on_attach(client, bufnr)
   end
 
-  local opts = vim.tbl_deep_extend("force", {
+  local opts = vim.tbl_deep_extend('force', {
     capabilities = defaults.capabilities,
     on_init = defaults.on_init,
   }, config)
 
-  -- vim.lsp.config existe desde 0.11; comprobarlo acá evita cargar vim.lsp
-  -- durante el arranque (utils se requiere desde config.map).
-  if vim.lsp.config then
-    vim.lsp.config(server, opts)
-  else
-    local lspconfig = require("lspconfig")
-    lspconfig[server].setup(opts)
-  end
+  vim.lsp.config(server, opts)
 end
 
 local function map(mode, lhs, rhs, opts)
   local default_opts = {
-    desc = "",
+    desc = '',
     noremap = true,
     silent = true,
   }
@@ -45,12 +42,7 @@ M.map = map
 
 M.create_buf_map = function(bufnr, opts)
   return function(mode, lhs, rhs, map_opts)
-    M.map(
-      mode,
-      lhs,
-      rhs,
-      vim.tbl_deep_extend("force", { buffer = bufnr }, opts or {}, map_opts or {})
-    )
+    M.map(mode, lhs, rhs, vim.tbl_deep_extend('force', { buffer = bufnr }, opts or {}, map_opts or {}))
   end
 end
 

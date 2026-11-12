@@ -89,10 +89,12 @@ M.config = function(_, opts)
 
   -- Backticks en ecosistema JS/TS/React/Svelte (si no estás en string TS)
   npairs.add_rules({
-    Rule('`', '`', { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte' }):with_pair(function(opts)
-      -- si ya hay un backtick justo antes, no dupliques
-      return opts.line:sub(opts.col, opts.col) ~= '`'
-    end),
+    Rule('`', '`', { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte' }):with_pair(
+      function(opts)
+        -- si ya hay un backtick justo antes, no dupliques
+        return opts.line:sub(opts.col, opts.col) ~= '`'
+      end
+    ),
   })
 end
 

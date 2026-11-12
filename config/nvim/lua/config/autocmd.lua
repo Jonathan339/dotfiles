@@ -1,20 +1,31 @@
----@diagnostic disable: undefined-global
 -- lua/config/autocmd.lua
+
 local agroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
+---@diagnostic disable: undefined-global
+
+-----------------------------------------------------------------------
+-- Utilidad: crear grupos de autocmd sin duplicados
+-----------------------------------------------------------------------
 local function augroup(name)
   return agroup(name, { clear = true })
 end
 
+-----------------------------------------------------------------------
+-- Restaurar terminal al salir de Neovim
+-----------------------------------------------------------------------
 autocmd('VimLeave', {
   group = augroup('reset_terminal_background'),
   desc = 'Evitar que quede fondo forzado al salir',
   callback = function()
-    pcall(function() vim.o.t_ut = '' end)
-    vim.cmd('highlight Normal guibg=NONE ctermbg=NONE')
+    pcall(function()
+      vim.o.t_ut = ''
+      vim.cmd('highlight Normal guibg=NONE ctermbg=NONE')
+    end)
   end,
 })
+
 -----------------------------------------------------------------------
 -- Crear directorios automáticamente antes de guardar
 -----------------------------------------------------------------------
@@ -23,26 +34,35 @@ autocmd('BufWritePre', {
   desc = 'Crear directorios faltantes antes de guardar',
   callback = function(ev)
     local file = ev.match or ev.file
-    if not file or file:match('^%w%w+://') then
+
+    if not file or file == '' or file:match('^%w%w+://') then
       return
-    end -- esquemas tipo netrw
+    end
+
     local dir = vim.fn.fnamemodify(file, ':p:h')
-    if dir ~= '' and vim.fn.isdirectory(dir) == 0 then
+
+    if dir ~= '' and vim.fn.isdirectory(dir) ~= 1 then
       vim.fn.mkdir(dir, 'p')
     end
   end,
 })
 
 -----------------------------------------------------------------------
--- Wrap + spell en textos
+-- Configuración para archivos de texto
 -----------------------------------------------------------------------
 autocmd('FileType', {
   group = augroup('text_settings'),
-  pattern = { 'gitcommit', 'markdown', 'quarto', 'NeogitCommitMessage' },
+  pattern = {
+    'gitcommit',
+    'markdown',
+    'quarto',
+    'NeogitCommitMessage',
+  },
   callback = function(ev)
     vim.opt_local.wrap = true
     vim.opt_local.linebreak = true
     vim.opt_local.spell = true
+
     if ev.match == 'markdown' or ev.match == 'quarto' then
       vim.opt_local.conceallevel = 2
       vim.opt_local.colorcolumn = ''
@@ -51,16 +71,20 @@ autocmd('FileType', {
 })
 
 -----------------------------------------------------------------------
--- Luasnip: limpiar snippets al salir de Insert
+-- LuaSnip: limpiar snippets al salir de Insert
 -----------------------------------------------------------------------
 autocmd('InsertLeave', {
   group = augroup('luasnip_unlink_leave'),
-  callback = function()
+  desc = 'Limpiar snippet activo al salir de Insert',
+  callback = function(ev)
     local ok, ls = pcall(require, 'luasnip')
+
     if not ok then
       return
     end
-    local buf = vim.api.nvim_get_current_buf()
+
+    local buf = ev.buf
+
     if ls.session.current_nodes[buf] and not ls.session.jump_active then
       pcall(ls.unlink_current)
     end
@@ -68,38 +92,47 @@ autocmd('InsertLeave', {
 })
 
 -----------------------------------------------------------------------
--- Auto-reload cuando cambian archivos afuera
+-- Auto-reload cuando cambian archivos externamente
 -----------------------------------------------------------------------
 autocmd({ 'FocusGained', 'TermClose', 'TermLeave' }, {
   group = augroup('checktime'),
+  desc = 'Comprobar cambios externos en archivos',
   callback = function()
-    if vim.o.buftype ~= 'nofile' then
+    if vim.bo.buftype == '' and vim.api.nvim_buf_is_valid(0) then
       vim.cmd('checktime')
     end
   end,
 })
 
 -----------------------------------------------------------------------
--- Highlights para nvim-cmp (aplicar en ColorScheme/VimEnter)
+-- Highlights para nvim-cmp
 -----------------------------------------------------------------------
 local function set_cmp_highlights()
   vim.schedule(function()
-    vim.api.nvim_set_hl(0, 'CmpItemAbbrDeprecated', { bg = 'NONE', strikethrough = true, fg = '#808080' })
-    vim.api.nvim_set_hl(0, 'CmpItemAbbrMatch', { bg = 'NONE', fg = '#569CD6' })
-    vim.api.nvim_set_hl(0, 'CmpItemAbbrMatchFuzzy', { link = 'CmpItemAbbrMatch' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindVariable', { bg = 'NONE', fg = '#9CDCFE' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindInterface', { link = 'CmpItemKindVariable' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindText', { link = 'CmpItemKindVariable' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindFunction', { bg = 'NONE', fg = '#C586C0' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindMethod', { link = 'CmpItemKindFunction' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindKeyword', { bg = 'NONE', fg = '#D4D4D4' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindProperty', { link = 'CmpItemKindKeyword' })
-    vim.api.nvim_set_hl(0, 'CmpItemKindUnit', { link = 'CmpItemKindKeyword' })
+    -- Links al tema actual en vez de colores fijos de VS Code.
+    local highlights = {
+      CmpItemAbbrDeprecated = { link = 'Comment', strikethrough = true },
+      CmpItemAbbrMatch = { link = 'Special' },
+      CmpItemAbbrMatchFuzzy = { link = 'CmpItemAbbrMatch' },
+      CmpItemKindVariable = { link = 'Identifier' },
+      CmpItemKindInterface = { link = 'Type' },
+      CmpItemKindText = { link = 'String' },
+      CmpItemKindFunction = { link = 'Function' },
+      CmpItemKindMethod = { link = 'Function' },
+      CmpItemKindKeyword = { link = 'Keyword' },
+      CmpItemKindProperty = { link = 'Identifier' },
+      CmpItemKindUnit = { link = 'Number' },
+    }
+
+    for name, opts in pairs(highlights) do
+      pcall(vim.api.nvim_set_hl, 0, name, opts)
+    end
   end)
 end
 
 autocmd({ 'ColorScheme', 'VimEnter' }, {
   group = augroup('cmp_hls'),
+  desc = 'Aplicar colores personalizados a nvim-cmp',
   callback = set_cmp_highlights,
 })
 
@@ -108,25 +141,34 @@ autocmd({ 'ColorScheme', 'VimEnter' }, {
 -----------------------------------------------------------------------
 autocmd('VimResized', {
   group = augroup('resize_splits'),
+  desc = 'Redistribuir ventanas al cambiar tamaño',
   callback = function()
-    local current_tab = vim.fn.tabpagenr()
+    local current_tab = vim.api.nvim_get_current_tabpage()
+
     vim.cmd('tabdo wincmd =')
-    vim.cmd('tabnext ' .. current_tab)
+
+    if vim.api.nvim_tabpage_is_valid(current_tab) then
+      vim.api.nvim_set_current_tabpage(current_tab)
+    end
   end,
 })
 
 -----------------------------------------------------------------------
--- Resaltado al yank
+-- Resaltado al copiar (yank)
 -----------------------------------------------------------------------
 autocmd('TextYankPost', {
   group = augroup('highlight_yank'),
+  desc = 'Resaltar texto copiado',
   callback = function()
-    pcall(vim.highlight.on_yank, { higroup = 'IncSearch', timeout = 150 })
+    pcall(vim.highlight.on_yank, {
+      higroup = 'IncSearch',
+      timeout = 152,
+    })
   end,
 })
 
 -----------------------------------------------------------------------
--- Cerrar con 'q' ciertos buffers auxiliares
+-- Cerrar buffers auxiliares con q
 -----------------------------------------------------------------------
 autocmd('FileType', {
   group = augroup('close_with_q'),
@@ -147,45 +189,82 @@ autocmd('FileType', {
   },
   callback = function(ev)
     vim.bo[ev.buf].buflisted = false
-    vim.keymap.set('n', 'q', '<cmd>close<cr>', { buffer = ev.buf, silent = true })
+
+    vim.keymap.set('n', 'q', '<cmd>close<cr>', {
+      buffer = ev.buf,
+      silent = true,
+      nowait = true,
+      desc = 'Cerrar ventana auxiliar',
+    })
   end,
 })
 
 -----------------------------------------------------------------------
--- Archivos grandes: ajustar para evitar lag
+-- Optimización de archivos grandes
 -----------------------------------------------------------------------
+local LARGE_FILE_SIZE = require('utils').large_file_size
+
 autocmd('BufReadPre', {
   group = augroup('large_file_optimizations'),
+  desc = 'Reducir consumo en archivos grandes',
   callback = function(ev)
-    local file = ev.match or ev.file or vim.api.nvim_buf_get_name(0)
+    local file = ev.match or ev.file
+
     if not file or file == '' then
       return
     end
+
     local ok, stat = pcall(vim.uv.fs_stat, file)
-    local max_size = 500 * 1024 -- 500 KB (podés bajarlo si querés)
-    if ok and stat and stat.size and stat.size > max_size then
-      vim.b.large_file = true
-      -- solo este buffer: 'syntax off' global mataba el highlight del resto
+
+    if not ok or not stat or not stat.size then
+      return
+    end
+
+    if stat.size > LARGE_FILE_SIZE then
+      vim.b[ev.buf].large_file = true
+
       vim.bo[ev.buf].syntax = 'OFF'
       vim.bo[ev.buf].swapfile = false
       vim.bo[ev.buf].undofile = false
-      -- foldenable es window-local (no existe vim.bo[buf].foldenable)
-      vim.wo.foldenable = false
+      vim.bo[ev.buf].modeline = false
+
+      -- foldmethod/foldenable/spell/wrap son window-local: se aplican cuando
+      -- el buffer ya está asociado a una ventana.
+      vim.schedule(function()
+        local win = vim.fn.bufwinid(ev.buf)
+
+        if win == -1 then
+          return
+        end
+
+        vim.wo[win].foldmethod = 'manual'
+        vim.wo[win].foldenable = false
+        vim.wo[win].spell = false
+        vim.wo[win].wrap = false
+      end)
     end
   end,
 })
 
 -----------------------------------------------------------------------
--- Volver a la última posición al reabrir el archivo
+-- Restaurar última posición del cursor
 -----------------------------------------------------------------------
 autocmd('BufReadPost', {
   group = augroup('restore_last_cursor'),
+  desc = 'Restaurar posición anterior del cursor',
   callback = function(ev)
-    local mark = vim.api.nvim_buf_get_mark(ev.buf, [["]])
-    local lcount = vim.api.nvim_buf_line_count(ev.buf)
-    if mark[1] > 0 and mark[1] <= lcount then
-      pcall(vim.api.nvim_win_set_cursor, 0, mark)
+    local mark = vim.api.nvim_buf_get_mark(ev.buf, '"')
+    local line_count = vim.api.nvim_buf_line_count(ev.buf)
+
+    if mark[1] > 0 and mark[1] <= line_count then
+      local win = vim.fn.bufwinid(ev.buf)
+
+      if win ~= -1 then
+        pcall(vim.api.nvim_win_set_cursor, win, {
+          mark[1],
+          mark[2],
+        })
+      end
     end
   end,
 })
-

@@ -1,13 +1,13 @@
 -- Bootstrap lazy.nvim ---------------------------------------------------------
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 
 if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "--branch=stable",
-    "https://github.com/folke/lazy.nvim.git",
+    'git',
+    'clone',
+    '--filter=blob:none',
+    '--branch=stable',
+    'https://github.com/folke/lazy.nvim.git',
     lazypath,
   })
 end
@@ -15,16 +15,16 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 -- Setup ------------------------------------------------------------------------
-require("lazy").setup({
+require('lazy').setup({
   spec = {
-     { import = "plugins" },
+    { import = 'plugins' },
   },
   defaults = {
     lazy = true,
     version = false,
   },
   install = {
-    colorscheme = { "gruvbox-minor" },
+    colorscheme = { 'gruvbox-minor' },
   },
   rocks = {
     enabled = false,
@@ -36,13 +36,13 @@ require("lazy").setup({
   performance = {
     rtp = {
       disabled_plugins = {
-        "gzip",
-        "tarPlugin",
-        "tohtml",
-        "tutor",
-        "zipPlugin",
-        "matchit",
-        "matchparen",
+        'gzip',
+        'tarPlugin',
+        'tohtml',
+        'tutor',
+        'zipPlugin',
+        'matchit',
+        'matchparen',
       },
     },
   },

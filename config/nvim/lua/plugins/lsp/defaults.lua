@@ -19,19 +19,20 @@ M.capabilities.workspace.fileOperations = {
 -- Ajustes finos de completionItem
 M.capabilities.textDocument = M.capabilities.textDocument or {}
 M.capabilities.textDocument.completion = M.capabilities.textDocument.completion or {}
-M.capabilities.textDocument.completion.completionItem = vim.tbl_deep_extend('force', M.capabilities.textDocument.completion.completionItem or {}, {
-  documentationFormat = { 'markdown', 'plaintext' },
-  snippetSupport = true,
-  preselectSupport = true,
-  insertReplaceSupport = true,
-  labelDetailsSupport = true,
-  deprecatedSupport = true,
-  commitCharactersSupport = true,
-  tagSupport = { valueSet = { 1 } },
-  resolveSupport = {
-    properties = { 'documentation', 'detail', 'additionalTextEdits' },
-  },
-})
+M.capabilities.textDocument.completion.completionItem =
+  vim.tbl_deep_extend('force', M.capabilities.textDocument.completion.completionItem or {}, {
+    documentationFormat = { 'markdown', 'plaintext' },
+    snippetSupport = true,
+    preselectSupport = true,
+    insertReplaceSupport = true,
+    labelDetailsSupport = true,
+    deprecatedSupport = true,
+    commitCharactersSupport = true,
+    tagSupport = { valueSet = { 1 } },
+    resolveSupport = {
+      properties = { 'documentation', 'detail', 'additionalTextEdits' },
+    },
+  })
 
 -- (Opcional) si usás plugins tipo ufo, añade foldingRange:
 -- M.capabilities.textDocument.foldingRange = { dynamicRegistration = false, lineFoldingOnly = true }

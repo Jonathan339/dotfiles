@@ -9,18 +9,18 @@ local M = {
 }
 
 M.config = function()
-  -- Guardas de contexto/performance
-  if #vim.api.nvim_list_uis() == 0 or vim.wo.diff or vim.b.large_file then
-    return
-  end
-
   -- Highlights “amigables con cualquier tema”
   vim.api.nvim_set_hl(0, 'render-markdownBullet', { link = 'Special', default = true })
 
   -- Los ajustes de buffer (wrap/spell/conceallevel) viven en config/autocmd.lua
 
+  -- render-markdown ignora internamente los archivos que superan
+  -- max_file_size; usamos la misma política que el resto de la config.
+  local large_file_mb = require('utils').large_file_size / 1024 / 1024
+
   -- Config básica del plugin (segura)
   require('render-markdown').setup({
+    max_file_size = large_file_mb,
     anti_conceal = {
       enabled = true,
       ignore = {

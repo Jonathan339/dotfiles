@@ -36,8 +36,9 @@ function M.config()
       typescript = 'bun run',
       rust = {
         'cd $dir &&',
-        'rustc $fileName &&',
-        '$dir/$fileNameWithoutExt',
+        'rustc $fileName -o /tmp/$fileNameWithoutExt &&',
+        '/tmp/$fileNameWithoutExt;',
+        'rm -f /tmp/$fileNameWithoutExt',
       },
       c = compile_and_run('gcc'),
       cpp = compile_and_run('g++'),

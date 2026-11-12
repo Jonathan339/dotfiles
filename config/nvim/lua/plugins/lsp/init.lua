@@ -9,11 +9,6 @@ return {
     -- capabilities. Sin esta dependencia el require falla y el LSP anuncia
     -- capabilities sin snippetSupport/labelDetails.
     'hrsh7th/cmp-nvim-lsp',
-    {
-      'j-hui/fidget.nvim',
-      tag = 'legacy',
-      opts = { text = { done = '✓' }, window = { relative = 'win' } },
-    },
   },
   config = function()
     require('plugins.lsp.keymaps').setup()
@@ -24,14 +19,15 @@ return {
       vim.lsp.document_color.enable(false)
     end
 
+    local icons = require('utils.icons').get('diagnostics')
     vim.diagnostic.config({
-      virtual_text = { prefix = '●', spacing = 2, source = 'always' },
+      virtual_text = { prefix = icons.Circle, spacing = 3, source = 'always' },
       signs = {
         text = {
-          [vim.diagnostic.severity.ERROR] = '✗',
-          [vim.diagnostic.severity.WARN] = '⚠',
-          [vim.diagnostic.severity.INFO] = 'ℹ',
-          [vim.diagnostic.severity.HINT] = '💡',
+          [vim.diagnostic.severity.ERROR] = icons.Error,
+          [vim.diagnostic.severity.WARN] = icons.Warning,
+          [vim.diagnostic.severity.INFO] = icons.Information,
+          [vim.diagnostic.severity.HINT] = icons.Hint,
         },
       },
       underline = true,
@@ -41,27 +37,27 @@ return {
       severity_sort = true,
       float = { border = 'rounded', source = 'always' },
     })
-    local signs = {
-      Error = { text = '✗', texthl = 'DiagnosticSignError' },
-      Warn = { text = '⚠', texthl = 'DiagnosticSignWarn' },
-      Info = { text = 'ℹ', texthl = 'DiagnosticSignInfo' },
-      Hint = { text = '💡', texthl = 'DiagnosticSignHint' },
-    }
-    for type, sign in pairs(signs) do
-      vim.fn.sign_define('DiagnosticSign' .. type, sign)
-    end
-
-    -- Colores custom para los signs de diagnostico
-    vim.api.nvim_set_hl(0, 'DiagnosticSignError', { fg = '#ff4d5e' })
-    vim.api.nvim_set_hl(0, 'DiagnosticSignWarn', { fg = '#ffb020' })
-    vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { fg = '#38bdf8' })
-    vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { fg = '#a78bfa' })
-
     local handlers = require('plugins.lsp.handlers')
     local servers = {}
-    -- Oxlint reemplaza a ESLint cuando está instalado; si todavía no está,
-    -- seguimos usando ESLint (Mason lo instala en segundo plano).
+    -- Oxlint reemplaza a ESLint cuando el binario está instalado; si todavía
+    -- no está, ESLint queda como fallback.
     local has_oxlint = vim.fn.executable('oxlint') == 1
+
+    -- ~/.cargo/bin/rust-analyzer es un shim de rustup: comprobar que el
+    -- componente esté realmente instalado en alguna toolchain.
+    local function has_rust_analyzer()
+      if vim.fn.executable('rust-analyzer') ~= 1 then
+        return false
+      end
+      local resolved = vim.fn.resolve(vim.fn.exepath('rust-analyzer'))
+      if vim.fn.fnamemodify(resolved, ':t') ~= 'rustup' then
+        return true
+      end
+      local rustup_home = vim.env.RUSTUP_HOME or vim.fn.expand('~/.rustup')
+      return #vim.fn.glob(rustup_home .. '/toolchains/*/bin/rust-analyzer', false, true) > 0
+    end
+
+    local rust_analyzer_ok = has_rust_analyzer()
     for _, name in ipairs({
       'bashls',
       'pyright',
@@ -72,6 +68,7 @@ return {
       'vtsls',
       'eslint',
       'oxlint',
+      'rust_analyzer',
       'lua_ls',
       'typos_lsp',
       'jsonls',
@@ -81,9 +78,8 @@ return {
       'marksman',
       'emmet_ls',
     }) do
-      if name == 'oxlint' and not has_oxlint then
-        -- Sin binario no lo arrancamos: ESLint queda como fallback.
-      elseif handlers[name] then
+      local enabled = (name ~= 'oxlint' or has_oxlint) and (name ~= 'rust_analyzer' or rust_analyzer_ok)
+      if enabled and handlers[name] then
         handlers[name]()
         table.insert(servers, name)
       end

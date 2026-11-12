@@ -17,17 +17,10 @@ M.config = function()
       border = 'curved', -- 'single' | 'double' | 'shadow' | 'curved' | ...,
     },
     highlights = {
-      Normal = {
-        guibg = '#252525',
-        guifg = '#ffffff',
-      },
-      NormalFloat = {
-        link = 'Normal',
-      },
-      FloatBorder = {
-        guifg = '#8f45e3',
-        guibg = '#252525',
-      },
+      -- Links al tema actual en vez de colores fijos.
+      Normal = { link = 'Normal' },
+      NormalFloat = { link = 'NormalFloat' },
+      FloatBorder = { link = 'FloatBorder' },
     },
     winbar = {
       enabled = false,

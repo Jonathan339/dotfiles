@@ -53,11 +53,16 @@ return {
 
       -- LSP
       lsp = {
-        progress = { enabled = false },
+        -- Noice es ahora el único lugar donde se muestra el progreso LSP
+        -- (antes fidget.nvim duplicaba esta tarea).
+        progress = { enabled = true, view = 'mini' },
         hover = { enabled = true, silent = true },
         signature = {
           enabled = true,
-          auto_open = { enabled = true, trigger = true, luasnip = true },
+          -- auto_open apagado: noice abría el popup de firma/documentación
+          -- solo al escribir "(" (p. ej. autocmd(). La firma manual sigue
+          -- disponible con gK.
+          auto_open = { enabled = false },
         },
         override = {
           ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
@@ -82,9 +87,6 @@ return {
         { filter = { event = 'msg_show', find = 'written' }, opts = { skip = true } },
         { filter = { event = 'msg_show', find = 'lines? yanked' }, view = 'mini' },
         { filter = { event = 'msg_show', find = 'fewer lines' }, opts = { skip = true } },
-
-        -- Silenciar progreso LSP
-        { filter = { event = 'lsp', kind = 'progress' }, opts = { skip = true } },
 
         -- Mensajes largos a split
         {

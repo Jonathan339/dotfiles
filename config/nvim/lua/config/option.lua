@@ -12,36 +12,26 @@ vim.g.loaded_perl_provider = 0
 vim.g.loaded_ruby_provider = 0
 vim.g.loaded_node_provider = 0
 
--- Mason bin al PATH desde el inicio. Mason carga en VeryLazy y el LSP en
--- BufReadPre, así que sin esto el servidor arranca antes de que mason agregue
--- su bin al PATH (error "missing from PATH").
-local mason_bin = vim.fn.stdpath('data') .. '/mason/bin'
-if not vim.env.PATH:find(mason_bin, 1, true) then
-  vim.env.PATH = mason_bin .. ':' .. vim.env.PATH
+-- PATH común: Neovim puede lanzarse desde el escritorio (KDE) sin el PATH
+-- del shell. Agregamos una sola vez cada toolchain que exista.
+local function prepend_path(dir)
+  if dir == '' or vim.fn.isdirectory(dir) ~= 1 then
+    return
+  end
+  if not (vim.env.PATH or ''):find(dir, 1, true) then
+    vim.env.PATH = dir .. ':' .. (vim.env.PATH or '')
+  end
 end
 
--- Node (fnm). Los servidores LSP de Mason son scripts con
--- "#!/usr/bin/env node" y en el sistema no hay node fuera de fnm, que solo
--- exporta un multishell por shell. Lanzado desde el escritorio (KDE) o sin
--- .zshrc, nvim no ve node y bashls/tailwindcss/vtsls mueren con exit 127.
-local fnm_node_bin = vim.fn.expand('~/.local/share/fnm/aliases/default/bin')
-if
-  vim.fn.isdirectory(fnm_node_bin) == 1
-  and not vim.env.PATH:find(fnm_node_bin, 1, true)
-then
-  vim.env.PATH = fnm_node_bin .. ':' .. vim.env.PATH
-end
-
--- Toolchain de Rust (rustup). Nvim puede lanzarse desde el lanzador del
--- escritorio sin el PATH del shell, y conform solo activa rustfmt si lo
--- encuentra al iniciar.
-local cargo_bin = vim.fn.expand('~/.cargo/bin')
-if
-  vim.fn.isdirectory(cargo_bin) == 1
-  and not vim.env.PATH:find(cargo_bin, 1, true)
-then
-  vim.env.PATH = cargo_bin .. ':' .. vim.env.PATH
-end
+-- Mason debe ir primero: el LSP arranca en BufReadPre, antes de que Mason
+-- cargue (VeryLazy) y agregue su bin al PATH.
+prepend_path(vim.fn.stdpath('data') .. '/mason/bin')
+-- Node (fnm): bashls/tailwindcss/vtsls son scripts "#!/usr/bin/env node".
+prepend_path(vim.fn.expand('~/.local/share/fnm/aliases/default/bin'))
+-- Rust (rustup): rust-analyzer y rustfmt.
+prepend_path(vim.fn.expand('~/.cargo/bin'))
+-- Bun: ejecuta TS (<leader>m) y algunos binarios de proyectos.
+prepend_path(vim.fn.expand('~/.bun/bin'))
 
 -- Leader
 vim.g.mapleader = ','
@@ -119,7 +109,11 @@ vim.opt.undofile = true
 vim.opt.formatoptions:append({ 'r' }) -- * en comentarios al hacer Enter
 
 -- Undercurl (si tu terminal lo soporta)
-pcall(function() vim.o.t_Cs = '\027[4:3m' end)
-pcall(function() vim.o.t_Ce = '\027[4:0m' end)
+pcall(function()
+  vim.o.t_Cs = '\027[4:3m'
+end)
+pcall(function()
+  vim.o.t_Ce = '\027[4:0m'
+end)
 
 -- Nota: no tocamos swap/backup; tus autocmds ya manejan casos grandes.
