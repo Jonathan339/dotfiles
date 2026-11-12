@@ -1,4 +1,4 @@
-.PHONY: install install-all link link-fix check palette lint shellcheck syntax ia ia-bench ia-model ia-ollama backup steam-disk keyd
+.PHONY: install install-all link link-fix check palette lint shellcheck syntax fmt-nvim lint-nvim verify ia ia-bench ia-model ia-ollama backup steam-disk keyd
 
 install:
 	./install.sh
@@ -34,6 +34,27 @@ syntax:
 
 shellcheck: lint
 	@echo "shellcheck OK"
+
+# Neovim / Lua
+NVIM_DIR = config/nvim
+STYLUA ?= $(shell command -v stylua 2>/dev/null || echo "$$HOME/.local/share/nvim/mason/bin/stylua")
+
+fmt-nvim:
+	@test -x "$(STYLUA)" || { \
+		echo "stylua no está instalado (Mason: ~/.local/share/nvim/mason/bin/stylua)"; \
+		exit 1; \
+	}
+	"$(STYLUA)" $(NVIM_DIR)
+
+lint-nvim:
+	@test -x "$(STYLUA)" || { \
+		echo "stylua no está instalado (Mason: ~/.local/share/nvim/mason/bin/stylua)"; \
+		exit 1; \
+	}
+	"$(STYLUA)" --check $(NVIM_DIR)
+
+verify: lint lint-nvim check
+	@echo "Verificación completa OK"
 
 ia:
 	./scripts/llama-check.sh
