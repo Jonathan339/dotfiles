@@ -99,6 +99,7 @@ PACMAN_PACKAGES=(
   hyprland waybar dunst swaybg hypridle grim slurp wl-clipboard
   cliphist brightnessctl stow
   neovim ttf-hack-nerd tree-sitter-cli shellcheck
+  keyd
 )
 
 package_is_installed() {
@@ -463,6 +464,32 @@ install_lazygit() {
   ok "Lazygit instalado."
 }
 
+install_keyd() {
+  if [[ "$PM" != "pacman" ]]; then
+    warn "keyd solo está empaquetado en Arch/CachyOS en este repo; saltando."
+    return 1
+  fi
+
+  install_package_if_missing keyd || { warn "No se pudo instalar keyd."; return 1; }
+
+  local src="$REPO_ROOT/system/etc/keyd/default.conf"
+  [[ -f "$src" ]] || die "Falta el archivo de sistema: $src"
+
+  # Cada paso se verifica: install_keyd se llama dentro de "|| warn",
+  # así que errexit no aplica y un sudo cancelado no debe pasar por bueno.
+  sudo install -Dm644 "$src" /etc/keyd/default.conf ||
+    { warn "No se pudo copiar $src a /etc/keyd (¿sudo cancelado?)."; return 1; }
+
+  if systemctl is-active --quiet keyd; then
+    sudo keyd reload || { warn "No se pudo recargar keyd."; return 1; }
+  else
+    sudo keyd check || { warn "keyd check falló: revisá $src"; return 1; }
+    sudo systemctl enable --now keyd || { warn "No se pudo activar keyd."; return 1; }
+  fi
+
+  ok "keyd aplicado: AltGr+, → < y AltGr+. → >."
+}
+
 clean() {
   case "$PM" in
     apt)
@@ -495,6 +522,7 @@ install_all() {
   install_hyprland
   install_nodejs
   install_lazygit
+  install_keyd
   clean
 
   log "Re-aplicando stow con todos los programas instalados..."
@@ -530,6 +558,7 @@ TOOL_CATALOG=(
   "nodejs|Node.js (via FNM)|fnm|install_nodejs|"
   "yarn|Yarn|yarn|install_yarn|"
   "lazygit|Lazygit|lazygit|install_lazygit|"
+  "keyd|keyd (tecla < > con AltGr)|keyd|install_keyd|"
   "nerd-fonts|Nerd Fonts||install_nerd_fonts|"
   "kitty-themes|kitty-themes||install_kitty_themes|"
   "__all|Aplicar TODOS los dotfiles||__apply_all|"
@@ -618,7 +647,8 @@ apply_tool() {
   IFS='|' read -r _ label _ fn pkgs <<< "$entry"
 
   # --config-only: solo acciones que aplican configs
-  if [[ "$CONFIG_ONLY" == true && -z "$pkgs" && "$fn" != "__apply_all" && "$fn" != "__check" ]]; then
+  # install_keyd también cuenta: su "config" vive en /etc, no en stow.
+  if [[ "$CONFIG_ONLY" == true && -z "$pkgs" && "$fn" != "__apply_all" && "$fn" != "__check" && "$fn" != "install_keyd" ]]; then
     warn "$label: no tiene configs para aplicar (modo --config-only)."
     return 0
   fi

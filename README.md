@@ -12,6 +12,8 @@ Soporta **Debian/Ubuntu (apt)** y **Arch/CachyOS (pacman)** con el mismo árbol 
 - `check.sh`: valida que todos los symlinks existan y apunten bien.
 - `config/`: archivos reales de configuración (nvim, shell, terminales, paleta de colores).
 - `stow/`: paquetes que Stow enlaza a `$HOME`, organizados en capas.
+- `system/`: archivos que viven fuera de `$HOME` (por ahora `/etc/keyd/default.conf`);
+  `install.sh` los copia con `sudo` porque Stow no puede enlazarlos.
 - `scripts/generate-palette.sh`: regenera los colores de kitty/alacritty/ghostty
   desde `config/colors/palette.sh` (fuente única).
 
@@ -50,6 +52,7 @@ make check                  # valida symlinks (exit 0 = OK)
 make palette                # regenera colores desde config/colors/palette.sh
 make lint                   # shellcheck + zsh -n (requiere shellcheck instalado)
 make backup                 # copia config/ a /tmp/dotfiles-backup-<ts>
+make keyd                   # instala keyd y aplica /etc/keyd/default.conf (sudo)
 ```
 
 El menú usa `fzf` por defecto: **Tab** marca, **Ctrl-a** todo, **Ctrl-d** nada, **rueda/PgUp/PgDn**

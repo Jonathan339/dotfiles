@@ -12,6 +12,9 @@ Cadena de dos saltos: `~/.config/x` → `stow/<capa>/<pkg>/.config/x` → `confi
   (ej. `stow/shared/kitty/.config/kitty/kitty.conf → config/kitty.conf`).
 - **Excepciones que viven enteras en `stow/`** (archivos reales, se editan ahí): `rofi`, `opencode`,
   `hypr`, `waybar`, `dunst` y `kde/plasma`.
+- Fuera de `$HOME` no hay `stow`: los archivos de `/etc` viven reales en `system/`
+  (hoy `system/etc/keyd/default.conf`) y se aplican con `make keyd` o `./install.sh --only keyd`
+  (copia con `sudo` + `keyd reload`).
 - Para saber cuál es el archivo real: `readlink -f ~/.config/loquesea`; si resuelve a `config/…`, editá eso.
 - No todo `~/.config` es repo: `~/.config/opencode/{agents,skills/codebase-memory,service.json}` y
   `~/.config/kitty` son directorios reales con symlinks por archivo.

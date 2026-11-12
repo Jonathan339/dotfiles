@@ -1,4 +1,4 @@
-.PHONY: install install-all link link-fix check palette lint shellcheck syntax ia ia-bench ia-model ia-ollama backup steam-disk
+.PHONY: install install-all link link-fix check palette lint shellcheck syntax ia ia-bench ia-model ia-ollama backup steam-disk keyd
 
 install:
 	./install.sh
@@ -54,6 +54,9 @@ ia-ollama:
 steam-disk:
 	@echo "Montando disco WD para Steam (requiere sudo)..." 
 	sudo bash scripts/mount-steam-disk.sh
+
+keyd:
+	./install.sh --only keyd
 
 backup:
 	@backup_dir="/tmp/dotfiles-backup-$$(date +%s)" && \
