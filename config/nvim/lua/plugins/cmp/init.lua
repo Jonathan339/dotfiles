@@ -1,56 +1,66 @@
 -- lua/plugins/cmp/init.lua
+
 return {
   'hrsh7th/nvim-cmp',
   event = 'InsertEnter',
+
   dependencies = {
-    -- fuentes básicas
+    -- Fuentes de autocompletado
     'hrsh7th/cmp-nvim-lsp',
     'hrsh7th/cmp-buffer',
     'hrsh7th/cmp-path',
     'hrsh7th/cmp-cmdline',
-    'hrsh7th/cmp-nvim-lua', -- ← la necesitabas: usabas { name = "nvim_lua" }
+    'hrsh7th/cmp-nvim-lua',
 
+    -- Snippets
     'saadparwaiz1/cmp_luasnip',
 
-    -- iconitos y colores bonitos (opcionales)
+    -- Iconos y colores
     'onsails/lspkind.nvim',
     'brenoprata10/nvim-highlight-colors',
   },
+
   opts = function()
     local cmp = require('cmp')
     local luasnip = require('luasnip')
 
-    -- deshabilitar cmp en comentarios (pero permitir en comandos/cmdline)
+    -- Desactivar autocompletado en comentarios
     local ok_ctx, context = pcall(require, 'cmp.config.context')
 
     local function enabled()
       if vim.bo.buftype == 'prompt' then
         return false
       end
+
       if ok_ctx then
-        if context.in_treesitter_capture('comment') == true or context.in_syntax_group('Comment') then
+        if context.in_treesitter_capture('comment') or context.in_syntax_group('Comment') then
           return false
         end
       end
+
       return true
     end
 
-    -- formateo: lspkind + nvim-highlight-colors (si están)
+    -- Formateadores opcionales
     local lspkind_ok, lspkind = pcall(require, 'lspkind')
     local nhc_ok, nhc = pcall(require, 'nvim-highlight-colors')
 
     local function formatter(entry, vim_item)
-      -- primero colores en el abbr si es un color literal (#fff, rgb(), etc.)
+      -- Resaltar colores CSS y otros literales
       if nhc_ok then
-        local colored = nhc.format(entry, { kind = vim_item.kind })
+        local colored = nhc.format(entry, {
+          kind = vim_item.kind,
+        })
+
         if colored and colored.abbr_hl_group then
           vim_item.kind_hl_group = colored.abbr_hl_group
           vim_item.kind = colored.abbr
         end
       end
-      -- luego iconos/simbolitos
+
+      -- Iconos y etiquetas de origen
       if lspkind_ok then
-        vim_item = (lspkind.cmp_format({
+        vim_item = lspkind.cmp_format({
           mode = 'symbol_text',
           maxwidth = 50,
           ellipsis_char = '…',
@@ -61,23 +71,27 @@ return {
             path = '[PATH]',
             nvim_lua = '[LUA]',
           },
-        }))(entry, vim_item)
+        })(entry, vim_item)
       end
+
       return vim_item
     end
 
-    -- helper: hay palabra antes del cursor?
+    -- Comprobar si hay texto antes del cursor
     local function has_words_before()
       local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+
       if col == 0 then
         return false
       end
+
       local text = vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]
+
       return text:sub(col, col):match('%s') == nil
     end
 
-    -- ventanas con borde
-    local function bordered(win)
+    -- Ventana de autocompletado con bordes redondeados
+    local function bordered()
       return cmp.config.window.bordered({
         border = 'rounded',
         winhighlight = 'NormalFloat:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None',
@@ -87,29 +101,42 @@ return {
 
     return {
       enabled = enabled,
-      preselect = cmp.PreselectMode.None,
-      completion = { completeopt = 'menu,menuone,noselect' },
-      performance = { throttle = 20 },
 
-      window = {
-        completion = bordered('completion'),
-        documentation = bordered('documentation'),
+      preselect = cmp.PreselectMode.None,
+
+      completion = {
+        completeopt = 'menu,menuone,noselect',
       },
 
+      performance = {
+        throttle = 20,
+      },
+
+      -- Ventanas
+      window = {
+        completion = bordered(),
+        documentation = nil,
+      },
+
+      -- Integración LuaSnip
       snippet = {
         expand = function(args)
           luasnip.lsp_expand(args.body)
         end,
       },
 
+      -- Atajos de teclado
       mapping = cmp.mapping.preset.insert({
-        ['<C-b>'] = cmp.mapping.scroll_docs(-4),
-        ['<C-f>'] = cmp.mapping.scroll_docs(4),
+
         ['<C-e>'] = cmp.mapping.abort(),
+
         ['<C-Space>'] = cmp.mapping.complete(),
 
-        ['<CR>'] = cmp.mapping.confirm({ select = false }),
+        ['<CR>'] = cmp.mapping.confirm({
+          select = false,
+        }),
 
+        -- Siguiente sugerencia o snippet
         ['<Tab>'] = cmp.mapping(function(fallback)
           if cmp.visible() then
             cmp.select_next_item()
@@ -122,6 +149,7 @@ return {
           end
         end, { 'i', 's' }),
 
+        -- Sugerencia anterior o snippet anterior
         ['<S-Tab>'] = cmp.mapping(function(fallback)
           if cmp.visible() then
             cmp.select_prev_item()
@@ -133,53 +161,97 @@ return {
         end, { 'i', 's' }),
       }),
 
+      -- Formato de sugerencias
       formatting = {
-        fields = { 'kind', 'abbr', 'menu' },
+        fields = {
+          'kind',
+          'abbr',
+          'menu',
+        },
         format = formatter,
       },
 
+      -- Texto fantasma
       experimental = {
-        ghost_text = { hl_group = 'Comment' },
+        ghost_text = {
+          hl_group = 'Comment',
+        },
       },
 
+      -- Fuentes de autocompletado
       sources = cmp.config.sources({
-        { name = 'nvim_lsp' },
-        { name = 'luasnip' },
-        { name = 'nvim_lua' },
+
+        {
+          name = 'nvim_lsp',
+        },
+
+        {
+          name = 'luasnip',
+        },
+
+        {
+          name = 'nvim_lua',
+        },
       }, {
-        { name = 'path' },
-        { name = 'buffer', keyword_length = 3 },
+
+        {
+          name = 'path',
+        },
+
+        {
+          name = 'buffer',
+          keyword_length = 4,
+        },
       }),
     }
   end,
+
   config = function(_, opts)
     local cmp = require('cmp')
+
     cmp.setup(opts)
 
-    -- Nota: la integración con autopairs ya la enganchamos en el plugin de autopairs.
-    -- Si no la tuvieras allí, podrías descomentar:
-    -- local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-    -- cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done({ map_char = { tex = "" } }))
+    --------------------------------------------------
+    -- AUTOCOMPLETADO EN BÚSQUEDAS
+    --------------------------------------------------
 
-    ------------------------------------------------------------------
-    -- cmdline completion
-    ------------------------------------------------------------------
-    -- búsqueda con / y ?
     cmp.setup.cmdline({ '/', '?' }, {
       mapping = cmp.mapping.preset.cmdline(),
-      sources = { { name = 'buffer' } },
+
+      sources = {
+        {
+          name = 'buffer',
+        },
+      },
     })
 
-    -- comandos con :
+    --------------------------------------------------
+    -- AUTOCOMPLETADO EN COMANDOS
+    --------------------------------------------------
+
     cmp.setup.cmdline(':', {
       mapping = cmp.mapping.preset.cmdline(),
+
       sources = cmp.config.sources({
-        { name = 'path' },
+
+        {
+          name = 'path',
+        },
       }, {
-        { name = 'cmdline' },
+
+        {
+          name = 'cmdline',
+        },
       }),
-      -- evita completado en ejecuciones tipo :! o :Man
-      matching = { disallow_symbol_nonprefix_matching = false },
+
+      matching = {
+        disallow_symbol_nonprefix_matching = false,
+      },
     })
+
+    --------------------------------------------------
+    -- AUTOPAIRS
+    -- La integración se configura en su propio plugin.
+    --------------------------------------------------
   end,
 }
