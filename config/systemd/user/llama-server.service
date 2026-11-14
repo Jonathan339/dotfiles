@@ -9,6 +9,10 @@ Type=simple
 # Los flags viven en ~/models/<modelo>/serve.sh. llama-serve.sh resuelve el
 # symlink ~/.config/llama-current (lo maneja scripts/llama-model.sh) y cae al
 # 9B si el selector todavía no existe. Para cambiar de modelo: llama-model.sh.
+# PATH explícito: al arrancar la sesión, el user manager no siempre hereda
+# ~/.local/bin (reboot 14/11/2026: el primer intento falló con "no se encontró
+# ni 'llama' ni 'llama-server' en path" y recién anduvo en el reintento).
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=%h/.dotfiles/scripts/llama-serve.sh
 
 Restart=on-failure
