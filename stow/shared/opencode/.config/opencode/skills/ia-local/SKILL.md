@@ -53,7 +53,7 @@ OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 
 - Unit de **usuario** `llama-server.service`, en la capa host: archivo real `config/systemd/user/llama-server.service`, symlink en `stow/host/cachyos/systemd/.config/systemd/user/`. Usa el mismo nombre que el unit del paquete (`/usr/lib/systemd/user/llama-server.service`): el de `~/.config` gana.
 - Flags: `serve -m ~/models/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf -a qwen3.5-9b -c 24576 -ngl 99 -fa on -ctk q8_0 -ctv q8_0 -np 1 -dev Vulkan0`.
-- `-dev Vulkan0` fija la Arc; `Vulkan1` es la iGPU Radeon (se descarta). Si cambia el orden de enumeración, `llama-server --list-devices` lo muestra.
+- `-dev Vulkan0` **no identifica la GPU**: el orden de enumeración cambia entre boots (14/11/2026: `Vulkan0` pasó a ser la Radeon y el 9B cayó a 4 t/s). Los `~/models/*/serve.sh` fijan `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.json`, así `vulkan0` es siempre la Arc B570. Verificar con `llama serve --list-devices`.
 - `--jinja` viene activado por defecto (0.7.0): tools y `reasoning_content` funcionan sin flag extra.
 - Gestión: `systemctl --user {status,restart} llama-server` y `journalctl --user -u llama-server -f`. Carga en frío ~60 s.
 - Un modelo por proceso: otro modelo implica cambiar `--model`/`--alias` y reiniciar, o un segundo puerto con su propio provider.
