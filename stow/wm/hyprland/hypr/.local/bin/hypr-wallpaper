@@ -7,4 +7,4 @@ chosen=$(find "$DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.p
 
 pkill swaybg
 nohup swaybg -i "$chosen" -m fill >/dev/null 2>&1 &
-echo "$chosen" > ~/.config/hypr/wallpaper
+mkdir -p ~/.local/state/hypr && echo "$chosen" > ~/.local/state/hypr/wallpaper
