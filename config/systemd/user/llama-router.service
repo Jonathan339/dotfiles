@@ -1,0 +1,28 @@
+[Unit]
+Description=llama.cpp router - cambia de modelo bajo demanda en :8082
+Documentation=https://github.com/ggml-org/llama.cpp
+# El router expone :8082 a OpenCode y reenvía al backend llama-server (:8083).
+# Si el modelo pedido no está cargado, lo cambia: para, libera VRAM y arranca.
+After=graphical-session.target llama-server.service
+Wants=llama-server.service
+
+[Service]
+Type=simple
+# PATH explícito por el mismo motivo que llama-server: el user manager no
+# siempre hereda ~/.local/bin (llama y ollama viven ahí o en /usr/local/bin).
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=MODELS_DIR=%h/models
+Environment=LISTEN_HOST=127.0.0.1
+Environment=LISTEN_PORT=8082
+Environment=BACKEND_HOST=127.0.0.1
+Environment=BACKEND_PORT=8083
+Environment=UNIT=llama-server
+Environment=LOAD_TIMEOUT=300
+Environment=STOP_OLLAMA=1
+ExecStart=%h/.dotfiles/scripts/llama-router.py
+
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

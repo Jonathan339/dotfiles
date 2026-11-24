@@ -11,7 +11,9 @@ set -euo pipefail
 # No cambia nada: no reinicia servicios ni edita configs. Si algo falla, imprime
 # el comando exacto para arreglarlo.
 #
-# Cambiar de modelo: ./scripts/llama-model.sh <coder|4b|9b|list>
+# Arquitectura: OpenCode → router :8082 → llama-server :8083. El router cambia
+# de modelo solo cuando la petición pide otro alias (scripts/llama-router.py).
+# Cambiar de modelo a mano: ./scripts/llama-model.sh <coder|4b|9b|list>
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,6 +23,8 @@ source "${SCRIPT_DIR}/lib/llama.sh"
 MODELS_DIR="${HOME}/models"
 LINK="${HOME}/.config/llama-current"
 UNIT="llama-server"
+ROUTER_UNIT="llama-router"
+ROUTER_PORT="${ROUTER_PORT:-8082}"
 OPENCODE_JSON="${HOME}/.config/opencode/opencode.json"
 
 OK_=0
@@ -63,6 +67,20 @@ else
   warn "no arranca en el login (${habilitado:-?}) → systemctl --user enable $UNIT"
 fi
 
+router_estado=$(systemctl --user is-active "$ROUTER_UNIT" 2>/dev/null || true)
+if [[ $router_estado == active ]]; then
+  ok "systemd: $ROUTER_UNIT activo (:$ROUTER_PORT)"
+else
+  err "systemd: $ROUTER_UNIT ${router_estado:-desconocido} → systemctl --user start $ROUTER_UNIT"
+fi
+
+router_habilitado=$(systemctl --user is-enabled "$ROUTER_UNIT" 2>/dev/null || true)
+if [[ $router_habilitado == enabled ]]; then
+  ok "router arranca en el login (enabled)"
+else
+  warn "router no arranca en el login (${router_habilitado:-?}) → systemctl --user enable $ROUTER_UNIT"
+fi
+
 # ==============================================================================
 # 2. Endpoint
 # ==============================================================================
@@ -78,27 +96,43 @@ if [[ -z $serve_sh ]]; then
   warn "sin selector $LINK → el unit cae al 9B por defecto (creálo con llama-model.sh)"
   puerto=8082
 else
-  puerto=$(serve_var "$serve_sh" port || echo 8082)
+  puerto=$(serve_var "$serve_sh" port || echo 8083)
   info "selector → ${serve_sh#"$HOME"/}"
 fi
-BASE="http://127.0.0.1:${puerto}"
+puerto=${puerto:-8083}
+BACKEND="http://127.0.0.1:${puerto}"
+BASE="http://127.0.0.1:${ROUTER_PORT}"
 
 if ss -ltn "sport = :$puerto" 2>/dev/null | grep -q LISTEN; then
-  ok "puerto $puerto escuchando"
+  ok "backend :$puerto escuchando"
 else
   err "nada escuchando en :$puerto → journalctl --user -u $UNIT -n 30 --no-pager"
 fi
 
-json=$(api_models "$BASE" || true)
+if ss -ltn "sport = :$ROUTER_PORT" 2>/dev/null | grep -q LISTEN; then
+  ok "router :$ROUTER_PORT escuchando"
+else
+  err "nada escuchando en :$ROUTER_PORT → journalctl --user -u $ROUTER_UNIT -n 30 --no-pager"
+fi
+
+json=$(api_models "$BACKEND" || true)
 alias_actual=$(printf '%s' "$json" | jq -r '.data[0].id // empty' 2>/dev/null || true)
 ctx_actual=$(printf '%s' "$json" | jq -r '.data[0].meta.n_ctx // empty' 2>/dev/null || true)
 
 if [[ -n $alias_actual ]]; then
-  ok "sirviendo: $alias_actual (ctx $ctx_actual)"
+  ok "backend sirviendo: $alias_actual (ctx $ctx_actual)"
 elif ss -ltn "sport = :$puerto" 2>/dev/null | grep -q LISTEN; then
   warn "/v1/models no responde todavía: el modelo puede estar cargando (~80 s en frío)"
 else
   err "/v1/models inaccesible"
+fi
+
+rjson=$(api_models "$BASE" || true)
+n_router=$(printf '%s' "$rjson" | jq -r '(.data // []) | length' 2>/dev/null || echo 0)
+if [[ ${n_router:-0} -ge 1 ]]; then
+  ok "router lista $n_router modelo(s)"
+else
+  err "el router no devuelve /v1/models"
 fi
 
 # ==============================================================================
@@ -194,6 +228,16 @@ device=$(journalctl --user -u "$UNIT" --no-pager -n 5000 2>/dev/null \
   | grep -oE 'dispositivo: vulkan[0-9]+' | tail -1 || true)
 if [[ -n $device ]]; then
   info "device pedido: ${device#dispositivo: } (vulkan0 = Arc B570)"
+fi
+
+pid_backend=$(llama_unit_pid "$UNIT")
+vram_kib=$(llama_pid_vram_kib "$pid_backend")
+if (( vram_kib >= 1048576 )); then
+  ok "VRAM residente: $((vram_kib / 1024)) MiB en la Arc (pid ${pid_backend:-?})"
+elif (( vram_kib > 0 )); then
+  warn "VRAM residente baja: $((vram_kib / 1024)) MiB; puede haber capas en CPU"
+else
+  warn "no pude leer VRAM residente del backend (pid ${pid_backend:-?})"
 fi
 
 # ==============================================================================

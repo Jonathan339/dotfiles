@@ -346,7 +346,10 @@ fi
 if [[ " ${LAYERS[*]} " == *"host/"* ]]; then
   echo ""
   echo "━━━ systemd ━━━"
-  SYSTEMD_LINKS=(".config/systemd/user/llama-server.service")
+  SYSTEMD_LINKS=(
+    ".config/systemd/user/llama-server.service"
+    ".config/systemd/user/llama-router.service"
+  )
   for f in "${SYSTEMD_LINKS[@]}"; do
     dest="$HOME/$f"
     label="systemd → $dest"
