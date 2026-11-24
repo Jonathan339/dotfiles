@@ -49,15 +49,15 @@ OLLAMA_CONTEXT_LENGTH=32768  OLLAMA_MAX_LOADED_MODELS=1
 OLLAMA_KEEP_ALIVE=30m        OLLAMA_VULKAN=true (lo aporta el paquete)
 ```
 
-## llama.cpp (servidor propio, puerto 8080)
+## llama.cpp (router :8082 + backend :8083)
 
-- Unit de **usuario** `llama-server.service`, en la capa host: archivo real `config/systemd/user/llama-server.service`, symlink en `stow/host/cachyos/systemd/.config/systemd/user/`. Usa el mismo nombre que el unit del paquete (`/usr/lib/systemd/user/llama-server.service`): el de `~/.config` gana.
-- Flags: `serve -m ~/models/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf -a qwen3.5-9b -c 24576 -ngl 99 -fa on -ctk q8_0 -ctv q8_0 -np 1 -dev Vulkan0`.
-- `-dev Vulkan0` **no identifica la GPU**: el orden de enumeración cambia entre boots (14/11/2026: `Vulkan0` pasó a ser la Radeon y el 9B cayó a 4 t/s). Los `~/models/*/serve.sh` fijan `VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.json`, así `vulkan0` es siempre la Arc B570. Verificar con `llama serve --list-devices`.
-- `--jinja` viene activado por defecto (0.7.0): tools y `reasoning_content` funcionan sin flag extra.
-- Gestión: `systemctl --user {status,restart} llama-server` y `journalctl --user -u llama-server -f`. Carga en frío ~60 s.
-- Un modelo por proceso: otro modelo implica cambiar `--model`/`--alias` y reiniciar, o un segundo puerto con su propio provider.
-- OpenCode lo consume por el provider `llamacpp` (ver skill `opencode-local`).
+- OpenCode apunta siempre a `http://127.0.0.1:8082/v1`: ahí escucha `llama-router.service` (`~/.dotfiles/scripts/llama-router.py`, unit en `config/systemd/user/`, symlink en `stow/host/cachyos/systemd/.config/systemd/user/`). El backend real es `llama-server.service` en `:8083`, con `llama-serve.sh` resolviendo `~/.config/llama-current` (cae al 9B si el selector no existe).
+- Si la petición pide un alias distinto del cargado, el router para el backend, espera a que la VRAM de procesos llama baje de 256 MiB, descarga modelos de Ollama (`STOP_OLLAMA=1`), repunta el selector al `serve.sh` pedido, arranca y reenvía. Un lock serializa los cambios concurrentes y el proxy soporta SSE: la primera petición espera la carga (~10–80 s).
+- Los flags, alias y ctx viven en `~/models/<modelo>/serve.sh` (leídos con `serve_var` de `scripts/lib/llama.sh`), no en la config de OpenCode. Todos usan `-ngl 99`, `--flash-attn on`, `--jinja` (tools y `reasoning_content` sin flag extra) y `--device` resuelto a la Arc.
+- `-dev Vulkan0` **no identifica la GPU**: el orden de enumeración cambia entre boots (14/11/2026: `Vulkan0` pasó a ser la Radeon y el 9B cayó a 4 t/s). Los `~/models/*/serve.sh` fijan el ICD de Intel (`VK_DRIVER_FILES`), así `Vulkan0` es siempre la Arc B570. Verificar con `llama serve --list-devices`.
+- Cambiar de modelo a mano: `cd ~/.dotfiles && make ia-model MODEL=coder|4b|9b` (o `./scripts/llama-model.sh list`). El script hace stop real, espera la liberación de VRAM, termina restos en el puerto, descarga modelos de Ollama y verifica que el nuevo proceso tenga VRAM residente en la Arc. `FORCE=1` reinicia aunque ya esté activo; `STOP_OLLAMA=0` evita descargar Ollama.
+- Gestión: `systemctl --user {status,restart} llama-server llama-router` y `journalctl --user -u llama-router -f`. Un solo modelo en GPU a la vez; para dos modelos hace falta otro backend en otro puerto con su propio provider.
+- OpenCode lo consume por el provider `llamacpp` (ver skill `opencode-local`). `make ia` verifica ambos units, ambos puertos, la VRAM residente y la coherencia de ctx.
 
 ## Rendimiento de referencia (medido el 25/10/2026)
 
