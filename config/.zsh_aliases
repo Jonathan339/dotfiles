@@ -25,6 +25,8 @@ alias free='free -h'
 alias ip='ip -c'
 
 # Terminal.
+alias c='clear'
+alias cls='clear'
 alias clr='clear'
 
 # Editor: nvim como predeterminado.
