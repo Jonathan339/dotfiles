@@ -69,6 +69,17 @@
         "type": "remote",
         "url": "https://mcp.context7.com/mcp"
       },
+      "rea": {
+        "type": "local",
+        "command": [
+          "/home/jonathan/.local/share/fnm/aliases/default/bin/node",
+          "/home/jonathan/.local/share/fnm/node-versions/v26.13.0/installation/lib/node_modules/rea-agents/scripts/rea.mjs",
+          "mcp"
+        ],
+        "environment": {
+          "REA_MCP_TOOL_CATALOG_PROFILE": "hot-cold"
+        }
+      },
       "playwright": {
         "type": "local",
         "command": ["bun", "x", "@playwright/mcp@latest"],
