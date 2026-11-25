@@ -77,7 +77,9 @@
           "mcp"
         ],
         "environment": {
-          "REA_MCP_TOOL_CATALOG_PROFILE": "hot-cold"
+          "REA_MCP_TOOL_CATALOG_PROFILE": "hot-cold",
+          "GHIDRA_INSTALL_DIR": "/home/jonathan/ghidra-install/ghidra_12.2_PUBLIC",
+          "JAVA_HOME": "/home/jonathan/jdk25/amazon-corretto-25.0.5.1.2-linux-x64"
         }
       },
       "playwright": {
